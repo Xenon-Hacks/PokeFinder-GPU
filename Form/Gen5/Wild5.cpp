@@ -32,6 +32,7 @@
 #include <Core/Gen5/Searchers/WildSearcher5.hpp>
 #include <Core/Parents/Filters/StateFilter.hpp>
 #include <Core/Parents/ProfileLoader.hpp>
+#include <Core/Util/OpenCL.hpp>
 #include <Core/Util/Translator.hpp>
 #include <Form/Controls/Controls.hpp>
 #include <Form/Controls/ComboMenu.hpp>
@@ -738,10 +739,15 @@ void Wild5::search()
     WildGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, leads, passPowers, searchMovingTrigger, searchMovingTrigger,
                              encounterSearcher[ui->comboBoxSearcherLocation->currentIndex()], *currentProfile, filter, true);
 
-    SearcherBase5<WildGenerator5, WildState5> *searcher;
+    QSettings settings;
+    bool useGPU = settings.value("settings/gpu", true).toBool() && OpenCL::isAvailable();
+
+    SearcherBase5<WildGenerator5, WildState5> *searcher = nullptr;
+    WildSearcher5GPU *gpuSearcher = nullptr;
     if (fastSearchEnabled())
     {
-        auto ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), CacheType::Normal, filter);
+        CacheType type = CacheType::Normal;
+        auto ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), type, filter);
         if (shaCache && shaCache->isValid(*currentProfile))
         {
             auto shaMap = shaCache->getCache(initialIVAdvances, maxIVAdvances, start, end, ivMap, CacheType::Normal, *currentProfile);
@@ -749,17 +755,43 @@ void Wild5::search()
         }
         else
         {
-            searcher = new WildSearcher5Fast(initialIVAdvances, maxIVAdvances, ivMap, generator, *currentProfile);
+            if (useGPU && WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, true))
+            {
+                gpuSearcher = new WildSearcher5GPU(initialIVAdvances, maxIVAdvances, ivMap, generator, *currentProfile);
+            }
+            if (!gpuSearcher || !gpuSearcher->isReady())
+            {
+                searcher = new WildSearcher5Fast(initialIVAdvances, maxIVAdvances, ivMap, generator, *currentProfile);
+            }
         }
     }
     else
     {
-        searcher = new WildSearcher5(initialIVAdvances, maxIVAdvances, generator, *currentProfile);
+        if (useGPU && WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false))
+        {
+            gpuSearcher = new WildSearcher5GPU(initialIVAdvances, maxIVAdvances, generator, *currentProfile);
+        }
+        if (!gpuSearcher || !gpuSearcher->isReady())
+        {
+            searcher = new WildSearcher5(initialIVAdvances, maxIVAdvances, generator, *currentProfile);
+        }
+    }
+
+    if (gpuSearcher && !gpuSearcher->isReady())
+    {
+        QMessageBox msg(QMessageBox::Warning, tr("GPU search unavailable"),
+                        tr("Searching on the CPU instead: %1").arg(QString::fromStdString(gpuSearcher->getError())));
+        msg.exec();
+        delete gpuSearcher;
+        gpuSearcher = nullptr;
+    }
+    else if (gpuSearcher)
+    {
+        searcher = gpuSearcher;
     }
 
     searcher->setMaxProgress(searcher->getMaxProgress(start, end));
 
-    QSettings settings;
     int threads = settings.value("settings/threads").toInt();
 
     auto *timer = new QTimer(this);
@@ -767,7 +799,7 @@ void Wild5::search()
         searcher->cancelSearch();
         ui->pushButtonCancel->setEnabled(false);
     });
-    connect(timer, &QTimer::timeout, this, [this, searcher, timer, showPassPower] {
+    connect(timer, &QTimer::timeout, this, [this, searcher, gpuSearcher, timer, showPassPower] {
         searcherModel->addItems(searcher->getResults());
         if (showPassPower)
         {
@@ -785,8 +817,15 @@ void Wild5::search()
             ui->pushButtonSearch->setEnabled(true);
             ui->pushButtonCancel->setEnabled(false);
 
+            std::string gpuError = gpuSearcher ? gpuSearcher->getError() : std::string();
             delete searcher;
             timer->deleteLater();
+
+            if (!gpuError.empty())
+            {
+                QMessageBox msg(QMessageBox::Warning, tr("GPU search failed"), QString::fromStdString(gpuError));
+                msg.exec();
+            }
         }
     });
 

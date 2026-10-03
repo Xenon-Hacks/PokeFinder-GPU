@@ -426,6 +426,13 @@ WildGenerator5::WildGenerator5(u32 initialAdvances, u32 maxAdvances, u32 offset,
     this->leads.erase(std::ranges::unique(this->leads).begin(), this->leads.end());
 }
 
+IVPrefilter5 WildGenerator5::getIVPrefilter() const
+{
+    bool bw = (profile.getVersion() & Game::BW) != Game::None;
+    // Super Rod keeps every IV advance, see generate()
+    return { filter.getIVMin(), filter.getIVMax(), static_cast<u8>(bw ? 0 : 2), false, area.getEncounter() != Encounter::SuperRod };
+}
+
 std::vector<WildState5> WildGenerator5::generate(u64 seed, u32 initialAdvances, u32 maxAdvances) const
 {
     bool bw = (profile.getVersion() & Game::BW) != Game::None;

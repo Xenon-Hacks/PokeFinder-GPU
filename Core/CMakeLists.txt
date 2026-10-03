@@ -155,6 +155,7 @@ add_library(PokeFinderCore STATIC
     Gen5/EncounterArea5.hpp
     Gen5/Encounters5.cpp
     Gen5/Encounters5.hpp
+    Gen5/IVPrefilter5.hpp
     Gen5/Keypresses.cpp
     Gen5/Keypresses.hpp
     Gen5/Filters/HiddenGrottoFilter.cpp
@@ -198,10 +199,14 @@ add_library(PokeFinderCore STATIC
     Gen5/Searchers/HiddenGrottoSearcher.hpp
     Gen5/Searchers/IDSearcher5.cpp
     Gen5/Searchers/IDSearcher5.hpp
+    Gen5/Searchers/GPUIVScanner5.cpp
+    Gen5/Searchers/GPUIVScanner5.hpp
     Gen5/Searchers/IVCacheSearcher.cpp
     Gen5/Searchers/IVCacheSearcher.hpp
     Gen5/Searchers/IVSearcher5.cpp
     Gen5/Searchers/IVSearcher5.hpp
+    Gen5/Searchers/IVSearcher5GPU.cpp
+    Gen5/Searchers/IVSearcher5GPU.hpp
     Gen5/Searchers/PhenomenonSearcher.hpp
     Gen5/Searchers/ProfileSearcher5.cpp
     Gen5/Searchers/ProfileSearcher5.hpp
@@ -327,6 +332,8 @@ add_library(PokeFinderCore STATIC
     Util/IVToPIDCalculator.hpp
     Util/Nature.cpp
     Util/Nature.hpp
+    Util/OpenCL.cpp
+    Util/OpenCL.hpp
     Util/StackVector.hpp
     Util/Translator.cpp
     Util/Translator.hpp
@@ -336,7 +343,7 @@ add_library(PokeFinderCore STATIC
 
 target_include_directories(PokeFinderCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/External ${CMAKE_CURRENT_BINARY_DIR}/generated_public PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated_private)
 target_link_libraries(PokeFinderCore PUBLIC nlohmann_json::nlohmann_json PokeFinderIncludes)
-target_link_libraries(PokeFinderCore PRIVATE gf2::gf2 libzstd_static)
+target_link_libraries(PokeFinderCore PRIVATE gf2::gf2 libzstd_static ${CMAKE_DL_LIBS})
 
 if (MSVC)
     add_compile_options(PokeFinderCore PRIVATE /Zc:inline)

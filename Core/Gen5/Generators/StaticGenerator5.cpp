@@ -122,6 +122,13 @@ StaticGenerator5::StaticGenerator5(u32 initialAdvances, u32 maxAdvances, u32 off
     }
 }
 
+IVPrefilter5 StaticGenerator5::getIVPrefilter() const
+{
+    bool bw = (profile.getVersion() & Game::BW) != Game::None;
+    u8 offset = (bw ? 0 : 2) + ((staticTemplate.getEgg() || staticTemplate.getRoamer()) ? 1 : 0);
+    return { filter.getIVMin(), filter.getIVMax(), offset, staticTemplate.getRoamer(), true };
+}
+
 std::vector<State5> StaticGenerator5::generate(u64 seed, u32 initialAdvances, u32 maxAdvances) const
 {
     bool bw = (profile.getVersion() & Game::BW) != Game::None;

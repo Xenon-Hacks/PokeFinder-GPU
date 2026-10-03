@@ -1,6 +1,6 @@
 /*
  * This file is part of PokéFinder
- * Copyright (C) 2017-2024 by Admiral_Fish, bumba, and EzPzStreamz
+ * Copyright (C) 2017-2026 by Admiral_Fish, bumba, and EzPzStreamz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,18 +17,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef STATICSEARCHER5_HPP
-#define STATICSEARCHER5_HPP
+#ifndef IVSEARCHER5GPUTEST_HPP
+#define IVSEARCHER5GPUTEST_HPP
 
-#include <Core/Gen5/Generators/StaticGenerator5.hpp>
-#include <Core/Gen5/Searchers/IVSearcher5.hpp>
-#include <Core/Gen5/Searchers/IVSearcher5GPU.hpp>
-#include <Core/Gen5/States/SearcherState5.hpp>
-#include <Core/Gen5/States/State5.hpp>
+#include <QObject>
 
-using StaticSearcher5 = IVSearcher5<StaticGenerator5, State5>;
-using StaticSearcher5Fast = IVSearcher5Fast<StaticGenerator5, State5>;
-using StaticSearcher5CacheFast = IVSearcher5CacheFast<StaticGenerator5, State5>;
-using StaticSearcher5GPU = IVSearcher5GPU<StaticGenerator5, State5>;
+class IVSearcher5GPUTest : public QObject
+{
+    Q_OBJECT
+private slots:
+    void initTestCase();
 
-#endif // STATICSEARCHER5_HPP
+    void searchWild_data();
+    void searchWild();
+
+    void searchWildCache();
+
+    void searchStatic_data();
+    void searchStatic();
+};
+
+#endif // IVSEARCHER5GPUTEST_HPP

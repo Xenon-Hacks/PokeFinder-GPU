@@ -22,6 +22,7 @@
 
 #include <Core/Enum/Lead.hpp>
 #include <Core/Gen5/EncounterArea5.hpp>
+#include <Core/Gen5/IVPrefilter5.hpp>
 #include <Core/Gen5/Profile5.hpp>
 #include <Core/Parents/Filters/StateFilter.hpp>
 #include <Core/Parents/Generators/WildGenerator.hpp>
@@ -120,6 +121,26 @@ public:
                    const std::vector<u8> &passPowers, bool searchMovingTrigger, bool requireMovingTrigger, const EncounterArea5 &area,
                    const Profile5 &profile, const WildStateFilter &filter, bool requirePassPowerIVAdvance = false,
                    bool filterNonRequiredLeads = true, bool useExploringPower = false);
+
+    /**
+     * @brief Checks \p ivs against the IV and hidden power filters, the same way \ref generate() does before generating PIDs
+     *
+     * @param ivs IVs to check
+     *
+     * @return true IVs pass the filter
+     * @return false IVs do not pass the filter
+     */
+    bool compareIVs(const std::array<u8, 6> &ivs) const
+    {
+        return filter.compareIV(ivs) && filter.compareHiddenPower(ivs);
+    }
+
+    /**
+     * @brief Describes how IVs are read so searchers can filter them before calling \ref generate()
+     *
+     * @return IV prefilter information
+     */
+    IVPrefilter5 getIVPrefilter() const;
 
     /**
      * @brief Generates states for the \p encounterArea

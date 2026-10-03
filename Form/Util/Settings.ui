@@ -143,6 +143,16 @@
    <item row="4" column="1">
     <widget class="QComboBox" name="comboBoxThreads"/>
    </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="labelGPU">
+     <property name="text">
+      <string>GPU Search</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QCheckBox" name="checkBoxGPU"/>
+   </item>
   </layout>
  </widget>
  <resources/>

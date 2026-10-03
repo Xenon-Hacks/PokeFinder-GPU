@@ -99,6 +99,26 @@ public:
     bool compareHiddenPower(const std::array<u8, 6> &ivs) const;
 
     /**
+     * @brief Returns the maximum IV the filter accepts for each stat, taking skip into account
+     *
+     * @return Maximum IVs
+     */
+    std::array<u8, 6> getIVMax() const
+    {
+        return skip ? std::array<u8, 6> { 31, 31, 31, 31, 31, 31 } : ivMax;
+    }
+
+    /**
+     * @brief Returns the minimum IV the filter accepts for each stat, taking skip into account
+     *
+     * @return Minimum IVs
+     */
+    std::array<u8, 6> getIVMin() const
+    {
+        return skip ? std::array<u8, 6> { 0, 0, 0, 0, 0, 0 } : ivMin;
+    }
+
+    /**
      * @brief Determines if the \p ivs meet the filter criteria
      *
      * @param ivs IVs to compare

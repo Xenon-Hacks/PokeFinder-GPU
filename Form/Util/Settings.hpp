@@ -82,6 +82,13 @@ private slots:
      * @param index Threads index
      */
     void threadsIndexChanged(int index);
+
+    /**
+     * @brief Updates the saved GPU search setting
+     *
+     * @param checked Whether GPU search is enabled
+     */
+    void gpuToggled(bool checked);
 };
 
 #endif // SETTINGS_HPP

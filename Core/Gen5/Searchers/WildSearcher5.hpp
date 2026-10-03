@@ -22,11 +22,13 @@
 
 #include <Core/Gen5/Generators/WildGenerator5.hpp>
 #include <Core/Gen5/Searchers/IVSearcher5.hpp>
+#include <Core/Gen5/Searchers/IVSearcher5GPU.hpp>
 #include <Core/Gen5/States/SearcherState5.hpp>
 #include <Core/Gen5/States/WildState5.hpp>
 
 using WildSearcher5 = IVSearcher5<WildGenerator5, WildState5>;
 using WildSearcher5Fast = IVSearcher5Fast<WildGenerator5, WildState5>;
 using WildSearcher5CacheFast = IVSearcher5CacheFast<WildGenerator5, WildState5>;
+using WildSearcher5GPU = IVSearcher5GPU<WildGenerator5, WildState5>;
 
 #endif // WILDSEARCHER5_HPP
