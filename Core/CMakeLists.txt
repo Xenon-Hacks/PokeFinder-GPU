@@ -207,6 +207,7 @@ add_library(PokeFinderCore STATIC
     Gen5/Searchers/IVSearcher5.hpp
     Gen5/Searchers/IVSearcher5GPU.cpp
     Gen5/Searchers/IVSearcher5GPU.hpp
+    Gen5/Searchers/MultiProfileSearcher5.hpp
     Gen5/Searchers/PhenomenonSearcher.hpp
     Gen5/Searchers/ProfileSearcher5.cpp
     Gen5/Searchers/ProfileSearcher5.hpp

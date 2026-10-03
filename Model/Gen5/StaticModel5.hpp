@@ -158,6 +158,14 @@ public slots:
 
     void setShowPassPower(bool flag);
 
+    /**
+     * @brief Sets the names of the profiles a search covered. With more than one a Profile column shows which one each result
+     * belongs to
+     *
+     * @param names Profile names, indexed by \ref SearcherState5::getProfile()
+     */
+    void setProfileNames(const QStringList &names);
+
 private:
     QStringList header = { tr("Seed"),
                            tr("Lead"),
@@ -182,6 +190,7 @@ private:
                            tr("Timer0"),
                            tr("Buttons") };
     bool showStats;
+    QStringList profileNames;
     bool showPassPower;
 };
 #endif // STATICMODEL5_HPP

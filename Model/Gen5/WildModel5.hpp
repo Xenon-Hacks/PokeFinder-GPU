@@ -205,6 +205,14 @@ public slots:
 
     void setShowPassPower(bool flag);
 
+    /**
+     * @brief Sets the names of the profiles a search covered. With more than one a Profile column shows which one each result
+     * belongs to
+     *
+     * @param names Profile names, indexed by \ref SearcherState5::getProfile()
+     */
+    void setProfileNames(const QStringList &names);
+
 private:
     QStringList header = { tr("Seed"),          tr("Pass Power"), tr("Advances"), tr("Trigger"),      tr("Steps"),
                            tr("Phenomenon"),    tr("IV Advances"), tr("Item"),    tr("Slot"),         tr("Level"),
@@ -215,6 +223,7 @@ private:
     bool showStats;
     bool showMovingTrigger;
     bool showPhenomenon;
+    QStringList profileNames;
     bool showPassPower;
 };
 

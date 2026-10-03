@@ -49,6 +49,11 @@ bool ProfileDisplay5::hasProfiles() const
     return !profiles.empty();
 }
 
+const std::vector<Profile5> &ProfileDisplay5::getProfiles() const
+{
+    return profiles;
+}
+
 void ProfileDisplay5::setProfile(const Profile5 &profile)
 {
     for (int i = 0; i < profiles.size(); i++)
