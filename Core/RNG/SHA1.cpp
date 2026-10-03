@@ -363,6 +363,13 @@ void SHA1::setTime(u32 time, DSType dsType)
     data[9] = val;
 }
 
+std::array<u32, 16> SHA1::getMessage() const
+{
+    std::array<u32, 16> message;
+    std::copy(data, data + 16, message.begin());
+    return message;
+}
+
 SHA1SSE::SHA1SSE(const Profile5 &profile) :
     SHA1SSE(profile.getVersion(), profile.getLanguage(), profile.getDSType(), profile.getMac(), profile.getVFrame(), profile.getGxStat())
 {
