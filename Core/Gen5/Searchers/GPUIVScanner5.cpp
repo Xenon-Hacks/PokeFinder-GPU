@@ -268,7 +268,7 @@ GPUIVScanner5::GPUIVScanner5(const Profile5 &profile, const std::vector<u32> &ke
 {
     std::ranges::sort(this->entries, [](const auto &left, const auto &right) {
         return static_cast<u32>(left.first) != static_cast<u32>(right.first) ? static_cast<u32>(left.first) < static_cast<u32>(right.first)
-                                                                              : left.first < right.first;
+                                                                             : left.first < right.first;
     });
 
     init(profile, keypresses, "-D USE_CACHE");
@@ -336,9 +336,7 @@ void GPUIVScanner5::init(const Profile5 &profile, const std::vector<u32> &keypre
     cl_device_id id = OpenCL::device();
     cl_int err;
 
-    auto fail = [this](const std::string &message, cl_int code) {
-        error = message + " (OpenCL error " + std::to_string(code) + ")";
-    };
+    auto fail = [this](const std::string &message, cl_int code) { error = message + " (OpenCL error " + std::to_string(code) + ")"; };
 
     dev->context = cl->clCreateContext(nullptr, 1, &id, nullptr, nullptr, &err);
     if (err != CL_SUCCESS)

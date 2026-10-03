@@ -58,8 +58,8 @@ public:
      * @param generator State generator
      * @param profile Profile information
      */
-    IVSearcher5GPU(u32 initialAdvances, u32 maxAdvances, const fph::MetaFphMap<u64, std::array<u8, 6>> &ivCache,
-                   const Generator &generator, const Profile5 &profile);
+    IVSearcher5GPU(u32 initialAdvances, u32 maxAdvances, const fph::MetaFphMap<u64, std::array<u8, 6>> &ivCache, const Generator &generator,
+                   const Profile5 &profile);
 
     /**
      * @brief Checks whether the GPU can run a search for \p generator over the IV advance range
@@ -89,11 +89,32 @@ public:
      */
     bool isReady() const;
 
+    /**
+     * @brief Starts the search
+     *
+     * @param threads Numbers of threads to search with
+     * @param start Start date
+     * @param end End date
+     */
+    void startSearch(int threads, const Date &start, const Date &end) override;
+
 private:
     std::unique_ptr<GPUIVScanner5> scanner;
     std::mutex scannerMutex;
     u32 initialAdvances;
     u32 maxAdvances;
+    int threads = 1;
+
+    /**
+     * @brief Runs the generator on the candidates in [\p begin, \p end) and stores the results
+     *
+     * @param candidates Candidates sorted by index, \p begin and \p end must fall on index boundaries
+     * @param begin First candidate
+     * @param end One past the last candidate
+     * @param day Date the candidates were scanned for
+     * @param timer0 Timer0 the candidates were scanned for
+     */
+    void finish(const std::vector<GPUIVScanner5::Candidate> &candidates, size_t begin, size_t end, const Date &day, u16 timer0);
 
     /**
      * @brief Searches between the \p start and \p end dates

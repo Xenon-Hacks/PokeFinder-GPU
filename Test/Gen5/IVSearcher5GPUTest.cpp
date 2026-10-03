@@ -29,9 +29,9 @@
 #include <Core/Gen5/Profile5.hpp>
 #include <Core/Gen5/Searchers/StaticSearcher5.hpp>
 #include <Core/Gen5/Searchers/WildSearcher5.hpp>
-#include <Core/Gen5/StaticTemplate5.hpp>
 #include <Core/Gen5/States/State5.hpp>
 #include <Core/Gen5/States/WildState5.hpp>
+#include <Core/Gen5/StaticTemplate5.hpp>
 #include <Core/Util/DateTime.hpp>
 #include <Core/Util/OpenCL.hpp>
 #include <QTest>
@@ -45,8 +45,8 @@ using IVs = std::array<u8, 6>;
 static Profile5 getProfile(Game version)
 {
     // Only searching without keypresses keeps the search short
-    return Profile5("-", version, 12345, 54321, "", "", 0x0009bf123456, { true, false, false, false, false, false, false, false, false }, 0x60,
-                    6, 8, false, 0xc79, 0xc7a, false, false, DSType::DS, Language::English);
+    return Profile5("-", version, 12345, 54321, "", "", 0x0009bf123456, { true, false, false, false, false, false, false, false, false },
+                    0x60, 6, 8, false, 0xc79, 0xc7a, false, false, DSType::DS, Language::English);
 }
 
 template <class Searcher>
@@ -65,9 +65,11 @@ static auto runSearch(Searcher &searcher)
     for (const auto &result : results)
     {
         const auto &state = result.getState();
-        keys.emplace_back(result.getDateTime().getDate().getJD(), result.getDateTime().getTime().hour() * 3600u + result.getDateTime().getTime().minute() * 60u + result.getDateTime().getTime().second(), result.getInitialSeed(),
-                          toInt(result.getButtons()), result.getTimer0(), state.getAdvances(), state.getIVAdvances(), state.getPID(),
-                          state.getLeadMask(), state.getIVs());
+        keys.emplace_back(result.getDateTime().getDate().getJD(),
+                          result.getDateTime().getTime().hour() * 3600u + result.getDateTime().getTime().minute() * 60u
+                              + result.getDateTime().getTime().second(),
+                          result.getInitialSeed(), toInt(result.getButtons()), result.getTimer0(), state.getAdvances(),
+                          state.getIVAdvances(), state.getPID(), state.getLeadMask(), state.getIVs());
     }
     std::ranges::sort(keys);
     return keys;
@@ -115,7 +117,8 @@ void IVSearcher5GPUTest::searchWild()
     StackVector<bool, 13> encounterSlots;
     encounterSlots.fill(true);
 
-    WildStateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers, encounterSlots);
+    WildStateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers,
+                           encounterSlots);
     WildGenerator5 generator(0, 100, 0, Method::Method5, { Lead::None, Lead::Synchronize }, { 0 }, false, false, areas[0], profile, filter,
                              true);
 

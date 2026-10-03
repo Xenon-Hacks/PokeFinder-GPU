@@ -86,11 +86,11 @@ namespace OpenCL
                 && load(lib, a.clCreateProgramWithSource, "clCreateProgramWithSource") && load(lib, a.clBuildProgram, "clBuildProgram")
                 && load(lib, a.clGetProgramBuildInfo, "clGetProgramBuildInfo") && load(lib, a.clCreateKernel, "clCreateKernel")
                 && load(lib, a.clCreateBuffer, "clCreateBuffer") && load(lib, a.clSetKernelArg, "clSetKernelArg")
-                && load(lib, a.clEnqueueNDRangeKernel, "clEnqueueNDRangeKernel")
-                && load(lib, a.clEnqueueReadBuffer, "clEnqueueReadBuffer") && load(lib, a.clEnqueueWriteBuffer, "clEnqueueWriteBuffer")
-                && load(lib, a.clFinish, "clFinish") && load(lib, a.clReleaseMemObject, "clReleaseMemObject")
-                && load(lib, a.clReleaseKernel, "clReleaseKernel") && load(lib, a.clReleaseProgram, "clReleaseProgram")
-                && load(lib, a.clReleaseCommandQueue, "clReleaseCommandQueue") && load(lib, a.clReleaseContext, "clReleaseContext");
+                && load(lib, a.clEnqueueNDRangeKernel, "clEnqueueNDRangeKernel") && load(lib, a.clEnqueueReadBuffer, "clEnqueueReadBuffer")
+                && load(lib, a.clEnqueueWriteBuffer, "clEnqueueWriteBuffer") && load(lib, a.clFinish, "clFinish")
+                && load(lib, a.clReleaseMemObject, "clReleaseMemObject") && load(lib, a.clReleaseKernel, "clReleaseKernel")
+                && load(lib, a.clReleaseProgram, "clReleaseProgram") && load(lib, a.clReleaseCommandQueue, "clReleaseCommandQueue")
+                && load(lib, a.clReleaseContext, "clReleaseContext");
             if (!ok)
             {
                 return runtime;
