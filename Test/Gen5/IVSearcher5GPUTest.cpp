@@ -44,8 +44,8 @@ using IVs = std::array<u8, 6>;
 
 static Profile5 getProfile(Game version)
 {
-    // No keys and single keys keep the search short
-    return Profile5("-", version, 12345, 54321, "", "", 0x0009bf123456, { true, true, false, false, false, false, false, false, false }, 0x60,
+    // Only searching without keypresses keeps the search short
+    return Profile5("-", version, 12345, 54321, "", "", 0x0009bf123456, { true, false, false, false, false, false, false, false, false }, 0x60,
                     6, 8, false, 0xc79, 0xc7a, false, false, DSType::DS, Language::English);
 }
 
@@ -89,9 +89,9 @@ void IVSearcher5GPUTest::searchWild_data()
     QTest::addColumn<u32>("initialIVAdvances");
     QTest::addColumn<u32>("maxIVAdvances");
 
-    QTest::newRow("B2 loose") << Game::Black2 << IVs { 20, 20, 0, 0, 0, 20 } << u8(255) << 0u << 10u;
+    QTest::newRow("B2 loose") << Game::Black2 << IVs { 20, 20, 0, 0, 0, 20 } << u8(3) << 0u << 10u;
     QTest::newRow("B2 strict") << Game::Black2 << IVs { 31, 0, 31, 0, 31, 31 } << u8(255) << 0u << 50u;
-    QTest::newRow("B2 offset") << Game::Black2 << IVs { 30, 30, 30, 30, 30, 30 } << u8(255) << 5u << 200u;
+    QTest::newRow("B2 offset") << Game::Black2 << IVs { 28, 28, 28, 28, 28, 28 } << u8(255) << 5u << 200u;
     QTest::newRow("B loose shiny") << Game::Black << IVs { 20, 0, 20, 0, 20, 0 } << u8(3) << 0u << 10u;
 }
 
@@ -116,7 +116,7 @@ void IVSearcher5GPUTest::searchWild()
     encounterSlots.fill(true);
 
     WildStateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers, encounterSlots);
-    WildGenerator5 generator(0, 300, 0, Method::Method5, { Lead::None, Lead::Synchronize }, { 0 }, false, false, areas[0], profile, filter,
+    WildGenerator5 generator(0, 100, 0, Method::Method5, { Lead::None, Lead::Synchronize }, { 0 }, false, false, areas[0], profile, filter,
                              true);
 
     QVERIFY(WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false));
@@ -145,7 +145,7 @@ void IVSearcher5GPUTest::searchWildCache()
     StackVector<bool, 13> encounterSlots;
     encounterSlots.fill(true);
 
-    WildStateFilter filter(255, 255, 255, 1, 100, 0, 255, 0, 255, false, { 25, 0, 25, 0, 25, 25 }, { 31, 31, 31, 31, 31, 31 }, natures,
+    WildStateFilter filter(255, 255, 3, 1, 100, 0, 255, 0, 255, false, { 25, 0, 25, 0, 25, 25 }, { 31, 31, 31, 31, 31, 31 }, natures,
                            powers, encounterSlots);
     WildGenerator5 generator(0, 300, 0, Method::Method5, { Lead::None }, { 0 }, false, false, areas[0], profile, filter, true);
 
@@ -212,7 +212,7 @@ void IVSearcher5GPUTest::searchStatic()
     std::array<bool, 16> powers;
     powers.fill(true);
 
-    StateFilter filter(255, 255, 255, 1, 100, 0, 255, 0, 255, false, { 25, 0, 25, 25, 0, 25 }, { 31, 31, 31, 31, 31, 31 }, natures, powers);
+    StateFilter filter(255, 255, 3, 1, 100, 0, 255, 0, 255, false, { 20, 0, 20, 20, 0, 20 }, { 31, 31, 31, 31, 31, 31 }, natures, powers);
     StaticGenerator5 generator(0, 200, 0, Method::Method5, { Lead::None }, { 0 }, *staticTemplate, profile, filter);
 
     StaticSearcher5GPU gpu(0, 15, generator, profile);

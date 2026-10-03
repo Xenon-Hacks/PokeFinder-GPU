@@ -122,6 +122,11 @@ void IVSearcher5GPU<Generator, State>::search(const Date &start, const Date &end
 
                 for (size_t i = 0; i < candidates.size();)
                 {
+                    if (this->cancelled.load(std::memory_order_relaxed))
+                    {
+                        return;
+                    }
+
                     u32 index = candidates[i].index;
                     u64 seed = candidates[i].seed;
 
@@ -158,7 +163,6 @@ void IVSearcher5GPU<Generator, State>::search(const Date &start, const Date &end
                         auto button = this->keypresses[index / 86400].button;
 
                         std::lock_guard<std::mutex> lock(this->mutex);
-                        this->results.reserve(this->results.capacity() + states.size());
                         for (const auto &state : states)
                         {
                             this->results.emplace_back(dt, seed, button, timer0, state);
