@@ -273,8 +273,10 @@ void IVSearcher5GPUTest::searchRandomProfiles()
           profile.getTID(), profile.getSID(), static_cast<unsigned long long>(mac), timer0Min, timer0Max, profile.getVCount(),
           profile.getGxStat(), profile.getVFrame(), toInt(dsType), toInt(language));
 
+    // One nature and a few PID advances keep the result count small, PokeFinder's result storage is slow on huge lists
     std::array<bool, 25> natures;
-    natures.fill(true);
+    natures.fill(false);
+    natures[random(0, 24)] = true;
     std::array<bool, 16> powers;
     powers.fill(true);
 
@@ -299,7 +301,7 @@ void IVSearcher5GPUTest::searchRandomProfiles()
 
         WildStateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers,
                                encounterSlots);
-        WildGenerator5 generator(0, 100, 0, Method::Method5, { Lead::None }, { 0 }, false, false, areas[random(0, areas.size() - 1)],
+        WildGenerator5 generator(0, 5, 0, Method::Method5, { Lead::None }, { 0 }, false, false, areas[random(0, areas.size() - 1)],
                                  profile, filter, true);
 
         QVERIFY(WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false));
@@ -328,7 +330,7 @@ void IVSearcher5GPUTest::searchRandomProfiles()
         QVERIFY(!templates.empty());
 
         StateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers);
-        StaticGenerator5 generator(0, 100, 0, Method::Method5, { Lead::None }, { 0 }, *templates[random(0, templates.size() - 1)], profile,
+        StaticGenerator5 generator(0, 5, 0, Method::Method5, { Lead::None }, { 0 }, *templates[random(0, templates.size() - 1)], profile,
                                    filter);
 
         QVERIFY(StaticSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false));
