@@ -417,7 +417,8 @@ WildSearcherModel5::WildSearcherModel5(QObject *parent) :
 
 int WildSearcherModel5::columnCount(const QModelIndex &parent) const
 {
-    return static_cast<int>(getSearcherColumns(showPassPower, showMovingTrigger, showPhenomenon).size()) + 1;
+    return static_cast<int>(getSearcherColumns(showPassPower, showMovingTrigger, showPhenomenon).size()) + 1
+        + (profileNames.size() > 1 ? 1 : 0);
 }
 
 QVariant WildSearcherModel5::data(const QModelIndex &index, int role) const
@@ -429,6 +430,10 @@ QVariant WildSearcherModel5::data(const QModelIndex &index, int role) const
         if (index.column() == 1)
         {
             return LeadDisplay::getLeadName(state.getLeadMask(), false);
+        }
+        if (profileNames.size() > 1 && index.column() == columnCount() - 1)
+        {
+            return profileNames.value(display.getProfile());
         }
 
         auto columns = getSearcherColumns(showPassPower, showMovingTrigger, showPhenomenon);
@@ -568,6 +573,10 @@ QVariant WildSearcherModel5::headerData(int section, Qt::Orientation orientation
         {
             return tr("Lead");
         }
+        if (profileNames.size() > 1 && section == columnCount() - 1)
+        {
+            return tr("Profile");
+        }
 
         auto columns = getSearcherHeaderColumns(showPassPower, showMovingTrigger, showPhenomenon);
         return header[columns[section > 1 ? section - 1 : section]];
@@ -587,6 +596,16 @@ void WildSearcherModel5::setShowMovingTrigger(bool flag)
     {
         beginResetModel();
         showMovingTrigger = flag;
+        endResetModel();
+    }
+}
+
+void WildSearcherModel5::setProfileNames(const QStringList &names)
+{
+    if (profileNames != names)
+    {
+        beginResetModel();
+        profileNames = names;
         endResetModel();
     }
 }

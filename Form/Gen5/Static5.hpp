@@ -21,6 +21,8 @@
 #define STATIC5_HPP
 
 #include <QWidget>
+#include <string>
+#include <vector>
 
 class IVCache;
 class Profile5;
@@ -131,6 +133,15 @@ private slots:
      * @brief Searches static encounters from the provided IVs
      */
     void search();
+
+    /**
+     * @brief Shows GPU warnings or errors from a search in one message box
+     *
+     * @param title Message box title
+     * @param text Text for each message, with %1 for the message
+     * @param messages Messages to show, nothing is shown if empty
+     */
+    void showGPUMessages(const QString &title, const QString &text, const std::vector<std::string> &messages);
 
     /**
      * @brief Updates the locations listed. Also toggles what controls are displayed based on relevance to the current settings.

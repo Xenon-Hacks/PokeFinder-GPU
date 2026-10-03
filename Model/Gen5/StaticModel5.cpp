@@ -173,7 +173,7 @@ StaticSearcherModel5::StaticSearcherModel5(QObject *parent) : TableModel(parent)
 
 int StaticSearcherModel5::columnCount(const QModelIndex &parent) const
 {
-    return 21 + (showPassPower ? 1 : 0);
+    return 21 + (showPassPower ? 1 : 0) + (profileNames.size() > 1 ? 1 : 0);
 }
 
 QVariant StaticSearcherModel5::data(const QModelIndex &index, int role) const
@@ -186,6 +186,10 @@ QVariant StaticSearcherModel5::data(const QModelIndex &index, int role) const
         if (column == 1)
         {
             return LeadDisplay::getLeadName(state.getLeadMask(), false);
+        }
+        if (profileNames.size() > 1 && column == columnCount() - 1)
+        {
+            return profileNames.value(display.getProfile());
         }
 
         if (showPassPower)
@@ -262,6 +266,10 @@ QVariant StaticSearcherModel5::headerData(int section, Qt::Orientation orientati
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
+        if (profileNames.size() > 1 && section == columnCount() - 1)
+        {
+            return tr("Profile");
+        }
         if (!showPassPower && section >= 2)
         {
             section++;
@@ -276,6 +284,16 @@ void StaticSearcherModel5::setShowStats(bool flag)
     showStats = flag;
     int offset = showPassPower ? 1 : 0;
     emit dataChanged(index(0, 8 + offset), index(rowCount() - 1, 13 + offset), { Qt::DisplayRole });
+}
+
+void StaticSearcherModel5::setProfileNames(const QStringList &names)
+{
+    if (profileNames != names)
+    {
+        beginResetModel();
+        profileNames = names;
+        endResetModel();
+    }
 }
 
 void StaticSearcherModel5::setShowPassPower(bool flag)

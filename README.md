@@ -35,6 +35,7 @@ Gen 5
 - added multi pass power search, so user don’t have to search using at most 1 pass power / level at a time, but can now select any number of pass powers / levels of the same pass power to search with at once
 - fixed a bug where Grotto Power did not work correctly
 - added “N’s Pokémon released” checkbox to BW2 profiles with memory link, as releasing them impacts the generation of Wild encounters
+- added “Search all profiles for this game” to the Wild and Static searchers, so users with several saves or consoles (different TID/SID, MAC, Timer0 and so on) get every profile’s hits from one search, with a Profile column showing which one each result belongs to
 
 
 Most of these will eventually be brought into the main PokeFinder, though that will take some time and not all of these features may make it, so for the time being I will try to keep this fork updated with any new changes AdmiralFish makes to the main PokeFinder. I will keep a list of all that’s been brought over right below.

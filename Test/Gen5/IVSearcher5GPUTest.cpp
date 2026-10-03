@@ -27,6 +27,7 @@
 #include <Core/Gen5/EncounterArea5.hpp>
 #include <Core/Gen5/Encounters5.hpp>
 #include <Core/Gen5/Profile5.hpp>
+#include <Core/Gen5/Searchers/MultiProfileSearcher5.hpp>
 #include <Core/Gen5/Searchers/StaticSearcher5.hpp>
 #include <Core/Gen5/Searchers/WildSearcher5.hpp>
 #include <Core/Gen5/States/State5.hpp>
@@ -38,6 +39,7 @@
 #include <Test/Enum.hpp>
 #include <algorithm>
 #include <chrono>
+#include <random>
 #include <thread>
 
 using IVs = std::array<u8, 6>;
@@ -227,4 +229,204 @@ void IVSearcher5GPUTest::searchStatic()
     QVERIFY(!cpuResults.empty());
     QCOMPARE(gpuResults.size(), cpuResults.size());
     QVERIFY(gpuResults == cpuResults);
+}
+
+void IVSearcher5GPUTest::searchRandomProfiles_data()
+{
+    QTest::addColumn<u32>("seed");
+
+    for (u32 i = 0; i < 12; i++)
+    {
+        QTest::newRow(("profile " + std::to_string(i)).data()) << (0x9e3779b9u * (i + 1));
+    }
+}
+
+void IVSearcher5GPUTest::searchRandomProfiles()
+{
+    QFETCH(u32, seed);
+
+    std::mt19937 rng(seed);
+    auto random = [&rng](u32 min, u32 max) { return std::uniform_int_distribution<u32>(min, max)(rng); };
+
+    constexpr Game versions[] = { Game::Black, Game::White, Game::Black2, Game::White2 };
+    Game version = versions[random(0, 3)];
+    auto dsType = static_cast<DSType>(random(0, 2));
+    auto language = static_cast<Language>(random(0, 6));
+    u16 timer0Min = random(0x600, 0x1700);
+    u16 timer0Max = timer0Min + random(0, 3);
+
+    // Most profiles skip keypresses so the CPU side stays quick, one in four allows single presses on one Timer0 instead
+    std::array<bool, 9> keypresses = { true, false, false, false, false, false, false, false, false };
+    bool skipLR = random(0, 1);
+    if (random(0, 3) == 0)
+    {
+        keypresses = { false, true, false, false, false, false, false, false, false };
+        skipLR = true;
+        timer0Max = timer0Min;
+    }
+
+    u64 mac = (static_cast<u64>(random(0, 0xffff)) << 32) | random(0, 0xffffffff);
+    Profile5 profile("Random", version, random(0, 0xffff), random(0, 0xffff), "", "", mac, keypresses, random(0x50, 0xb0), random(5, 6),
+                     random(4, 9), skipLR, timer0Min, timer0Max, false, random(0, 1), dsType, language);
+    qInfo("%s TID %u SID %u MAC %012llx Timer0 %x-%x VCount %x GxStat %u VFrame %u DS %u Lang %u", version == Game::Black ? "B"
+              : version == Game::White ? "W" : version == Game::Black2 ? "B2" : "W2",
+          profile.getTID(), profile.getSID(), static_cast<unsigned long long>(mac), timer0Min, timer0Max, profile.getVCount(),
+          profile.getGxStat(), profile.getVFrame(), toInt(dsType), toInt(language));
+
+    std::array<bool, 25> natures;
+    natures.fill(true);
+    std::array<bool, 16> powers;
+    powers.fill(true);
+
+    // Three random stats need 25+, about 1 in 500 IV spreads pass
+    IVs min = { 0, 0, 0, 0, 0, 0 };
+    for (int i = 0; i < 3; i++)
+    {
+        min[random(0, 5)] = 25;
+    }
+    u8 shiny = random(0, 3) == 0 ? 3 : 255;
+    u32 initialIVAdvances = random(0, 5);
+    u32 maxIVAdvances = random(0, 15);
+
+    std::vector<std::tuple<u32, u32, u64, u16, u16, u32, u32, u32, u64, IVs>> cpuResults, gpuResults;
+    if (random(0, 1))
+    {
+        EncounterSettings5 settings = {};
+        auto areas = Encounters5::getEncounters(Encounter::Grass, settings, &profile);
+        QVERIFY(!areas.empty());
+        StackVector<bool, 13> encounterSlots;
+        encounterSlots.fill(true);
+
+        WildStateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers,
+                               encounterSlots);
+        WildGenerator5 generator(0, 100, 0, Method::Method5, { Lead::None }, { 0 }, false, false, areas[random(0, areas.size() - 1)],
+                                 profile, filter, true);
+
+        QVERIFY(WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false));
+        WildSearcher5GPU gpu(initialIVAdvances, maxIVAdvances, generator, profile);
+        QVERIFY2(gpu.isReady(), gpu.getError().data());
+        WildSearcher5 cpu(initialIVAdvances, maxIVAdvances, generator, profile);
+        gpuResults = runSearch(gpu);
+        QVERIFY2(gpu.getError().empty(), gpu.getError().data());
+        cpuResults = runSearch(cpu);
+    }
+    else
+    {
+        std::vector<const StaticTemplate5 *> templates;
+        for (int type = 0; type < 8; type++)
+        {
+            int size = 0;
+            const StaticTemplate5 *list = Encounters5::getStaticEncounters(type, &size);
+            for (int i = 0; i < size; i++)
+            {
+                if ((list[i].getVersion() & version) != Game::None && !list[i].getEgg())
+                {
+                    templates.emplace_back(&list[i]);
+                }
+            }
+        }
+        QVERIFY(!templates.empty());
+
+        StateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers);
+        StaticGenerator5 generator(0, 100, 0, Method::Method5, { Lead::None }, { 0 }, *templates[random(0, templates.size() - 1)], profile,
+                                   filter);
+
+        QVERIFY(StaticSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false));
+        StaticSearcher5GPU gpu(initialIVAdvances, maxIVAdvances, generator, profile);
+        QVERIFY2(gpu.isReady(), gpu.getError().data());
+        StaticSearcher5 cpu(initialIVAdvances, maxIVAdvances, generator, profile);
+        gpuResults = runSearch(gpu);
+        QVERIFY2(gpu.getError().empty(), gpu.getError().data());
+        cpuResults = runSearch(cpu);
+    }
+
+    qInfo("%zu results", cpuResults.size());
+    QCOMPARE(gpuResults.size(), cpuResults.size());
+    QVERIFY(gpuResults == cpuResults);
+}
+
+void IVSearcher5GPUTest::searchMultipleProfiles()
+{
+    // Two saves of the same game on different consoles: every TID/SID, MAC and Timer0 differs
+    std::vector<Profile5> profiles
+        = { Profile5("First", Game::Black2, 1993, 37709, "", "", 0x0009bf123456, { true, false, false, false, false, false, false, false, false },
+                     0x60, 6, 8, false, 0xc79, 0xc7a, false, false, DSType::DS, Language::English),
+            Profile5("Second", Game::Black2, 4242, 101, "", "", 0x0022aa6789ab, { true, false, false, false, false, false, false, false, false },
+                     0xad, 5, 5, false, 0x1680, 0x1680, false, true, DSType::DS3, Language::Japanese) };
+
+    std::array<bool, 25> natures;
+    natures.fill(true);
+    std::array<bool, 16> powers;
+    powers.fill(true);
+    StackVector<bool, 13> encounterSlots;
+    encounterSlots.fill(true);
+    WildStateFilter filter(255, 255, 255, 1, 100, 0, 255, 0, 255, false, { 25, 0, 25, 0, 25, 25 }, { 31, 31, 31, 31, 31, 31 }, natures,
+                           powers, encounterSlots);
+
+    EncounterSettings5 settings = {};
+    auto area = Encounters5::getEncounters(Encounter::Grass, settings, &profiles[0])[0];
+    auto makeGenerator = [&](const Profile5 &profile) {
+        return WildGenerator5(0, 100, 0, Method::Method5, { Lead::None }, { 0 }, false, false, area, profile, filter, true);
+    };
+
+    MultiProfileSearcher5<WildGenerator5, WildState5> multi(profiles, [&](const Profile5 &profile, size_t) {
+        MultiProfileSearcher5<WildGenerator5, WildState5>::Created created;
+        created.gpu = new WildSearcher5GPU(0, 10, makeGenerator(profile), profile);
+        if (!created.gpu->isReady())
+        {
+            created.searcher = new WildSearcher5(0, 10, makeGenerator(profile), profile);
+        }
+        return created;
+    });
+
+    Date date(2025, 7, 14);
+    QVERIFY(multi.startSearch(4, date, date));
+    QVERIFY(multi.getWarnings().empty());
+    std::vector<SearcherState5<WildState5>> results;
+    while (true)
+    {
+        bool searching = multi.isSearching();
+        auto found = multi.getResults();
+        results.insert(results.end(), found.begin(), found.end());
+        if (!searching)
+        {
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    QVERIFY(multi.getErrors().empty());
+    QCOMPARE(multi.getProgress(), 100);
+
+    for (u8 i = 0; i < profiles.size(); i++)
+    {
+        // Same seeds, PIDs and shininess as searching the profile on its own with the CPU
+        std::vector<std::tuple<u64, u32, u32, u8>> combined, alone;
+        for (const auto &result : results)
+        {
+            if (result.getProfile() == i)
+            {
+                combined.emplace_back(result.getInitialSeed(), result.getState().getAdvances(), result.getState().getPID(),
+                                      result.getState().getShiny());
+            }
+        }
+
+        WildSearcher5 cpu(0, 10, makeGenerator(profiles[i]), profiles[i]);
+        cpu.setMaxProgress(cpu.getMaxProgress(date, date));
+        cpu.startSearch(4, date, date);
+        while (cpu.isSearching())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        for (const auto &result : cpu.getResults())
+        {
+            alone.emplace_back(result.getInitialSeed(), result.getState().getAdvances(), result.getState().getPID(),
+                               result.getState().getShiny());
+        }
+
+        QVERIFY(!alone.empty());
+        std::ranges::sort(combined);
+        std::ranges::sort(alone);
+        QCOMPARE(combined.size(), alone.size());
+        QVERIFY(combined == alone);
+    }
 }

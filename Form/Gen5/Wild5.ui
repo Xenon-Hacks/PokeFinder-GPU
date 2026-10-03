@@ -411,6 +411,16 @@
            <widget class="DateEdit" name="dateEditSearcherEndDate"/>
           </item>
           <item row="8" column="0" colspan="2">
+           <widget class="QCheckBox" name="checkBoxSearcherAllProfiles">
+            <property name="toolTip">
+             <string>Search every profile for this game, each with its own TID/SID, MAC, Timer0 range and other settings</string>
+            </property>
+            <property name="text">
+             <string>Search all profiles for this game</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0" colspan="2">
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
              <widget class="QPushButton" name="pushButtonSearch">

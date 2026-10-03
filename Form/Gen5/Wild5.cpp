@@ -29,6 +29,7 @@
 #include <Core/Gen5/IVCache.hpp>
 #include <Core/Gen5/Profile5.hpp>
 #include <Core/Gen5/SHA1Cache.hpp>
+#include <Core/Gen5/Searchers/MultiProfileSearcher5.hpp>
 #include <Core/Gen5/Searchers/WildSearcher5.hpp>
 #include <Core/Parents/Filters/StateFilter.hpp>
 #include <Core/Parents/ProfileLoader.hpp>
@@ -51,6 +52,7 @@
 #include <QSizePolicy>
 #include <QTimer>
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 static bool supportsMovingTrigger(Encounter encounter, const Profile5 *profile)
@@ -736,70 +738,102 @@ void Wild5::search()
     searcherModel->setShowPassPower(showPassPower);
 
     auto filter = ui->filterSearcher->getFilter<WildStateFilter, true>();
-    WildGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, leads, passPowers, searchMovingTrigger, searchMovingTrigger,
-                             encounterSearcher[ui->comboBoxSearcherLocation->currentIndex()], *currentProfile, filter, true);
+    auto area = encounterSearcher[ui->comboBoxSearcherLocation->currentIndex()];
+
+    // Every profile of the same game shares the encounter tables and IV cache, only the TID/SID, MAC, Timer0 and other boot
+    // settings differ, so all of them run through the same search
+    std::vector<Profile5> profiles;
+    if (ui->checkBoxSearcherAllProfiles->isChecked())
+    {
+        for (const auto &profile : ui->profileDisplay->getProfiles())
+        {
+            if (profile.getVersion() == currentProfile->getVersion() && profiles.size() < 256)
+            {
+                profiles.emplace_back(profile);
+            }
+        }
+    }
+    if (profiles.empty())
+    {
+        profiles.emplace_back(*currentProfile);
+    }
+
+    QStringList profileNames;
+    for (const auto &profile : profiles)
+    {
+        profileNames.append(QString::fromStdString(profile.getName()));
+    }
+    searcherModel->setProfileNames(profileNames);
 
     QSettings settings;
     bool useGPU = settings.value("settings/gpu", true).toBool() && OpenCL::isAvailable();
 
-    SearcherBase5<WildGenerator5, WildState5> *searcher = nullptr;
-    WildSearcher5GPU *gpuSearcher = nullptr;
-    if (fastSearchEnabled())
+    // Caches are read up front, the profile selection can change while the search runs
+    bool fastSearch = fastSearchEnabled();
+    auto ivMap = std::make_shared<fph::MetaFphMap<u64, std::array<u8, 6>>>();
+    std::vector<std::shared_ptr<fph::MetaFphMap<u64, u64>>> shaMaps(profiles.size());
+    if (fastSearch)
     {
-        CacheType type = CacheType::Normal;
-        auto ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), type, filter);
-        if (shaCache && shaCache->isValid(*currentProfile))
+        *ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), CacheType::Normal, filter);
+        for (size_t i = 0; i < profiles.size(); i++)
         {
-            auto shaMap = shaCache->getCache(initialIVAdvances, maxIVAdvances, start, end, ivMap, CacheType::Normal, *currentProfile);
-            searcher = new WildSearcher5CacheFast(initialIVAdvances, maxIVAdvances, shaMap, ivMap, generator, *currentProfile);
+            if (shaCache && shaCache->isValid(profiles[i]))
+            {
+                shaMaps[i] = std::make_shared<fph::MetaFphMap<u64, u64>>(
+                    shaCache->getCache(initialIVAdvances, maxIVAdvances, start, end, *ivMap, CacheType::Normal, profiles[i]));
+            }
+        }
+    }
+
+    auto factory = [=](const Profile5 &profile, size_t index) {
+        WildGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, leads, passPowers, searchMovingTrigger,
+                                 searchMovingTrigger, area, profile, filter, true);
+
+        MultiProfileSearcher5<WildGenerator5, WildState5>::Created created;
+        if (fastSearch)
+        {
+            if (shaMaps[index])
+            {
+                created.searcher
+                    = new WildSearcher5CacheFast(initialIVAdvances, maxIVAdvances, *shaMaps[index], *ivMap, generator, profile);
+                return created;
+            }
+
+            if (useGPU && WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, true))
+            {
+                created.gpu = new WildSearcher5GPU(initialIVAdvances, maxIVAdvances, *ivMap, generator, profile);
+            }
+            if (!created.gpu || !created.gpu->isReady())
+            {
+                created.searcher = new WildSearcher5Fast(initialIVAdvances, maxIVAdvances, *ivMap, generator, profile);
+            }
         }
         else
         {
-            if (useGPU && WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, true))
+            if (useGPU && WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false))
             {
-                gpuSearcher = new WildSearcher5GPU(initialIVAdvances, maxIVAdvances, ivMap, generator, *currentProfile);
+                created.gpu = new WildSearcher5GPU(initialIVAdvances, maxIVAdvances, generator, profile);
             }
-            if (!gpuSearcher || !gpuSearcher->isReady())
+            if (!created.gpu || !created.gpu->isReady())
             {
-                searcher = new WildSearcher5Fast(initialIVAdvances, maxIVAdvances, ivMap, generator, *currentProfile);
+                created.searcher = new WildSearcher5(initialIVAdvances, maxIVAdvances, generator, profile);
             }
         }
-    }
-    else
-    {
-        if (useGPU && WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false))
-        {
-            gpuSearcher = new WildSearcher5GPU(initialIVAdvances, maxIVAdvances, generator, *currentProfile);
-        }
-        if (!gpuSearcher || !gpuSearcher->isReady())
-        {
-            searcher = new WildSearcher5(initialIVAdvances, maxIVAdvances, generator, *currentProfile);
-        }
-    }
+        return created;
+    };
 
-    if (gpuSearcher && !gpuSearcher->isReady())
-    {
-        QMessageBox msg(QMessageBox::Warning, tr("GPU search unavailable"),
-                        tr("Searching on the CPU instead: %1").arg(QString::fromStdString(gpuSearcher->getError())));
-        msg.exec();
-        delete gpuSearcher;
-        gpuSearcher = nullptr;
-    }
-    else if (gpuSearcher)
-    {
-        searcher = gpuSearcher;
-    }
-
-    searcher->setMaxProgress(searcher->getMaxProgress(start, end));
-
+    auto *searcher = new MultiProfileSearcher5<WildGenerator5, WildState5>(profiles, factory);
     int threads = settings.value("settings/threads").toInt();
+    searcher->startSearch(threads, start, end);
+    showGPUMessages(tr("GPU search unavailable"), tr("Searching on the CPU instead: %1"), searcher->getWarnings());
 
     auto *timer = new QTimer(this);
     connect(ui->pushButtonCancel, &QPushButton::clicked, timer, [this, searcher] {
         searcher->cancelSearch();
         ui->pushButtonCancel->setEnabled(false);
     });
-    connect(timer, &QTimer::timeout, this, [this, searcher, gpuSearcher, timer, showPassPower] {
+    connect(timer, &QTimer::timeout, this, [this, searcher, timer, showPassPower] {
+        bool searching = searcher->isSearching();
         searcherModel->addItems(searcher->getResults());
         if (showPassPower)
         {
@@ -807,30 +841,38 @@ void Wild5::search()
         }
         ui->progressBar->setValue(searcher->getProgress());
 
-        if (!searcher->isSearching())
+        if (!searching)
         {
             timer->stop();
-
-            searcherModel->addItems(searcher->getResults());
-            ui->progressBar->setValue(searcher->getProgress());
 
             ui->pushButtonSearch->setEnabled(true);
             ui->pushButtonCancel->setEnabled(false);
 
-            std::string gpuError = gpuSearcher ? gpuSearcher->getError() : std::string();
+            auto warnings = searcher->getWarnings();
+            auto errors = searcher->getErrors();
             delete searcher;
             timer->deleteLater();
 
-            if (!gpuError.empty())
-            {
-                QMessageBox msg(QMessageBox::Warning, tr("GPU search failed"), QString::fromStdString(gpuError));
-                msg.exec();
-            }
+            showGPUMessages(tr("GPU search unavailable"), tr("Searching on the CPU instead: %1"), warnings);
+            showGPUMessages(tr("GPU search failed"), QStringLiteral("%1"), errors);
         }
     });
 
-    searcher->startSearch(threads, start, end);
     timer->start(1000);
+}
+
+void Wild5::showGPUMessages(const QString &title, const QString &text, const std::vector<std::string> &messages)
+{
+    if (!messages.empty())
+    {
+        QStringList lines;
+        for (const auto &message : messages)
+        {
+            lines.append(text.arg(QString::fromStdString(message)));
+        }
+        QMessageBox msg(QMessageBox::Warning, title, lines.join('\n'));
+        msg.exec();
+    }
 }
 
 void Wild5::searcherEncounterIndexChanged(int index)
