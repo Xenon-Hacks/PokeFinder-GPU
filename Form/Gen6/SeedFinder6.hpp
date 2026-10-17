@@ -69,6 +69,8 @@ private:
     SeedModel6 *model;
     unsigned long long planClockSet = 0;
     unsigned long long planTimer = 0;
+    unsigned int recovered = 0;
+    bool hasRecovered = false;
 
     /**
      * @brief Reads the caught Pokemon panel
@@ -109,6 +111,16 @@ private slots:
      * @brief Measures the delay from the attempt in the selected result row
      */
     void calibrate();
+
+    /**
+     * @brief Recovers the save seed from boots found with the full search
+     */
+    void recover();
+
+    /**
+     * @brief Stores the recovered save seed in the current profile
+     */
+    void saveRecovered();
 
     /**
      * @brief Updates the current profile

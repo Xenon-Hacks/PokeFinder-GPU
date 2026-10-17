@@ -6,7 +6,7 @@
 <rect>
 <x>0</x>
 <y>0</y>
-<width>1200</width>
+<width>1500</width>
 <height>700</height>
 </rect>
 </property>
@@ -14,7 +14,7 @@
  <string>Seed Finder Gen 6</string>
 </property>
 <layout class="QGridLayout" name="gridLayout">
-<item row="0" column="0" colspan="3">
+<item row="0" column="0" colspan="4">
 <widget class="ProfileDisplay6" name="profileDisplay" native="true"/>
 </item>
 <item row="1" column="0">
@@ -478,7 +478,100 @@
 </layout>
 </widget>
 </item>
-<item row="2" column="0" colspan="3">
+<item row="1" column="3">
+<widget class="QGroupBox" name="groupBoxRecover">
+<property name="title">
+ <string>Recover Save Seed</string>
+</property>
+<layout class="QGridLayout" name="gridLayoutgroupBoxRecover">
+<item row="0" column="0" colspan="2">
+<widget class="QLabel" name="labelRecoverHelp">
+<property name="text">
+ <string>No save backup? Find the seed of a boot with the All 2^32 search and narrowing, then enter it and when its title screen appeared. A second boot is an optional check</string>
+</property>
+</widget>
+</item>
+<item row="1" column="0">
+<widget class="QLabel" name="labelSeedA">
+<property name="text">
+ <string>Seed A</string>
+</property>
+</widget>
+</item>
+<item row="1" column="1">
+<widget class="TextBox" name="textBoxRecoverSeedA"/>
+</item>
+<item row="2" column="0">
+<widget class="QLabel" name="labelTitleA">
+<property name="text">
+ <string>Title A</string>
+</property>
+</widget>
+</item>
+<item row="2" column="1">
+<widget class="QDateTimeEdit" name="dateTimeEditRecoverA"/>
+</item>
+<item row="3" column="0">
+<widget class="QLabel" name="labelSeedBCheck">
+<property name="text">
+ <string>Seed B (check)</string>
+</property>
+</widget>
+</item>
+<item row="3" column="1">
+<widget class="TextBox" name="textBoxRecoverSeedB"/>
+</item>
+<item row="4" column="0">
+<widget class="QLabel" name="labelTitleB">
+<property name="text">
+ <string>Title B</string>
+</property>
+</widget>
+</item>
+<item row="4" column="1">
+<widget class="QDateTimeEdit" name="dateTimeEditRecoverB"/>
+</item>
+<item row="5" column="0">
+<widget class="QLabel" name="labelToleranceS">
+<property name="text">
+ <string>Tolerance (s)</string>
+</property>
+</widget>
+</item>
+<item row="5" column="1">
+<widget class="QSpinBox" name="spinBoxRecoverTolerance">
+<property name="minimum">
+<number>1</number>
+</property>
+<property name="maximum">
+<number>60</number>
+</property>
+<property name="value">
+<number>2</number>
+</property>
+</widget>
+</item>
+<item row="6" column="0" colspan="2">
+<widget class="QPushButton" name="pushButtonRecover">
+<property name="text">
+ <string>Recover</string>
+</property>
+</widget>
+</item>
+<item row="7" column="0" colspan="2">
+<widget class="QLabel" name="labelRecover"/>
+</item>
+<item row="8" column="0" colspan="2">
+<widget class="QPushButton" name="pushButtonRecoverSave">
+<property name="text">
+ <string>Save To Profile</string>
+</property>
+</widget>
+</item>
+</layout>
+</widget>
+</item>
+<item row="2" column="0" colspan="4">
 <widget class="TableView" name="tableView"/>
 </item>
 </layout>

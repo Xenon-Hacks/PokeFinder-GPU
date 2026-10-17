@@ -493,3 +493,25 @@ void Gen6Test::timerPlan()
     // Past the latest 3DS clock setting (2099-12-31 23:59:59) there is nothing to aim for
     QVERIFY(!SeedWindow6::planTimer(0xAA56F2F4, profileX.getSaveSeed(), SeedWindow6::maxConsoleMs - 1000, 3000, 30000).valid);
 }
+
+void Gen6Test::recoverSaveSeed()
+{
+    // Two boots of the X save, title times noted to the second (up to 999 ms early)
+    u32 saveSeed = profileX.getSaveSeed();
+    u64 bootA = 0xDDE41DE5;
+    u64 bootB = 0xDDE41DE5 + 123456789;
+    std::vector<SeedWindow6::Boot> boots = { { bootA / 1000 * 1000, SeedWindow6::seedAt(saveSeed, bootA) },
+                                             { bootB / 1000 * 1000, SeedWindow6::seedAt(saveSeed, bootB) } };
+
+    auto recovery = SeedWindow6::recoverSaveSeed(boots, 2000);
+    QVERIFY(recovery.consistent);
+    QCOMPARE(static_cast<u32>(recovery.saveSeed - saveSeed), u32(bootA % 1000)); // Off by the noting error only
+
+    // The error is a clock shift: the estimate still maps both boots' title times to their seeds within that error
+    s64 errorB = static_cast<s32>(SeedWindow6::seedAt(recovery.saveSeed, bootB / 1000 * 1000) - boots[1].seed);
+    QVERIFY(errorB >= -1000 && errorB <= 1000);
+
+    // A wrong seed for boot B is caught
+    boots[1].seed ^= 0x00100000;
+    QVERIFY(!SeedWindow6::recoverSaveSeed(boots, 2000).consistent);
+}

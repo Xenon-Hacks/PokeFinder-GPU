@@ -22,9 +22,10 @@
 #include <Core/Enum/Game.hpp>
 #include <Core/Gen6/Profile6.hpp>
 #include <Core/Gen6/Searchers/SeedSearcher6.hpp>
+#include <Core/Gen6/SeedWindow6.hpp>
+#include <Core/Parents/ProfileLoader.hpp>
 #include <Core/Util/OpenCL.hpp>
 #include <Core/Util/Translator.hpp>
-#include <Core/Gen6/SeedWindow6.hpp>
 #include <Form/Gen6/SeedWindowUI6.hpp>
 #include <Model/Gen6/StateModel6.hpp>
 #include <QMessageBox>
@@ -107,6 +108,18 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->labelPlan->setWordWrap(true);
     ui->labelPlan->setTextInteractionFlags(Qt::TextSelectableByMouse);
     ui->pushButtonCalibrate->setEnabled(false);
+    ui->textBoxRecoverSeedA->setValues(InputType::Seed32Bit);
+    ui->textBoxRecoverSeedB->setValues(InputType::Seed32Bit);
+    for (auto *edit : { ui->dateTimeEditRecoverA, ui->dateTimeEditRecoverB })
+    {
+        edit->setDisplayFormat("yyyy-MM-dd hh:mm:ss");
+        edit->setDateTime(QDateTime::currentDateTime());
+    }
+    ui->labelRecoverHelp->setWordWrap(true);
+    ui->labelRecover->setWordWrap(true);
+    ui->labelRecover->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    ui->labelToleranceS->setToolTip(tr("How far off each noted title time may be"));
+    ui->pushButtonRecoverSave->setEnabled(false);
     ui->labelMinGap->setToolTip(tr("Fewest MT frames between the previous catch's trigger and this one"));
     ui->labelMaxGap->setToolTip(tr("Most MT frames between the previous catch's trigger and this one (60 per second)"));
     ui->labelNarrow->setWordWrap(true);
@@ -146,6 +159,8 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     connect(ui->pushButtonNarrow, &QPushButton::clicked, this, &SeedFinder6::narrow);
     connect(ui->pushButtonSeedTime, &QPushButton::clicked, this, &SeedFinder6::seedTime);
     connect(ui->pushButtonCalibrate, &QPushButton::clicked, this, &SeedFinder6::calibrate);
+    connect(ui->pushButtonRecover, &QPushButton::clicked, this, &SeedFinder6::recover);
+    connect(ui->pushButtonRecoverSave, &QPushButton::clicked, this, &SeedFinder6::saveRecovered);
     connect(ui->tableView, &QTableView::clicked, this, [this](const QModelIndex &index) {
         ui->textBoxTimeSeed->setText(QString::number(model->getItem(index.row()).seed, 16).toUpper());
     });
@@ -409,4 +424,71 @@ void SeedFinder6::calibrate()
                                .arg(delay)
                                .arg(old)
                                .arg(delay - old));
+}
+
+void SeedFinder6::recover()
+{
+    std::vector<SeedWindow6::Boot> boots;
+    if (!ui->textBoxRecoverSeedA->text().isEmpty())
+    {
+        boots.push_back({ SeedWindowUI6::consoleMs(ui->dateTimeEditRecoverA->dateTime()), ui->textBoxRecoverSeedA->getUInt() });
+    }
+    if (!ui->textBoxRecoverSeedB->text().isEmpty())
+    {
+        boots.push_back({ SeedWindowUI6::consoleMs(ui->dateTimeEditRecoverB->dateTime()), ui->textBoxRecoverSeedB->getUInt() });
+    }
+    if (boots.empty())
+    {
+        QMessageBox msg(QMessageBox::Warning, tr("No boots"), tr("Enter the seed of at least one boot and when its title screen appeared"));
+        msg.exec();
+        return;
+    }
+
+    u64 tolerance = static_cast<u64>(ui->spinBoxRecoverTolerance->value()) * 1000;
+    auto recovery = SeedWindow6::recoverSaveSeed(boots, tolerance);
+    recovered = recovery.saveSeed;
+    hasRecovered = recovery.consistent;
+    ui->pushButtonRecoverSave->setEnabled(hasRecovered);
+
+    QString seed = QString::number(recovered, 16).toUpper().rightJustified(8, '0');
+    if (!recovery.consistent)
+    {
+        ui->labelRecover->setText(tr("The boots disagree by %1 ms. One of the seeds is probably wrong; narrow it with another catch.")
+                                      .arg(recovery.worstMismatch));
+    }
+    else if (boots.size() > 1)
+    {
+        ui->labelRecover->setText(tr("Save seed: %1. Both boots agree within %2 ms. It may be off by your timing error, "
+                                     "which acts like a clock offset: Calibrate removes it.")
+                                      .arg(seed)
+                                      .arg(recovery.worstMismatch));
+    }
+    else
+    {
+        ui->labelRecover->setText(tr("Save seed: %1. It may be off by your timing error, which acts like a clock offset: "
+                                     "Calibrate removes it. A second boot checks that the seed is right.")
+                                      .arg(seed));
+    }
+}
+
+void SeedFinder6::saveRecovered()
+{
+    if (!hasRecovered)
+    {
+        return;
+    }
+
+    if (currentProfile->getName() == "-")
+    {
+        QMessageBox msg(QMessageBox::Warning, tr("No profile selected"), tr("Create or select a Gen 6 profile to store the save seed in"));
+        msg.exec();
+        return;
+    }
+
+    Profile6 updated(currentProfile->getName(), currentProfile->getVersion(), currentProfile->getTID(), currentProfile->getSID(),
+                     currentProfile->getShinyCharm(), recovered);
+    ProfileLoader6::updateProfile(updated, *currentProfile);
+    ui->profileDisplay->updateProfiles();
+    emit profilesChanged(6);
+    ui->labelRecover->setText(tr("Saved %1 to the profile").arg(QString::number(recovered, 16).toUpper().rightJustified(8, '0')));
 }

@@ -80,6 +80,52 @@ namespace SeedWindow6
     }
 
     /**
+     * @brief A boot whose seed was found without the save seed
+     */
+    struct Boot
+    {
+        u64 titleMs; ///< Console time the title screen appeared, as noted (ms since 2000)
+        u32 seed; ///< Seed found for that boot (full 2^32 search + narrowing)
+    };
+
+    /**
+     * @brief Save seed estimated from boots whose seeds were found without it
+     */
+    struct Recovery
+    {
+        u32 saveSeed; ///< seed - noted title time of the first boot
+        s64 worstMismatch; ///< Largest disagreement (ms) of the other boots with that estimate
+        bool consistent; ///< Whether every other boot agrees within the tolerance
+    };
+
+    /**
+     * @brief Estimates Misc[0x00] from boots whose seeds were found without it
+     *
+     * seed = save seed + T, so the save seed is seed - T. The noted title time is only good to about a second, so the estimate is
+     * off by that error. The error is a constant shift of the clock: clock searches still find the seed (with the console time
+     * shifted by the same amount) and Calibrate absorbs it into the delay, so the estimate works like the real value. More boots
+     * cannot remove the error (every boot gives the same seed - T relation), but they check that the found seeds are right:
+     * a wrong seed would put the other boots' implied title times far from the noted ones.
+     *
+     * @param boots Found boots, at least one
+     * @param tolerance How far the noted title times may be off, in ms
+     *
+     * @return Estimated save seed and how well the other boots agree
+     */
+    inline Recovery recoverSaveSeed(const std::vector<Boot> &boots, u64 tolerance)
+    {
+        Recovery recovery { boots[0].seed - static_cast<u32>(boots[0].titleMs), 0, true };
+        for (size_t i = 1; i < boots.size(); i++)
+        {
+            // Implied title time of this boot minus the noted one, as a signed 32-bit ms difference
+            s64 mismatch = static_cast<s32>(boots[i].seed - recovery.saveSeed - static_cast<u32>(boots[i].titleMs));
+            recovery.worstMismatch = std::max(recovery.worstMismatch, mismatch < 0 ? -mismatch : mismatch);
+        }
+        recovery.consistent = static_cast<u64>(recovery.worstMismatch) <= 2 * tolerance;
+        return recovery;
+    }
+
+    /**
      * @brief Timer plan for hitting one seed
      */
     struct TimerPlan
