@@ -50,6 +50,7 @@
 #include <Test/Gen5/ProfileSearcher5Test.hpp>
 #include <Test/Gen5/StaticGenerator5Test.hpp>
 #include <Test/Gen5/WildGenerator5Test.hpp>
+#include <Test/Gen6/Gen6Test.hpp>
 #include <Test/Gen8/EggGenerator8Test.hpp>
 #include <Test/Gen8/EventGenerator8Test.hpp>
 #include <Test/Gen8/IDGenerator8Test.hpp>
@@ -126,6 +127,9 @@ int main()
     status += runTest<ProfileSearcher5Test>(fails);
     status += runTest<StaticGenerator5Test>(fails);
     status += runTest<WildGenerator5Test>(fails);
+
+    // Gen 6
+    status += runTest<Gen6Test>(fails);
 
     // Gen 8
     status += runTest<IDGenerator8Test>(fails);

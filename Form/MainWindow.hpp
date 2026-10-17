@@ -39,6 +39,12 @@ class HiddenGrotto;
 class IDs5;
 class Static5;
 class Wild5;
+class Eggs6;
+class Event6;
+class IDs6;
+class SeedFinder6;
+class Static6;
+class Wild6;
 class Eggs8;
 class Event8;
 class IDs8;
@@ -74,6 +80,11 @@ signals:
      * @brief Emits that the profiles have been changed
      */
     void profilesChanged5();
+
+    /**
+     * @brief Emits that the Gen 6 profiles have been modified
+     */
+    void profilesChanged6();
 
     /**
      * @brief Emits that the profiles have been changed
@@ -119,6 +130,14 @@ private:
     IDs5 *ids5 = nullptr;
     Static5 *static5 = nullptr;
     Wild5 *wild5 = nullptr;
+
+    // Gen 6
+    Eggs6 *egg6 = nullptr;
+    Event6 *event6 = nullptr;
+    IDs6 *ids6 = nullptr;
+    SeedFinder6 *seedFinder6 = nullptr;
+    Static6 *static6 = nullptr;
+    Wild6 *wild6 = nullptr;
 
     // Gen 8
     Eggs8 *egg8 = nullptr;
@@ -311,6 +330,42 @@ private slots:
      * @brief Opens the Gen 5 SHA1 Cache Finder window
      */
     void openSHA1CacheFinder() const;
+
+    // Gen 6
+    /**
+     * @brief Opens the Gen 6 Egg window
+     */
+    void openEggs6();
+
+    /**
+     * @brief Opens the Gen 6 Wonder Card window
+     */
+    void openEvent6();
+
+    /**
+     * @brief Opens the Gen 6 IDs window
+     */
+    void openIDs6();
+
+    /**
+     * @brief Opens the Gen 6 Seed Finder (GPU) window
+     */
+    void openSeedFinder6();
+
+    /**
+     * @brief Opens the Gen 6 Static window
+     */
+    void openStatic6();
+
+    /**
+     * @brief Opens the Gen 6 Wild window
+     */
+    void openWild6();
+
+    /**
+     * @brief Opens the Gen 6 Profile Manager window
+     */
+    void openProfileManager6() const;
 
     // Gen 8
     /**

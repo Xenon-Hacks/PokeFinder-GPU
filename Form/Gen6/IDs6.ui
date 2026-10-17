@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+<class>IDs6</class>
+<widget class="QWidget" name="IDs6">
+<property name="geometry">
+<rect>
+<x>0</x>
+<y>0</y>
+<width>900</width>
+<height>700</height>
+</rect>
+</property>
+<property name="windowTitle">
+ <string>TID/SID Gen 6</string>
+</property>
+<layout class="QGridLayout" name="gridLayout">
+<item row="0" column="0">
+<widget class="QGroupBox" name="groupBoxRNGInfo">
+<property name="title">
+ <string>RNG Info</string>
+</property>
+<layout class="QGridLayout" name="gridLayoutgroupBoxRNGInfo">
+<item row="0" column="0" colspan="2">
+<widget class="QComboBox" name="comboBoxSource">
+<item>
+<property name="text">
+ <string>TinyMT state</string>
+</property>
+</item>
+<item>
+<property name="text">
+ <string>TinyMT seed</string>
+</property>
+</item>
+</widget>
+</item>
+<item row="1" column="0">
+<widget class="QLabel" name="labelStateSeed0">
+<property name="text">
+ <string>State/Seed 0</string>
+</property>
+</widget>
+</item>
+<item row="1" column="1">
+<widget class="TextBox" name="textBoxState0"/>
+</item>
+<item row="2" column="0">
+<widget class="QLabel" name="labelState1">
+<property name="text">
+ <string>State 1</string>
+</property>
+</widget>
+</item>
+<item row="2" column="1">
+<widget class="TextBox" name="textBoxState1"/>
+</item>
+<item row="3" column="0">
+<widget class="QLabel" name="labelState2">
+<property name="text">
+ <string>State 2</string>
+</property>
+</widget>
+</item>
+<item row="3" column="1">
+<widget class="TextBox" name="textBoxState2"/>
+</item>
+<item row="4" column="0">
+<widget class="QLabel" name="labelState3">
+<property name="text">
+ <string>State 3</string>
+</property>
+</widget>
+</item>
+<item row="4" column="1">
+<widget class="TextBox" name="textBoxState3"/>
+</item>
+<item row="5" column="0">
+<widget class="QLabel" name="labelInitialAdvances">
+<property name="text">
+ <string>Initial Advances</string>
+</property>
+</widget>
+</item>
+<item row="5" column="1">
+<widget class="TextBox" name="textBoxInitialAdvances">
+<property name="text">
+ <string>0</string>
+</property>
+</widget>
+</item>
+<item row="6" column="0">
+<widget class="QLabel" name="labelMaxAdvances">
+<property name="text">
+ <string>Max Advances</string>
+</property>
+</widget>
+</item>
+<item row="6" column="1">
+<widget class="TextBox" name="textBoxMaxAdvances">
+<property name="text">
+ <string>10000</string>
+</property>
+</widget>
+</item>
+<item row="7" column="0" colspan="2">
+<widget class="QPushButton" name="pushButtonGenerate">
+<property name="text">
+ <string>Generate</string>
+</property>
+</widget>
+</item>
+</layout>
+</widget>
+</item>
+<item row="0" column="1">
+<widget class="QGroupBox" name="groupBoxFilters">
+<property name="sizePolicy">
+<sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+<horstretch>1</horstretch>
+<verstretch>0</verstretch>
+</sizepolicy>
+</property>
+<property name="title">
+ <string>Filters</string>
+</property>
+<layout class="QVBoxLayout" name="layoutgroupBoxFilters">
+<item>
+<widget class="IDsFilter" name="idFilter" native="true"/>
+</item>
+</layout>
+</widget>
+</item>
+<item row="1" column="0" colspan="2">
+<widget class="TableView" name="tableView"/>
+</item>
+</layout>
+</widget>
+<customwidgets>
+<customwidget>
+<class>TextBox</class>
+<extends>QLineEdit</extends>
+<header>Form/Controls/TextBox.hpp</header>
+</customwidget>
+<customwidget>
+<class>TableView</class>
+<extends>QTableView</extends>
+<header>Form/Controls/TableView.hpp</header>
+</customwidget>
+<customwidget>
+<class>IDsFilter</class>
+<extends>QWidget</extends>
+<header>Form/Controls/IDsFilter.hpp</header>
+<container>1</container>
+</customwidget>
+</customwidgets>
+<resources/>
+<connections/>
+</ui>

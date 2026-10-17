@@ -82,6 +82,15 @@ set(PROJECT_UI
     Gen5/Tools/Phenomenon.ui
     Gen5/Tools/SHA1CacheFinder.ui
     Gen5/Wild5.ui
+    Gen6/Eggs6.ui
+    Gen6/Event6.ui
+    Gen6/IDs6.ui
+    Gen6/Profile/ProfileDisplay6.ui
+    Gen6/Profile/ProfileEditor6.ui
+    Gen6/Profile/ProfileManager6.ui
+    Gen6/SeedFinder6.ui
+    Gen6/Static6.ui
+    Gen6/Wild6.ui
     Gen8/Eggs8.ui
     Gen8/Event8.ui
     Gen8/IDs8.ui
@@ -216,6 +225,24 @@ set(PROJECT_SOURCES
     Gen5/Tools/SHA1CacheFinder.hpp
     Gen5/Wild5.cpp
     Gen5/Wild5.hpp
+    Gen6/Eggs6.cpp
+    Gen6/Eggs6.hpp
+    Gen6/Event6.cpp
+    Gen6/Event6.hpp
+    Gen6/IDs6.cpp
+    Gen6/IDs6.hpp
+    Gen6/Profile/ProfileDisplay6.cpp
+    Gen6/Profile/ProfileDisplay6.hpp
+    Gen6/Profile/ProfileEditor6.cpp
+    Gen6/Profile/ProfileEditor6.hpp
+    Gen6/Profile/ProfileManager6.cpp
+    Gen6/Profile/ProfileManager6.hpp
+    Gen6/SeedFinder6.cpp
+    Gen6/SeedFinder6.hpp
+    Gen6/Static6.cpp
+    Gen6/Static6.hpp
+    Gen6/Wild6.cpp
+    Gen6/Wild6.hpp
     Gen8/Eggs8.cpp
     Gen8/Eggs8.hpp
     Gen8/Event8.cpp

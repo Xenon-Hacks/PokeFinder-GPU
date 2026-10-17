@@ -117,7 +117,7 @@ bool EggSettings::isValid(bool hiddenAbility) const
         u8 ability2 = ui->comboBoxParentBAbility->currentIndex();
 
         bool hiddenAbilityCompatible = (parent1 == 0 && parent2 == 1 && ability2 == 2) || (parent1 == 1 && ability1 == 2 && parent2 == 0);
-        if ((game & Game::Gen8) != Game::None)
+        if ((game & (Game::Gen6 | Game::Gen8)) != Game::None)
         {
             hiddenAbilityCompatible |= (parent1 == 3 && ability2 == 2) || (ability1 == 2 && parent2 == 3);
         }
@@ -311,6 +311,23 @@ void EggSettings::setup(Game game)
         ui->comboBoxParentBAbility->addItem("H");
 
         max = 649;
+    }
+    else if ((game & Game::Gen6) != Game::None)
+    {
+        const QString powers[] = { tr("Power Weight"), tr("Power Bracer"), tr("Power Belt"),
+                                   tr("Power Lens"),   tr("Power Band"),   tr("Power Anklet") };
+        for (int i = 0; i < 6; i++)
+        {
+            ui->comboBoxParentAItem->addItem(powers[i], i + 2);
+            ui->comboBoxParentBItem->addItem(powers[i], i + 2);
+        }
+        ui->comboBoxParentAItem->addItem(tr("Destiny Knot"), 8);
+        ui->comboBoxParentBItem->addItem(tr("Destiny Knot"), 8);
+
+        ui->comboBoxParentAAbility->addItem("H");
+        ui->comboBoxParentBAbility->addItem("H");
+
+        max = 721;
     }
     else if ((game & Game::BDSP) != Game::None)
     {
