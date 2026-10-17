@@ -95,6 +95,18 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->textBoxMinGap->setValues(InputType::Advance32Bit);
     ui->textBoxMaxGap->setValues(InputType::Advance32Bit);
     ui->textBoxTimeSeed->setValues(InputType::Seed32Bit);
+    ui->textBoxTitleDelay->setValues(InputType::Advance32Bit);
+    ui->textBoxTargetFrame->setValues(InputType::Advance32Bit);
+    ui->dateTimeEditAround->setDisplayFormat("yyyy-MM-dd hh:mm");
+    ui->dateTimeEditAround->setDateTimeRange(QDateTime(QDate(2000, 1, 1), QTime(0, 0)), QDateTime(QDate(2099, 12, 31), QTime(23, 59)));
+    ui->dateTimeEditAround->setDateTime(QDateTime::currentDateTime());
+    ui->labelAround->setToolTip(tr("Earliest console time to aim for; the seed comes round once every 49 days 17:02:47.296"));
+    ui->labelDelayMs->setToolTip(tr("Your calibrated ms from the timed press to the title screen seeding"));
+    ui->labelLeadS->setToolTip(tr("Seconds you want between confirming the clock and the timed press"));
+    ui->labelTargetFrame->setToolTip(tr("Frame to trigger the target at after the title screen (60 per second)"));
+    ui->labelPlan->setWordWrap(true);
+    ui->labelPlan->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    ui->pushButtonCalibrate->setEnabled(false);
     ui->labelMinGap->setToolTip(tr("Fewest MT frames between the previous catch's trigger and this one"));
     ui->labelMaxGap->setToolTip(tr("Most MT frames between the previous catch's trigger and this one (60 per second)"));
     ui->labelNarrow->setWordWrap(true);
@@ -133,6 +145,7 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     connect(ui->pushButtonSearch, &QPushButton::clicked, this, &SeedFinder6::search);
     connect(ui->pushButtonNarrow, &QPushButton::clicked, this, &SeedFinder6::narrow);
     connect(ui->pushButtonSeedTime, &QPushButton::clicked, this, &SeedFinder6::seedTime);
+    connect(ui->pushButtonCalibrate, &QPushButton::clicked, this, &SeedFinder6::calibrate);
     connect(ui->tableView, &QTableView::clicked, this, [this](const QModelIndex &index) {
         ui->textBoxTimeSeed->setText(QString::number(model->getItem(index.row()).seed, 16).toUpper());
     });
@@ -335,19 +348,65 @@ void SeedFinder6::narrow()
 void SeedFinder6::seedTime()
 {
     u32 seed = ui->textBoxTimeSeed->getUInt();
-    u64 from = SeedWindowUI6::consoleMs(ui->dateTimeEditStart->dateTime());
-    auto times = SeedWindow6::timesFor(seed, currentProfile->getSaveSeed(), from, 5);
+    u64 around = SeedWindowUI6::consoleMs(ui->dateTimeEditAround->dateTime());
+    u64 delay = ui->textBoxTitleDelay->getUInt();
+    u64 lead = static_cast<u64>(ui->spinBoxLead->value()) * 1000;
+    u32 frame = ui->textBoxTargetFrame->getUInt();
 
-    QStringList lines;
-    for (u64 ms : times)
+    auto plan = SeedWindow6::planTimer(seed, currentProfile->getSaveSeed(), around, delay, lead);
+    if (!plan.valid)
     {
-        lines.append(SeedWindowUI6::consoleTime(ms).toString("yyyy-MM-dd hh:mm:ss.zzz"));
+        ui->labelPlan->setText(tr("The next time for this seed falls after 2099-12-31 23:59, the latest 3DS clock setting. "
+                                  "Pick an earlier Around date."));
+        ui->pushButtonCalibrate->setEnabled(false);
+        return;
     }
-    QMessageBox msg(QMessageBox::Information, tr("Console times"),
-                    tr("The title screen sets seed %1 with save seed %2 when the console clock reads:\n\n%3\n\nThe time repeats every "
-                       "49 days 17:02:47.296. It is exact to the millisecond, so aim a seed window around it.")
-                        .arg(QString::number(seed, 16).toUpper().rightJustified(8, '0'))
-                        .arg(QString::number(currentProfile->getSaveSeed(), 16).toUpper().rightJustified(8, '0'))
-                        .arg(lines.join('\n')));
-    msg.exec();
+    planClockSet = plan.clockSet;
+    planTimer = plan.timer;
+    ui->pushButtonCalibrate->setEnabled(true);
+
+    QString text = tr("1. Set the 3DS clock to %1 and start your timer the moment you confirm it.\n"
+                      "2. Press at %2 ms (%3 s). The title screen should seed %4 at %5.\n")
+                       .arg(SeedWindowUI6::consoleTime(plan.clockSet).toString("yyyy-MM-dd hh:mm"))
+                       .arg(plan.timer)
+                       .arg(static_cast<double>(plan.timer) / 1000.0, 0, 'f', 3)
+                       .arg(QString::number(seed, 16).toUpper().rightJustified(8, '0'))
+                       .arg(SeedWindowUI6::consoleTime(plan.target).toString("hh:mm:ss.zzz"));
+    if (frame != 0)
+    {
+        text += tr("3. Trigger the target at frame %1, %2 s after the title screen.\n")
+                    .arg(frame)
+                    .arg(static_cast<double>(frame) / 60.0, 0, 'f', 3);
+    }
+    text += tr("Afterwards, find the seed you got with a clock search, select its row and press Calibrate.");
+    ui->labelPlan->setText(text);
+}
+
+void SeedFinder6::calibrate()
+{
+    QModelIndex index = ui->tableView->currentIndex();
+    if (!index.isValid() || model->getItem(index.row()).ms == 0)
+    {
+        QMessageBox msg(QMessageBox::Warning, tr("No result selected"),
+                        tr("Run a save seed + console clock search for the attempt, then select the seed you got"));
+        msg.exec();
+        return;
+    }
+
+    u64 found = model->getItem(index.row()).ms;
+    s64 delay = SeedWindow6::measuredDelay(found, planClockSet, planTimer);
+    s64 old = ui->textBoxTitleDelay->getUInt();
+    if (delay < 0)
+    {
+        QMessageBox msg(QMessageBox::Warning, tr("Unexpected result"),
+                        tr("That seed was set %1 ms before the timed press, so it is not from this plan").arg(-delay));
+        msg.exec();
+        return;
+    }
+
+    ui->textBoxTitleDelay->setText(QString::number(delay));
+    ui->labelPlan->setText(tr("Measured delay %1 ms (was %2 ms, off by %3 ms). Press Plan Timer again for the next attempt.")
+                               .arg(delay)
+                               .arg(old)
+                               .arg(delay - old));
 }

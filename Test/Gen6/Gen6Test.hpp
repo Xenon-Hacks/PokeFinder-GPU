@@ -47,6 +47,7 @@ private slots:
     void seedWindow();
     void seedTimes();
     void narrowSameBoot();
+    void timerPlan();
 };
 
 #endif // GEN6TEST_HPP

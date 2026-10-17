@@ -67,6 +67,8 @@ private:
 
     const Profile6 *currentProfile;
     SeedModel6 *model;
+    unsigned long long planClockSet = 0;
+    unsigned long long planTimer = 0;
 
     /**
      * @brief Reads the caught Pokemon panel
@@ -99,9 +101,14 @@ private slots:
     void narrow();
 
     /**
-     * @brief Shows the console times whose title screen sets the seed
+     * @brief Plans the console clock and timer that hit the target seed
      */
     void seedTime();
+
+    /**
+     * @brief Measures the delay from the attempt in the selected result row
+     */
+    void calibrate();
 
     /**
      * @brief Updates the current profile

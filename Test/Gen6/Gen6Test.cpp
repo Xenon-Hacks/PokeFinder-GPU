@@ -476,3 +476,20 @@ void Gen6Test::narrowSameBoot()
     QCOMPARE(results[0].frame, 801u);
     QCOMPARE(results[0].ms, u64(0xDDE41DE5));
 }
+
+void Gen6Test::timerPlan()
+{
+    // Aim for 0xAA56F2F4 with a 3 s press-to-title delay and at least 30 s between the clock confirm and the press
+    auto plan = SeedWindow6::planTimer(0xAA56F2F4, profileX.getSaveSeed(), 0, 3000, 30000);
+    QCOMPARE(plan.target, u64(0xDDE41DE5));
+    QVERIFY(plan.valid);
+    QCOMPARE(plan.clockSet % 60000, u64(0));
+    QVERIFY(plan.timer >= 30000 && plan.timer < 90000);
+    QCOMPARE(SeedWindow6::seedAt(profileX.getSaveSeed(), plan.clockSet + plan.timer + 3000), 0xAA56F2F4u);
+
+    // An attempt that seeded 25 ms late measures a delay of 3025 ms
+    QCOMPARE(SeedWindow6::measuredDelay(plan.target + 25, plan.clockSet, plan.timer), s64(3025));
+
+    // Past the latest 3DS clock setting (2099-12-31 23:59:59) there is nothing to aim for
+    QVERIFY(!SeedWindow6::planTimer(0xAA56F2F4, profileX.getSaveSeed(), SeedWindow6::maxConsoleMs - 1000, 3000, 30000).valid);
+}

@@ -37,6 +37,7 @@
 namespace SeedWindow6
 {
     constexpr u64 period = 1ULL << 32; ///< ms between two console times that give the same seed
+    constexpr u64 maxConsoleMs = 36525ULL * 86400000ULL - 1; ///< 2099-12-31 23:59:59.999, the latest 3DS clock setting
 
     /**
      * @brief Seed the title screen sets at console time \p ms
@@ -76,6 +77,57 @@ namespace SeedWindow6
             times.emplace_back(time + i * period);
         }
         return times;
+    }
+
+    /**
+     * @brief Timer plan for hitting one seed
+     */
+    struct TimerPlan
+    {
+        u64 clockSet; ///< Console time to set (whole minute); start the timer when it is confirmed
+        u64 target; ///< Console time the title screen must seed at
+        u64 timer; ///< ms from the clock confirm to the timed press
+        bool valid; ///< false when the target falls after the latest 3DS clock setting
+    };
+
+    /**
+     * @brief Plans the clock and timer that make the title screen set \p seed
+     *
+     * The title screen seeds at press + \p delay, so the press has to come at target - delay. The 3DS clock can only be set to a
+     * whole minute and starts counting from second 0 when it is confirmed, so the clock is set to the last minute that still
+     * leaves at least \p lead ms before the press.
+     *
+     * @param seed Target initial MT seed
+     * @param saveSeed Save Misc[0x00]
+     * @param aroundMs Earliest console time to aim for, ms since 2000
+     * @param delay Calibrated ms from the timed press to the title screen seeding
+     * @param lead Minimum ms between the clock confirm and the press
+     *
+     * @return Timer plan
+     */
+    inline TimerPlan planTimer(u32 seed, u32 saveSeed, u64 aroundMs, u64 delay, u64 lead)
+    {
+        constexpr u64 minute = 60000;
+        TimerPlan plan;
+        plan.target = timesFor(seed, saveSeed, aroundMs + delay + lead, 1)[0];
+        plan.clockSet = (plan.target - delay - lead) / minute * minute;
+        plan.timer = plan.target - delay - plan.clockSet;
+        plan.valid = plan.target <= maxConsoleMs;
+        return plan;
+    }
+
+    /**
+     * @brief Delay measured from an attempt
+     *
+     * @param foundMs Console time of the seed the attempt actually got (from the Seed Finder)
+     * @param clockSet Console time the clock was confirmed at
+     * @param timer ms the press was timed at
+     *
+     * @return ms from the press to the title screen seeding
+     */
+    constexpr s64 measuredDelay(u64 foundMs, u64 clockSet, u64 timer)
+    {
+        return static_cast<s64>(foundMs) - static_cast<s64>(clockSet) - static_cast<s64>(timer);
     }
 
     /**
