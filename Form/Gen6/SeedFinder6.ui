@@ -6,7 +6,7 @@
 <rect>
 <x>0</x>
 <y>0</y>
-<width>900</width>
+<width>1200</width>
 <height>700</height>
 </rect>
 </property>
@@ -14,7 +14,7 @@
  <string>Seed Finder Gen 6</string>
 </property>
 <layout class="QGridLayout" name="gridLayout">
-<item row="0" column="0" colspan="2">
+<item row="0" column="0" colspan="3">
 <widget class="ProfileDisplay6" name="profileDisplay" native="true"/>
 </item>
 <item row="1" column="0">
@@ -332,7 +332,78 @@
 </layout>
 </widget>
 </item>
-<item row="2" column="0" colspan="2">
+<item row="1" column="2">
+<widget class="QGroupBox" name="groupBoxNarrow">
+<property name="title">
+ <string>Same Boot</string>
+</property>
+<layout class="QGridLayout" name="gridLayoutgroupBoxNarrow">
+<item row="0" column="0" colspan="2">
+<widget class="QLabel" name="labelNarrowHelp">
+<property name="text">
+ <string>Enter the next catch on the left, then narrow the results</string>
+</property>
+</widget>
+</item>
+<item row="1" column="0">
+<widget class="QLabel" name="labelMinGap">
+<property name="text">
+ <string>Min Gap</string>
+</property>
+</widget>
+</item>
+<item row="1" column="1">
+<widget class="TextBox" name="textBoxMinGap">
+<property name="text">
+ <string>0</string>
+</property>
+</widget>
+</item>
+<item row="2" column="0">
+<widget class="QLabel" name="labelMaxGap">
+<property name="text">
+ <string>Max Gap</string>
+</property>
+</widget>
+</item>
+<item row="2" column="1">
+<widget class="TextBox" name="textBoxMaxGap">
+<property name="text">
+ <string>3000</string>
+</property>
+</widget>
+</item>
+<item row="3" column="0" colspan="2">
+<widget class="QPushButton" name="pushButtonNarrow">
+<property name="text">
+ <string>Narrow With This Catch</string>
+</property>
+</widget>
+</item>
+<item row="4" column="0" colspan="2">
+<widget class="QLabel" name="labelNarrow"/>
+</item>
+<item row="5" column="0">
+<widget class="QLabel" name="labelSeed">
+<property name="text">
+ <string>Seed</string>
+</property>
+</widget>
+</item>
+<item row="5" column="1">
+<widget class="TextBox" name="textBoxTimeSeed"/>
+</item>
+<item row="6" column="0" colspan="2">
+<widget class="QPushButton" name="pushButtonSeedTime">
+<property name="text">
+ <string>Seed To Console Time</string>
+</property>
+</widget>
+</item>
+</layout>
+</widget>
+</item>
+<item row="2" column="0" colspan="3">
 <widget class="TableView" name="tableView"/>
 </item>
 </layout>

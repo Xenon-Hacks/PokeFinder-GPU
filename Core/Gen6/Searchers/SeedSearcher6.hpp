@@ -78,6 +78,23 @@ public:
     static bool matches(const SeedSearch6Settings &settings, const u32 *outputs, u32 size);
 
     /**
+     * @brief Keeps the candidates that also produce the next catch of the same boot
+     *
+     * The next catch is searched from frame + \p minGap to frame + \p maxGap of each candidate. Its settings' frame range is
+     * ignored. A wrong seed survives with odds of about (frames searched) / 2^30, so one more catch nearly always leaves only the
+     * real seed.
+     *
+     * @param settings Next catch (IVs, nature, skip, perfect IVs)
+     * @param candidates Seeds and frames that matched the earlier catches
+     * @param minGap Fewest MT frames between the previous trigger and this one
+     * @param maxGap Most MT frames between the previous trigger and this one
+     *
+     * @return Matching candidates with the frame of the new catch
+     */
+    static std::vector<SeedResult6> narrow(const SeedSearch6Settings &settings, const std::vector<SeedResult6> &candidates, u32 minGap,
+                                           u32 maxGap);
+
+    /**
      * @brief Returns the error that stopped the GPU path, empty if none
      *
      * @return Error message

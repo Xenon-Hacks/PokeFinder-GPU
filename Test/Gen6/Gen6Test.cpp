@@ -29,6 +29,7 @@
 #include <Core/Gen6/Profile6.hpp>
 #include <Core/Gen6/Save6.hpp>
 #include <Core/Gen6/Searchers/SeedSearcher6.hpp>
+#include <Core/Gen6/SeedWindow6.hpp>
 #include <Core/Gen6/StaticTemplate6.hpp>
 #include <Core/Gen6/States/EggState6.hpp>
 #include <Core/Gen6/States/State6.hpp>
@@ -414,4 +415,64 @@ void Gen6Test::saveParse()
     QVERIFY(save.shinyCharm);
     QCOMPARE(save.saveSeed, 0xC2A451A2u);
     QCOMPARE(save.eggSeed, 0xF4338068A5EC7C90ull);
+}
+
+void Gen6Test::seedWindow()
+{
+    // Zygarde IVs at frame 301 of seed 0xAA56F2F4 = X Misc[0x00] + 0xDDE41DE5 ms
+    std::array<bool, 25> natures;
+    natures.fill(true);
+    std::array<bool, 16> powers;
+    powers.fill(true);
+    StateFilter filter(255, 255, 255, 1, 100, 0, 255, 0, 255, false, { 31, 31, 26, 31, 27, 23 }, { 31, 31, 26, 31, 27, 23 }, natures,
+                       powers);
+
+    const StaticTemplate6 *zygarde = findStatic(718);
+    StaticGenerator6 generator(290, 20, zygarde->getDelay(), Lead::None, *zygarde, profileX, filter);
+    auto window = SeedWindow6::generate(generator, profileX.getSaveSeed(), 0xDDE41DE5 - 50, 0xDDE41DE5 + 50, 4);
+
+    QCOMPARE(window.seeds, u64(101));
+    QVERIFY(window.seedsWithHits >= 1);
+    auto it = std::ranges::find_if(window.states, [](const State6 &state) { return state.getSeed() == 0xAA56F2F4; });
+    QVERIFY(it != window.states.end());
+    QCOMPARE(it->getMs(), u64(0xDDE41DE5));
+    QCOMPARE(it->getAdvances(), 301u);
+    QVERIFY(std::ranges::is_sorted(window.states, {}, &State6::getMs));
+}
+
+void Gen6Test::seedTimes()
+{
+    auto times = SeedWindow6::timesFor(0xAA56F2F4, profileX.getSaveSeed(), 0, 2);
+    QCOMPARE(times[0], u64(0xDDE41DE5));
+    QCOMPARE(times[1], u64(0xDDE41DE5) + SeedWindow6::period);
+
+    // Starting after the first time skips to the next cycle
+    times = SeedWindow6::timesFor(0xAA56F2F4, profileX.getSaveSeed(), 0xDDE41DE6, 1);
+    QCOMPARE(times[0], u64(0xDDE41DE5) + SeedWindow6::period);
+    QCOMPARE(SeedWindow6::seedAt(profileX.getSaveSeed(), times[0]), 0xAA56F2F4u);
+}
+
+void Gen6Test::narrowSameBoot()
+{
+    // Second catch of the same boot: a grass Psyduck triggered 500 frames after the Zygarde
+    WildGenerator6 wild(801, 0, 0, Encounter6::Grass, Lead::None, 54, 20, 0, false, profileX, allFilter());
+    auto second = wild.generate(0xAA56F2F4);
+    QCOMPARE(second.size(), size_t(1));
+
+    SeedSearch6Settings settings;
+    settings.ivMin = second[0].getIVs();
+    settings.ivMax = settings.ivMin;
+    settings.minFrame = 0;
+    settings.maxFrame = 0;
+    settings.skip = 60 + 1 + 1;
+    settings.ivCount = 0;
+    settings.nature = second[0].getNature();
+    settings.natureOffset = 1;
+
+    std::vector<SeedResult6> candidates = { { 0xDDE41DE5, 0xAA56F2F4, 301 }, { 0, 0x12345678, 301 }, { 0, 0xAA56F2F5, 290 } };
+    auto results = SeedSearcher6::narrow(settings, candidates, 400, 600);
+    QCOMPARE(results.size(), size_t(1));
+    QCOMPARE(results[0].seed, 0xAA56F2F4u);
+    QCOMPARE(results[0].frame, 801u);
+    QCOMPARE(results[0].ms, u64(0xDDE41DE5));
 }

@@ -238,6 +238,7 @@ set(PROJECT_SOURCES
     Gen6/Profile/ProfileManager6.cpp
     Gen6/Profile/ProfileManager6.hpp
     Gen6/SeedFinder6.cpp
+    Gen6/SeedWindowUI6.hpp
     Gen6/SeedFinder6.hpp
     Gen6/Static6.cpp
     Gen6/Static6.hpp

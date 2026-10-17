@@ -40,8 +40,40 @@ public:
      */
     State6(u32 advances, const Gen6::Result6 &result, u8 level, u8 member, const PersonalInfo *info) :
         GeneratorState(advances, result.ec, result.pid, result.ivs, result.ability, result.gender, level, result.nature, result.shiny, info),
-        member(member)
+        ms(0), seed(0), member(member)
     {
+    }
+
+    /**
+     * @brief Returns the console clock of the seed for seed window results
+     *
+     * @return Console ms since 2000, 0 when the state was generated from a single seed
+     */
+    u64 getMs() const
+    {
+        return ms;
+    }
+
+    /**
+     * @brief Returns the initial MT seed for seed window results
+     *
+     * @return Initial MT seed
+     */
+    u32 getSeed() const
+    {
+        return seed;
+    }
+
+    /**
+     * @brief Sets the seed and console clock the state came from
+     *
+     * @param seed Initial MT seed
+     * @param ms Console ms since 2000
+     */
+    void setSeed(u32 seed, u64 ms)
+    {
+        this->seed = seed;
+        this->ms = ms;
     }
 
     /**
@@ -55,6 +87,8 @@ public:
     }
 
 private:
+    u64 ms;
+    u32 seed;
     u8 member;
 };
 

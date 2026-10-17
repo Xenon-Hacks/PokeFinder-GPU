@@ -23,6 +23,7 @@
 #include <QWidget>
 
 class Profile6;
+struct SeedSearch6Settings;
 class SeedModel6;
 
 namespace Ui
@@ -67,6 +68,16 @@ private:
     const Profile6 *currentProfile;
     SeedModel6 *model;
 
+    /**
+     * @brief Reads the caught Pokemon panel
+     *
+     * @param settings Settings to fill (IVs, nature, skip, perfect IVs)
+     *
+     * @return true Panel is valid
+     * @return false Panel is not valid
+     */
+    bool readCatch(SeedSearch6Settings &settings);
+
 private slots:
     /**
      * @brief Fills delay, PID rolls and IV count for the encounter preset
@@ -81,6 +92,16 @@ private slots:
      * @param index Mode index
      */
     void modeIndexChanged(int index);
+
+    /**
+     * @brief Keeps the results that also produce the catch in the panel
+     */
+    void narrow();
+
+    /**
+     * @brief Shows the console times whose title screen sets the seed
+     */
+    void seedTime();
 
     /**
      * @brief Updates the current profile

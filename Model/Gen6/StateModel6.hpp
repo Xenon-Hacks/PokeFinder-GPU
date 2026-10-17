@@ -33,6 +33,8 @@ class StateModel6 final : public TableModel<State6>
 {
     Q_OBJECT
 public:
+    static constexpr int seedColumn = 16; ///< First of the seed window columns (Seed, Console Time)
+
     StateModel6(QObject *parent);
 
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -51,7 +53,8 @@ public slots:
 
 private:
     QStringList header = { tr("Advances"), tr("Horde"), tr("EC"),  tr("PID"), tr("Shiny"),  tr("Nature"),        tr("Ability"), tr("HP"),
-                           tr("Atk"),      tr("Def"),   tr("SpA"), tr("SpD"), tr("Spe"),    tr("Hidden Power"), tr("Gender"),  tr("Characteristic") };
+                           tr("Atk"),      tr("Def"),   tr("SpA"), tr("SpD"), tr("Spe"),    tr("Hidden Power"), tr("Gender"),  tr("Characteristic"),
+                           tr("Seed"),     tr("Console Time") };
     bool showStats;
 };
 

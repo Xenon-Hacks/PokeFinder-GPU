@@ -41,13 +41,22 @@ static QString abilityText(u8 ability, u16 abilityIndex)
     return QString("H: %1").arg(QString::fromStdString(Translator::getAbility(abilityIndex)));
 }
 
+static QString consoleTime(u64 ms)
+{
+    if (ms == 0)
+    {
+        return QString("-");
+    }
+    return QDateTime(QDate(2000, 1, 1), QTime(0, 0), QTimeZone::UTC).addMSecs(static_cast<qint64>(ms)).toString("yyyy-MM-dd hh:mm:ss.zzz");
+}
+
 StateModel6::StateModel6(QObject *parent) : TableModel(parent), showStats(false)
 {
 }
 
 int StateModel6::columnCount(const QModelIndex &parent) const
 {
-    return 16;
+    return 18;
 }
 
 QVariant StateModel6::data(const QModelIndex &index, int role) const
@@ -85,6 +94,10 @@ QVariant StateModel6::data(const QModelIndex &index, int role) const
             return QString::fromStdString(Translator::getGender(state.getGender()));
         case 15:
             return QString::fromStdString(Translator::getCharacteristic(state.getCharacteristic(), CharacteristicGeneration::Gen6));
+        case 16:
+            return hex32(state.getSeed());
+        case 17:
+            return consoleTime(state.getMs());
         }
     }
 
@@ -243,13 +256,7 @@ QVariant SeedModel6::data(const QModelIndex &index, int role) const
         case 1:
             return result.frame;
         case 2:
-            if (result.ms == 0)
-            {
-                return QString("-");
-            }
-            return QDateTime(QDate(2000, 1, 1), QTime(0, 0), QTimeZone::UTC)
-                .addMSecs(static_cast<qint64>(result.ms))
-                .toString("yyyy-MM-dd hh:mm:ss.zzz");
+            return consoleTime(result.ms);
         }
     }
 

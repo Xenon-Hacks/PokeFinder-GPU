@@ -221,6 +221,34 @@ bool SeedSearcher6::matches(const SeedSearch6Settings &settings, const u32 *outp
     return true;
 }
 
+std::vector<SeedResult6> SeedSearcher6::narrow(const SeedSearch6Settings &settings, const std::vector<SeedResult6> &candidates,
+                                               u32 minGap, u32 maxGap)
+{
+    u32 gaps = maxGap - minGap + 1;
+    std::vector<u32> outputs(gaps + look);
+
+    std::vector<SeedResult6> results;
+    for (const auto &candidate : candidates)
+    {
+        MT mt(candidate.seed, candidate.frame + minGap + settings.skip);
+        for (u32 &output : outputs)
+        {
+            output = mt.next();
+        }
+
+        for (u32 gap = 0; gap < gaps; gap++)
+        {
+            if (matches(settings, &outputs[gap], look))
+            {
+                SeedResult6 result = candidate;
+                result.frame = candidate.frame + minGap + gap;
+                results.emplace_back(result);
+            }
+        }
+    }
+    return results;
+}
+
 std::string SeedSearcher6::getError() const
 {
     return error;

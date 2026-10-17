@@ -44,6 +44,9 @@ private slots:
     void saveParse();
     void seedSearcherCPU();
     void seedSearcherGPU();
+    void seedWindow();
+    void seedTimes();
+    void narrowSameBoot();
 };
 
 #endif // GEN6TEST_HPP

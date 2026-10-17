@@ -26,6 +26,7 @@
 #include <Core/Gen6/States/State6.hpp>
 #include <Core/Util/Translator.hpp>
 #include <Form/Controls/Controls.hpp>
+#include <Form/Gen6/SeedWindowUI6.hpp>
 #include <Model/Gen6/StateModel6.hpp>
 #include <QSettings>
 
@@ -40,6 +41,7 @@ Wild6::Wild6(QWidget *parent) : QWidget(parent), ui(new Ui::Wild6)
 
     model = new StateModel6(ui->tableView);
     ui->tableView->setModel(model);
+    SeedWindowUI6::setup(ui->checkBoxWindow, ui->dateTimeEditStart, ui->dateTimeEditEnd, ui->textBoxSeed, ui->labelOdds, ui->tableView);
 
     ui->textBoxSeed->setValues(InputType::Seed32Bit);
     ui->textBoxInitialAdvances->setValues(InputType::Advance32Bit);
@@ -131,6 +133,13 @@ void Wild6::generate()
     WildGenerator6 generator(initialAdvances, maxAdvances, delay, encounter, lead, ui->comboBoxPokemon->getCurrentUShort(),
                              ui->spinBoxLevel->value(), ui->spinBoxIVCount->value(), ui->checkBoxShinyLocked->isChecked(),
                              *currentProfile, filter);
+
+    if (ui->checkBoxWindow->isChecked())
+    {
+        SeedWindowUI6::run(generator, currentProfile->getSaveSeed(), maxAdvances, ui->dateTimeEditStart, ui->dateTimeEditEnd, ui->labelOdds,
+                           model);
+        return;
+    }
 
     auto states = generator.generate(seed);
     model->addItems(states);
