@@ -45,16 +45,17 @@ namespace
         u8 rolls;
         u8 ivCount;
         bool ability;
+        bool container;
     };
 
-    // Wild: EC = trigger + 60; gifts and legends skip the ability draw when it is fixed
+    // Encounters run the 60-output container before the EC; fossils and gifts do not. Fixed-ability legends skip the ability draw.
     constexpr Preset presets[] = {
-        { 0, 1, 0, true }, // Wild
-        { 0, 3, 0, true }, // Wild + Shiny Charm
-        { 0, 5, 2, true }, // Friend Safari
-        { 0, 7, 2, true }, // Friend Safari + Shiny Charm
-        { 80, 1, 0, true }, // Gift / fossil
-        { 0, 1, 3, false } // Legend
+        { 0, 1, 0, true, true }, // Wild
+        { 0, 3, 0, true, true }, // Wild + Shiny Charm
+        { 0, 5, 2, true, true }, // Friend Safari
+        { 0, 7, 2, true, true }, // Friend Safari + Shiny Charm
+        { 81, 1, 0, true, false }, // Gift / fossil (OR fossil: A press + 81; X/Y not timed)
+        { 0, 1, 3, false, true } // Legend
     };
 
     bool parseRange(const QString &text, u8 &min, u8 &max)
@@ -102,7 +103,8 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->dateTimeEditAround->setDateTimeRange(QDateTime(QDate(2000, 1, 1), QTime(0, 0)), QDateTime(QDate(2099, 12, 31), QTime(23, 59)));
     ui->dateTimeEditAround->setDateTime(QDateTime::currentDateTime());
     ui->labelAround->setToolTip(tr("Earliest console time to aim for; the seed comes round once every 49 days 17:02:47.296"));
-    ui->labelDelayMs->setToolTip(tr("Your calibrated ms from the timed press to the title screen seeding"));
+    ui->labelPressToSeedMs->setToolTip(tr("ms from the A press on the title screen to the seed being set: about 670 on Azahar, "
+                                          "calibrate on hardware"));
     ui->labelLeadS->setToolTip(tr("Seconds you want between confirming the clock and the timed press"));
     ui->labelTargetFrame->setToolTip(tr("Frame to trigger the target at after the title screen (60 per second)"));
     ui->labelPlan->setWordWrap(true);
@@ -131,8 +133,11 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->dateTimeEditStart->setDateTime(now.addSecs(-30));
     ui->dateTimeEditEnd->setDateTime(now.addSecs(30));
 
-    ui->comboBoxMode->setToolTip(tr("The game seeds MT with the save's Misc[0x00] plus the console clock in ms when the title screen loads"));
-    ui->labelMinFrame->setToolTip(tr("MT frame of the trigger (button press or step); the EC is frame + delay + 60"));
+    ui->comboBoxMode->setToolTip(tr("The game seeds MT with the save's Misc[0x00] plus the console clock in ms, read about 0.67 s after "
+                                     "the A press on the title screen (Azahar). Misc[0x00] changes on every in-game save."));
+    ui->labelMinFrame->setToolTip(tr("MT frame of the trigger (button press or step); the EC is frame + delay + 60, or + delay for gifts"));
+    ui->checkBoxContainer->setToolTip(tr("Encounters generate 6 dummy Pokemon (60 outputs) between the trigger and the EC; fossils and "
+                                         "gifts go straight to the EC"));
     ui->labelDelay->setToolTip(tr("MT frames from the press to the 60-frame skip (Mewtwo 3, Zygarde 2, Xerneas 161, Yveltal 210)"));
 
     ui->comboBoxNature->addItem(tr("Any"), 255);
@@ -201,6 +206,7 @@ void SeedFinder6::encounterIndexChanged(int index)
         ui->spinBoxRolls->setValue(preset.rolls);
         ui->spinBoxIVCount->setValue(preset.ivCount);
         ui->checkBoxAbility->setChecked(preset.ability);
+        ui->checkBoxContainer->setChecked(preset.container);
     }
 }
 
@@ -229,7 +235,7 @@ bool SeedFinder6::readCatch(SeedSearch6Settings &settings)
         }
     }
 
-    settings.skip = ui->textBoxDelay->getUInt() + 60 + 1 + ui->spinBoxRolls->value();
+    settings.skip = ui->textBoxDelay->getUInt() + (ui->checkBoxContainer->isChecked() ? 60 : 0) + 1 + ui->spinBoxRolls->value();
     settings.ivCount = ui->spinBoxIVCount->value();
     settings.nature = ui->comboBoxNature->getCurrentUChar();
     settings.natureOffset = ui->checkBoxAbility->isChecked() ? 1 : 0;
@@ -381,7 +387,7 @@ void SeedFinder6::seedTime()
     ui->pushButtonCalibrate->setEnabled(true);
 
     QString text = tr("1. Set the 3DS clock to %1 and start your timer the moment you confirm it.\n"
-                      "2. Press at %2 ms (%3 s). The title screen should seed %4 at %5.\n")
+                      "2. Press A on the title screen (PRESS START) at %2 ms (%3 s). The seed %4 is set at %5.\n")
                        .arg(SeedWindowUI6::consoleTime(plan.clockSet).toString("yyyy-MM-dd hh:mm"))
                        .arg(plan.timer)
                        .arg(static_cast<double>(plan.timer) / 1000.0, 0, 'f', 3)

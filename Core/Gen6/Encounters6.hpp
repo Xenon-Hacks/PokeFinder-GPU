@@ -29,7 +29,7 @@ namespace Encounters6
     /**
      * @brief Gets static encounters from the \p index category
      *
-     * @param index Category index (0 legends, 1 starters, 2 fossils, 3 stationary)
+     * @param index Category index (0 legends, 1 starters, 2 fossils, 3 gifts, 4 stationary)
      * @param size Number of templates
      *
      * @return Array of static encounters

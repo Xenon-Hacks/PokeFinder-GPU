@@ -188,14 +188,21 @@
 </property>
 </widget>
 </item>
-<item row="2" column="0">
+<item row="2" column="0" colspan="2">
+<widget class="QCheckBox" name="checkBoxContainer">
+<property name="text">
+ <string>60-output container before the EC (not for fossils and gifts)</string>
+</property>
+</widget>
+</item>
+<item row="3" column="0">
 <widget class="QLabel" name="labelPidRolls">
 <property name="text">
  <string>PID Rolls</string>
 </property>
 </widget>
 </item>
-<item row="2" column="1">
+<item row="3" column="1">
 <widget class="QSpinBox" name="spinBoxRolls">
 <property name="minimum">
 <number>1</number>
@@ -208,14 +215,14 @@
 </property>
 </widget>
 </item>
-<item row="3" column="0">
+<item row="4" column="0">
 <widget class="QLabel" name="labelIvCount">
 <property name="text">
  <string>IV Count</string>
 </property>
 </widget>
 </item>
-<item row="3" column="1">
+<item row="4" column="1">
 <widget class="QSpinBox" name="spinBoxIVCount">
 <property name="minimum">
 <number>0</number>
@@ -228,101 +235,101 @@
 </property>
 </widget>
 </item>
-<item row="4" column="0">
+<item row="5" column="0">
 <widget class="QLabel" name="labelHp">
 <property name="text">
  <string>HP</string>
 </property>
 </widget>
 </item>
-<item row="4" column="1">
+<item row="5" column="1">
 <widget class="QLineEdit" name="lineEditHP">
 <property name="text">
  <string>0-31</string>
 </property>
 </widget>
 </item>
-<item row="5" column="0">
+<item row="6" column="0">
 <widget class="QLabel" name="labelAtk">
 <property name="text">
  <string>Atk</string>
 </property>
 </widget>
 </item>
-<item row="5" column="1">
+<item row="6" column="1">
 <widget class="QLineEdit" name="lineEditAtk">
 <property name="text">
  <string>0-31</string>
 </property>
 </widget>
 </item>
-<item row="6" column="0">
+<item row="7" column="0">
 <widget class="QLabel" name="labelDef">
 <property name="text">
  <string>Def</string>
 </property>
 </widget>
 </item>
-<item row="6" column="1">
+<item row="7" column="1">
 <widget class="QLineEdit" name="lineEditDef">
 <property name="text">
  <string>0-31</string>
 </property>
 </widget>
 </item>
-<item row="7" column="0">
+<item row="8" column="0">
 <widget class="QLabel" name="labelSpa">
 <property name="text">
  <string>SpA</string>
 </property>
 </widget>
 </item>
-<item row="7" column="1">
+<item row="8" column="1">
 <widget class="QLineEdit" name="lineEditSpA">
 <property name="text">
  <string>0-31</string>
 </property>
 </widget>
 </item>
-<item row="8" column="0">
+<item row="9" column="0">
 <widget class="QLabel" name="labelSpd">
 <property name="text">
  <string>SpD</string>
 </property>
 </widget>
 </item>
-<item row="8" column="1">
+<item row="9" column="1">
 <widget class="QLineEdit" name="lineEditSpD">
 <property name="text">
  <string>0-31</string>
 </property>
 </widget>
 </item>
-<item row="9" column="0">
+<item row="10" column="0">
 <widget class="QLabel" name="labelSpe">
 <property name="text">
  <string>Spe</string>
 </property>
 </widget>
 </item>
-<item row="9" column="1">
+<item row="10" column="1">
 <widget class="QLineEdit" name="lineEditSpe">
 <property name="text">
  <string>0-31</string>
 </property>
 </widget>
 </item>
-<item row="10" column="0">
+<item row="11" column="0">
 <widget class="QLabel" name="labelNature">
 <property name="text">
  <string>Nature</string>
 </property>
 </widget>
 </item>
-<item row="10" column="1">
+<item row="11" column="1">
 <widget class="ComboBox" name="comboBoxNature"/>
 </item>
-<item row="11" column="0" colspan="2">
+<item row="12" column="0" colspan="2">
 <widget class="QCheckBox" name="checkBoxAbility">
 <property name="text">
  <string>Ability is drawn before the nature</string>
@@ -411,16 +418,16 @@
 <widget class="QDateTimeEdit" name="dateTimeEditAround"/>
 </item>
 <item row="8" column="0">
-<widget class="QLabel" name="labelDelayMs">
+<widget class="QLabel" name="labelPressToSeedMs">
 <property name="text">
- <string>Delay (ms)</string>
+ <string>Press to seed (ms)</string>
 </property>
 </widget>
 </item>
 <item row="8" column="1">
 <widget class="TextBox" name="textBoxTitleDelay">
 <property name="text">
- <string>0</string>
+ <string>670</string>
 </property>
 </widget>
 </item>

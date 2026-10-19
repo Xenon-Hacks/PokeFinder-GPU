@@ -20,7 +20,9 @@
 #ifndef WILD6_HPP
 #define WILD6_HPP
 
+#include <Core/Gen6/EncounterArea6.hpp>
 #include <QWidget>
+#include <vector>
 
 class Profile6;
 class StateModel6;
@@ -66,10 +68,16 @@ private:
 
     const Profile6 *currentProfile;
     StateModel6 *model;
+    std::vector<EncounterArea6> areas;
+
+    /**
+     * @brief Returns the selected area
+     */
+    const EncounterArea6 *currentArea() const;
 
 private slots:
     /**
-     * @brief Sets the default delay and IV count for the encounter type
+     * @brief Lists the locations that have the encounter type
      *
      * @param index Encounter index
      */
@@ -79,6 +87,20 @@ private slots:
      * @brief Generates wild encounters from a seed
      */
     void generate();
+
+    /**
+     * @brief Lists the targets of the location and sets its default delay
+     *
+     * @param index Location index
+     */
+    void locationIndexChanged(int index);
+
+    /**
+     * @brief Shows the level of the target
+     *
+     * @param index Pokemon index
+     */
+    void pokemonIndexChanged(int index);
 
     /**
      * @brief Updates the current profile

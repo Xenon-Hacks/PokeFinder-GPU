@@ -30,6 +30,7 @@ class Gen6Test : public QObject
 {
     Q_OBJECT
 private slots:
+    void initTestCase();
     void liveStatic_data();
     void liveStatic();
     void liveEvent();
@@ -38,6 +39,8 @@ private slots:
     void staticGenerator();
     void wildGenerator();
     void hordeGenerator();
+    void giftGenerator();
+    void encounterTables();
     void eggChain();
     void idGenerator();
     void wc6Parse();

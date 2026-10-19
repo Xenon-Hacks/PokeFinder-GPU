@@ -20,40 +20,49 @@
 #include "WildGenerator6.hpp"
 #include <Core/Enum/Lead.hpp>
 #include <Core/Enum/Method.hpp>
+#include <Core/Gen6/Pokemon6.hpp>
 #include <Core/Gen6/States/State6.hpp>
-#include <Core/Parents/PersonalLoader.hpp>
+#include <Core/Parents/PersonalInfo.hpp>
 #include <Core/RNG/MT.hpp>
 #include <Core/RNG/RNGList.hpp>
 
-WildGenerator6::WildGenerator6(u32 initialAdvances, u32 maxAdvances, u32 delay, Encounter6 encounter, Lead lead, u16 specie, u8 level,
-                               u8 ivCount, bool shinyLocked, const Profile6 &profile, const StateFilter &filter) :
+WildGenerator6::WildGenerator6(u32 initialAdvances, u32 maxAdvances, u32 delay, Encounter6 encounter, Lead lead,
+                               const std::vector<Slot> &targets, u8 haMember, u8 ivCount, bool shinyLocked, const Profile6 &profile,
+                               const StateFilter &filter) :
     Generator(initialAdvances, maxAdvances, delay, Method::None, profile, filter),
-    info(PersonalLoader::getPersonal(profile.getVersion(), specie)),
+    targets(targets),
     encounter(encounter),
     lead(lead),
+    haMember(haMember),
     ivCount(ivCount),
-    level(level),
     shinyLocked(shinyLocked)
 {
 }
 
 std::vector<State6> WildGenerator6::generate(u32 seed) const
 {
-    Gen6::Request6 request;
-    request.pidType = shinyLocked ? Gen6::PIDType::Locked : Gen6::PIDType::Random;
-    request.pidRolls = getPIDRolls(encounter, profile.getShinyCharm(), shinyLocked);
-    request.ivCount = ivCount;
-    request.ability = encounter == Encounter6::Horde ? Gen6::AbilityRandomHidden : Gen6::AbilityRandom;
-    if (lead <= Lead::SynchronizeEnd)
-    {
-        request.nature = toInt(lead);
-    }
-    else if ((lead == Lead::CuteCharmF || lead == Lead::CuteCharmM) && !info->getFixedGender())
-    {
-        request.gender = lead == Lead::CuteCharmF ? 0 : 1;
-    }
+    u8 members = isHorde(encounter) ? 5 : 1;
 
-    u8 members = encounter == Encounter6::Horde ? 5 : 1;
+    std::vector<Gen6::Request6> requests(members);
+    for (u8 member = 0; member < members; member++)
+    {
+        Gen6::Request6 &request = requests[member];
+        const PersonalInfo *info = targets[member].getInfo();
+
+        request.pidType = shinyLocked ? Gen6::PIDType::Locked : Gen6::PIDType::Random;
+        request.pidRolls = getPIDRolls(encounter, profile.getShinyCharm(), shinyLocked);
+        request.ivCount = ivCount;
+        // The hidden-ability horde member is fixed to the hidden ability and draws nothing for it (live X)
+        request.ability = (members == 5 && member + 1 == haMember) ? 2 : Gen6::AbilityRandom;
+        if (lead <= Lead::SynchronizeEnd)
+        {
+            request.nature = toInt(lead);
+        }
+        else if ((lead == Lead::CuteCharmF || lead == Lead::CuteCharmM) && !info->getFixedGender())
+        {
+            request.gender = lead == Lead::CuteCharmF ? 0 : 1;
+        }
+    }
 
     RNGList<u32, MT, 256> rngList(seed, initialAdvances + offset + 60);
 
@@ -62,9 +71,10 @@ std::vector<State6> WildGenerator6::generate(u32 seed) const
     {
         for (u8 member = 0; member < members; member++)
         {
-            auto result = Gen6::generate(rngList, request, info, profile.getTID(), profile.getSID());
+            const Slot &slot = targets[member];
+            auto result = Gen6::generate(rngList, requests[member], slot.getInfo(), profile.getTID(), profile.getSID());
 
-            State6 state(initialAdvances + cnt, result, level, encounter == Encounter6::Horde ? member + 1 : 0, info);
+            State6 state(initialAdvances + cnt, result, slot.getMaxLevel(), members == 5 ? member + 1 : 0, slot.getInfo());
             if (filter.compare(state))
             {
                 states.emplace_back(state);
@@ -73,19 +83,6 @@ std::vector<State6> WildGenerator6::generate(u32 seed) const
     }
 
     return states;
-}
-
-u32 WildGenerator6::getDefaultDelay(Encounter6 encounter)
-{
-    switch (encounter)
-    {
-    case Encounter6::RockSmash:
-        return 274; // Yes press -> Tiny decision and 60 skip, live X 1.0
-    case Encounter6::Horde:
-        return 200; // Honey press -> 60 skip, live on Azahar (3DSRNGTool uses 174)
-    default:
-        return 0;
-    }
 }
 
 u8 WildGenerator6::getPIDRolls(Encounter6 encounter, bool shinyCharm, bool shinyLocked)

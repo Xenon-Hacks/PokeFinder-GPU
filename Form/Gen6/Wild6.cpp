@@ -49,18 +49,19 @@ Wild6::Wild6(QWidget *parent) : QWidget(parent), ui(new Ui::Wild6)
     ui->textBoxDelay->setValues(InputType::Advance32Bit);
 
     ui->labelInitialAdvances->setToolTip(
-        tr("MT frame of the trigger: the encounter step, the Rock Smash Yes press, the fishing bite or the Honey press"));
-    ui->labelDelay->setToolTip(tr("MT frames from the trigger to the 60-frame skip before the EC"));
-    ui->comboBoxEncounter->setToolTip(tr("Species, slot, lead check and held item come from the TinyMT and are not modelled here"));
+        tr("MT frame of the trigger: the encounter step, the Rock Smash Yes press, the fishing bite or the Honey / Sweet Scent press"));
+    ui->labelDelay->setToolTip(tr("MT frames from the trigger to the 60-output container before the EC (Azahar values, calibrate on hardware)"));
+    ui->comboBoxEncounter->setToolTip(tr("Which slot appears, the lead check and held items come from the TinyMT and are not modelled: "
+                                         "pick the target you are after"));
+    ui->comboBoxLocation->setToolTip(tr("Locations that have this encounter type in the selected game"));
+    ui->comboBoxHAMember->setToolTip(tr("Horde member with the hidden ability (chosen on the TinyMT); it skips its ability draw, so the "
+                                        "members after it start one output earlier"));
+    ui->comboBoxLocation->enableAutoComplete();
+    ui->comboBoxPokemon->enableAutoComplete();
 
     ui->comboMenuLead->addAction(tr("None"), toInt(Lead::None));
     ui->comboMenuLead->addMenu(tr("Cute Charm"), { { tr("♂ Lead"), toInt(Lead::CuteCharmM) }, { tr("♀ Lead"), toInt(Lead::CuteCharmF) } });
     ui->comboMenuLead->addMenu(tr("Synchronize"), Translator::getNatures());
-
-    for (u16 specie = 1; specie <= 721; specie++)
-    {
-        ui->comboBoxPokemon->addItem(QString::fromStdString(Translator::getSpecie(specie)), specie);
-    }
 
     ui->filter->disableControls(Controls::Height | Controls::Weight | Controls::Wild);
     ui->filter->enableHiddenAbility();
@@ -69,6 +70,8 @@ Wild6::Wild6(QWidget *parent) : QWidget(parent), ui(new Ui::Wild6)
     connect(ui->profileDisplay, &ProfileDisplay6::profilesChanged, this, &Wild6::profilesChanged);
     connect(ui->pushButtonGenerate, &QPushButton::clicked, this, &Wild6::generate);
     connect(ui->comboBoxEncounter, &QComboBox::currentIndexChanged, this, &Wild6::encounterIndexChanged);
+    connect(ui->comboBoxLocation, &QComboBox::currentIndexChanged, this, &Wild6::locationIndexChanged);
+    connect(ui->comboBoxPokemon, &QComboBox::currentIndexChanged, this, &Wild6::pokemonIndexChanged);
     connect(ui->filter, &Filter::showStatsChanged, model, &StateModel6::setShowStats);
 
     updateProfiles();
@@ -98,24 +101,91 @@ void Wild6::updateProfiles()
     ui->profileDisplay->updateProfiles();
 }
 
+const EncounterArea6 *Wild6::currentArea() const
+{
+    int index = ui->comboBoxLocation->currentIndex();
+    return index >= 0 && index < static_cast<int>(areas.size()) ? &areas[index] : nullptr;
+}
+
 void Wild6::encounterIndexChanged(int index)
 {
     if (index >= 0)
     {
         auto encounter = static_cast<Encounter6>(index);
-        ui->textBoxDelay->setText(QString::number(WildGenerator6::getDefaultDelay(encounter)));
+        areas = Encounters6::getEncounters(encounter, currentProfile->getVersion());
+
+        std::vector<u16> locations;
+        for (const auto &area : areas)
+        {
+            locations.emplace_back(area.getLocation());
+        }
+
+        u16 current = ui->comboBoxLocation->getCurrentUShort();
+        ui->comboBoxLocation->clear();
+        ui->comboBoxLocation->addItems(Translator::getLocations(locations, currentProfile->getVersion()), locations);
+        ui->comboBoxLocation->setCurrentIndexByData(current);
+
+        bool horde = isHorde(encounter);
+        ui->labelHaMember->setVisible(horde);
+        ui->comboBoxHAMember->setVisible(horde);
         ui->spinBoxIVCount->setValue(encounter == Encounter6::FriendSafari ? 2 : 0);
         ui->checkBoxShinyLocked->setEnabled(encounter == Encounter6::Grass);
         if (encounter != Encounter6::Grass)
         {
             ui->checkBoxShinyLocked->setChecked(false);
         }
+
+        if (ui->comboBoxLocation->currentIndex() < 0)
+        {
+            locationIndexChanged(-1);
+        }
+    }
+}
+
+void Wild6::locationIndexChanged(int index)
+{
+    const EncounterArea6 *area = currentArea();
+
+    ui->comboBoxPokemon->clear();
+    if (area)
+    {
+        auto names = area->getNames();
+        for (size_t i = 0; i < names.size(); i++)
+        {
+            ui->comboBoxPokemon->addItem(QString::fromStdString(names[i]), static_cast<int>(i));
+        }
+        ui->textBoxDelay->setText(QString::number(area->getDelay()));
+    }
+}
+
+void Wild6::pokemonIndexChanged(int index)
+{
+    const EncounterArea6 *area = currentArea();
+    if (!area || index < 0)
+    {
+        ui->labelLevelValue->setText("-");
+        return;
+    }
+
+    if (isHorde(area->getEncounter()))
+    {
+        auto members = area->getHorde(index);
+        ui->labelLevelValue->setText(QString::number(members[0].getMaxLevel()));
+    }
+    else
+    {
+        const Slot &slot = area->getPokemon(index);
+        ui->labelLevelValue->setText(slot.getMinLevel() == slot.getMaxLevel()
+                                         ? QString::number(slot.getMaxLevel())
+                                         : QString("%1-%2").arg(slot.getMinLevel()).arg(slot.getMaxLevel()));
     }
 }
 
 void Wild6::generate()
 {
-    if (!ui->filter->isValid())
+    const EncounterArea6 *area = currentArea();
+    int target = ui->comboBoxPokemon->currentIndex();
+    if (!area || target < 0 || !ui->filter->isValid())
     {
         return;
     }
@@ -127,12 +197,14 @@ void Wild6::generate()
     u32 maxAdvances = ui->textBoxMaxAdvances->getUInt();
     u32 delay = ui->textBoxDelay->getUInt();
     auto lead = ui->comboMenuLead->getEnum<Lead>();
-    auto encounter = static_cast<Encounter6>(ui->comboBoxEncounter->currentIndex());
+    Encounter6 encounter = area->getEncounter();
+
+    std::vector<Slot> targets = isHorde(encounter) ? area->getHorde(target) : std::vector<Slot> { area->getPokemon(target) };
+    u8 haMember = isHorde(encounter) ? static_cast<u8>(ui->comboBoxHAMember->currentIndex()) : 0;
 
     auto filter = ui->filter->getFilter<StateFilter>();
-    WildGenerator6 generator(initialAdvances, maxAdvances, delay, encounter, lead, ui->comboBoxPokemon->getCurrentUShort(),
-                             ui->spinBoxLevel->value(), ui->spinBoxIVCount->value(), ui->checkBoxShinyLocked->isChecked(),
-                             *currentProfile, filter);
+    WildGenerator6 generator(initialAdvances, maxAdvances, delay, encounter, lead, targets, haMember, ui->spinBoxIVCount->value(),
+                             ui->checkBoxShinyLocked->isChecked(), *currentProfile, filter);
 
     if (ui->checkBoxWindow->isChecked())
     {
@@ -148,4 +220,5 @@ void Wild6::generate()
 void Wild6::profileChanged(const Profile6 &profile)
 {
     currentProfile = &profile;
+    encounterIndexChanged(ui->comboBoxEncounter->currentIndex());
 }

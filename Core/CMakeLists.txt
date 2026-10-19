@@ -39,6 +39,7 @@ set(EMBED_HEADERS
     ${EMBED_PATH}/EncounterData3.hpp
     ${EMBED_PATH}/EncounterData4.hpp
     ${EMBED_PATH}/EncounterData5.hpp
+    ${EMBED_PATH}/EncounterData6.hpp
     ${EMBED_PATH}/EncounterData8.hpp
     ${EMBED_PATH}/i18n.hpp
     ${EMBED_PATH}/Personal.hpp
@@ -226,6 +227,8 @@ add_library(PokeFinderCore STATIC
     Gen5/StaticTemplate5.hpp
     Gen5/Tools/AdjacentSeedsCalculator.cpp
     Gen5/Tools/AdjacentSeedsCalculator.hpp
+    Gen6/EncounterArea6.cpp
+    Gen6/EncounterArea6.hpp
     Gen6/Encounters6.cpp
     Gen6/Encounters6.hpp
     Gen6/Generators/EggGenerator6.cpp

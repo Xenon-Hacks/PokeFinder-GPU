@@ -30,27 +30,39 @@ StaticGenerator6::StaticGenerator6(u32 initialAdvances, u32 maxAdvances, u32 del
 {
 }
 
-std::vector<State6> StaticGenerator6::generate(u32 seed) const
+Gen6::Request6 StaticGenerator6::getRequest(const StaticTemplate6 &staticTemplate, const Profile6 &profile, Lead lead)
 {
-    const PersonalInfo *info = staticTemplate.getInfo();
-
     Gen6::Request6 request;
     bool locked = staticTemplate.getShiny() == Shiny::Never;
     request.pidType = locked ? Gen6::PIDType::Locked : Gen6::PIDType::Random;
     // Gifts (fossils) roll once even with the Shiny Charm, verified live on Y 1.5
     request.pidRolls = (locked || staticTemplate.getGift() || !profile.getShinyCharm()) ? 1 : 3;
+    request.ivs = staticTemplate.getIVs();
     request.ivCount = staticTemplate.getIVCount();
     request.ability = staticTemplate.getAbility() == 255 ? Gen6::AbilityRandom : staticTemplate.getAbility();
     if (staticTemplate.getGender() != 255)
     {
         request.gender = staticTemplate.getGender();
     }
-    if (lead <= Lead::SynchronizeEnd && !staticTemplate.getGift())
+    if (staticTemplate.getNature() != 255)
+    {
+        request.nature = staticTemplate.getNature();
+    }
+    else if (lead <= Lead::SynchronizeEnd && !staticTemplate.getGift())
     {
         request.nature = toInt(lead);
     }
+    return request;
+}
 
-    RNGList<u32, MT, 128> rngList(seed, initialAdvances + offset + 60);
+std::vector<State6> StaticGenerator6::generate(u32 seed) const
+{
+    const PersonalInfo *info = staticTemplate.getInfo();
+    Gen6::Request6 request = getRequest(staticTemplate, profile, lead);
+
+    // Encounters run the 60-output container (6 dummy Pokemon) between the trigger and the EC; gifts and fossils do not
+    u32 container = staticTemplate.getGift() ? 0 : 60;
+    RNGList<u32, MT, 128> rngList(seed, initialAdvances + offset + container);
 
     std::vector<State6> states;
     for (u32 cnt = 0; cnt <= maxAdvances; cnt++, rngList.advanceState())

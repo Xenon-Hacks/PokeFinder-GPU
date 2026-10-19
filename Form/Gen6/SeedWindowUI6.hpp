@@ -76,8 +76,9 @@ namespace SeedWindowUI6
         start->setDateTime(now.addSecs(-1));
         end->setDateTime(now.addSecs(1));
 
-        check->setToolTip(QObject::tr("Generate every seed the title screen can set in this console clock window (Misc[0x00] + ms). "
-                                      "The odds line shows how many of those seeds have a result that passes the filters."));
+        check->setToolTip(QObject::tr("Generate every seed the title screen can set in this console clock window (Misc[0x00] + ms, "
+                                      "read about 0.67 s after the A press on the title screen). The odds line shows how many of those "
+                                      "seeds have a result that passes the filters."));
         odds->setWordWrap(true);
 
         auto toggle = [=](bool window) {

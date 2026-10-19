@@ -35,6 +35,8 @@ ProfileEditor6::ProfileEditor6(QWidget *parent) : QDialog(parent), ui(new Ui::Pr
     ui->textBoxSID->setValues(InputType::TIDSID);
 
     ui->textBoxSaveSeed->setValues(InputType::Seed32Bit);
+    ui->labelSaveSeed->setToolTip(tr("u32 at save offset 0x4200. The game adds the console clock in ms to it at the title screen. It "
+                                     "changes on every in-game save, so reload it from the save you will play from."));
 
     ui->comboBoxVersion->setup({ toInt(Game::X), toInt(Game::Y) });
 
@@ -114,4 +116,9 @@ void ProfileEditor6::loadSave()
     ui->textBoxSID->setText(QString::number(save.sid));
     ui->checkBoxShinyCharm->setChecked(save.shinyCharm);
     ui->textBoxSaveSeed->setText(QString::number(save.saveSeed, 16));
+
+    QMessageBox msg(QMessageBox::Information, tr("Save seed loaded"),
+                    tr("Save seed %1. It changes on every in-game save, so load the save again after you save in the game.")
+                        .arg(QString::number(save.saveSeed, 16).toUpper().rightJustified(8, '0')));
+    msg.exec();
 }

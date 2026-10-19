@@ -20,6 +20,7 @@
 #include "Gen6Test.hpp"
 #include <Core/Enum/Game.hpp>
 #include <Core/Enum/Lead.hpp>
+#include <Core/Gen6/EncounterArea6.hpp>
 #include <Core/Gen6/Encounters6.hpp>
 #include <Core/Gen6/Generators/EggGenerator6.hpp>
 #include <Core/Gen6/Generators/IDGenerator6.hpp>
@@ -35,6 +36,8 @@
 #include <Core/Gen6/States/State6.hpp>
 #include <Core/Gen6/WC6.hpp>
 #include <Core/Parents/PersonalLoader.hpp>
+#include <Core/Parents/Slot.hpp>
+#include <Core/Util/Translator.hpp>
 #include <Core/Parents/States/IDState.hpp>
 #include <Core/Util/OpenCL.hpp>
 #include <QFile>
@@ -81,7 +84,7 @@ namespace
 
     const StaticTemplate6 *findStatic(u16 specie)
     {
-        for (int category = 0; category < 4; category++)
+        for (int category = 0; category < 5; category++)
         {
             int size;
             const StaticTemplate6 *templates = Encounters6::getStaticEncounters(category, &size);
@@ -106,6 +109,12 @@ namespace
         QCOMPARE(state.getNature(), nature);
         QCOMPARE(state.getGender(), gender);
     }
+}
+
+void Gen6Test::initTestCase()
+{
+    // Encounter table names come from the translator
+    Translator::init("en");
 }
 
 void Gen6Test::liveStatic_data()
@@ -164,13 +173,7 @@ void Gen6Test::liveStatic()
     const StaticTemplate6 *staticTemplate = findStatic(specie);
     QVERIFY(staticTemplate != nullptr);
 
-    // Same request StaticGenerator6 builds
-    Gen6::Request6 request;
-    bool locked = staticTemplate->getShiny() == Shiny::Never;
-    request.pidType = locked ? Gen6::PIDType::Locked : Gen6::PIDType::Random;
-    request.pidRolls = (locked || staticTemplate->getGift() || !profile.getShinyCharm()) ? 1 : 3;
-    request.ivCount = staticTemplate->getIVCount();
-    request.ability = staticTemplate->getAbility() == 255 ? Gen6::AbilityRandom : staticTemplate->getAbility();
+    Gen6::Request6 request = StaticGenerator6::getRequest(*staticTemplate, profile, Lead::None);
 
     ReplayRNG rng { outputs.data() };
     auto result = Gen6::generate(rng, request, staticTemplate->getInfo(), profile.getTID(), profile.getSID());
@@ -247,7 +250,8 @@ void Gen6Test::staticGenerator()
 
 void Gen6Test::wildGenerator()
 {
-    WildGenerator6 generator(1000, 2, 0, Encounter6::FriendSafari, Lead::None, 219, 30, 2, false, profileX, allFilter());
+    std::vector<Slot> magcargo = { Slot(219, 30, 30, PersonalLoader::getPersonal(Game::X, 219)) };
+    WildGenerator6 generator(1000, 2, 0, Encounter6::FriendSafari, Lead::None, magcargo, 0, 2, false, profileX, allFilter());
     auto states = generator.generate(0xAA56F2F4);
     QCOMPARE(states.size(), size_t(3));
 
@@ -258,20 +262,90 @@ void Gen6Test::wildGenerator()
 
 void Gen6Test::hordeGenerator()
 {
-    WildGenerator6 generator(500, 0, WildGenerator6::getDefaultDelay(Encounter6::Horde), Encounter6::Horde, Lead::None, 54, 20, 0, false,
-                             profileX, allFilter());
+    // Honey horde of Psyduck, hidden-ability member 3: members draw a 2-ability slot, the HA member skips the draw (live X)
+    std::vector<Slot> horde(5, Slot(54, 20, 20, PersonalLoader::getPersonal(Game::X, 54)));
+    EncounterArea6 route7(38, Encounter6::HordeHoney, horde);
+    QCOMPARE(route7.getDelay(), 200u);
+
+    WildGenerator6 generator(500, 0, route7.getDelay(), Encounter6::HordeHoney, Lead::None, horde, 3, 0, false, profileX, allFilter());
     auto states = generator.generate(0xAA56F2F4);
     QCOMPARE(states.size(), size_t(5));
 
     compare(states[0], 721093831, 3213296868, { 11, 20, 17, 2, 23, 23 }, 0, 2, 1);
-    compare(states[1], 1220281124, 2232264663, { 6, 9, 2, 2, 10, 6 }, 2, 19, 0);
-    compare(states[2], 3911048680, 3100301348, { 2, 27, 8, 14, 27, 19 }, 0, 11, 0);
-    compare(states[3], 3235279697, 2992602514, { 25, 8, 28, 10, 26, 16 }, 1, 12, 1);
-    compare(states[4], 1423436343, 3823731220, { 12, 20, 26, 31, 23, 4 }, 1, 19, 0);
+    compare(states[1], 1220281124, 2232264663, { 6, 9, 2, 2, 10, 6 }, 1, 19, 0);
+    compare(states[2], 3911048680, 3100301348, { 2, 27, 8, 14, 27, 19 }, 2, 1, 1);
+    compare(states[3], 4133073760, 3235279697, { 22, 25, 8, 28, 10, 26 }, 1, 10, 1);
+    compare(states[4], 1562068325, 1423436343, { 28, 12, 20, 26, 31, 23 }, 0, 10, 0);
     for (u8 i = 0; i < 5; i++)
     {
         QCOMPARE(states[i].getMember(), u8(i + 1));
     }
+}
+
+void Gen6Test::giftGenerator()
+{
+    // Gifts have no 60-output container and skip every fixed field: Lapras = EC, PID, gender; Lucario = EC, PID; fossil = 11 outputs
+    const StaticTemplate6 *lapras = findStatic(131);
+    StaticGenerator6 laprasGenerator(100, 0, lapras->getDelay(), Lead::None, *lapras, profileX, allFilter());
+    auto states = laprasGenerator.generate(0xAA56F2F4);
+    QCOMPARE(states.size(), size_t(1));
+    compare(states[0], 2985311265, 463328270, { 31, 20, 20, 20, 20, 20 }, 0, 6, 1);
+
+    const StaticTemplate6 *lucario = findStatic(448);
+    StaticGenerator6 lucarioGenerator(100, 0, lucario->getDelay(), Lead::None, *lucario, profileX, allFilter());
+    states = lucarioGenerator.generate(0xAA56F2F4);
+    compare(states[0], 1310491473, 4047990518, { 6, 25, 16, 25, 19, 31 }, 0, 11, 0);
+
+    const StaticTemplate6 *tyrunt = findStatic(696);
+    StaticGenerator6 tyruntGenerator(200, 0, tyrunt->getDelay(), Lead::None, *tyrunt, profileX, allFilter());
+    states = tyruntGenerator.generate(0xAA56F2F4);
+    compare(states[0], 1042132413, 1098448136, { 8, 22, 14, 28, 28, 25 }, 1, 0, 0);
+
+    // Fixed-ability statics draw no ability: the roaming bird is 9 outputs (EC, PID, 3 picks, 3 IVs, nature)
+    const StaticTemplate6 *articuno = findStatic(144);
+    StaticGenerator6 articunoGenerator(300, 0, articuno->getDelay(), Lead::None, *articuno, profileX, allFilter());
+    states = articunoGenerator.generate(0xAA56F2F4);
+    compare(states[0], 3897440333, 3184488952, { 16, 3, 31, 31, 31, 8 }, 0, 20, 2);
+}
+
+void Gen6Test::encounterTables()
+{
+    auto hordes = Encounters6::getEncounters(Encounter6::HordeHoney, Game::X);
+    auto route7 = std::ranges::find_if(hordes, [](const EncounterArea6 &area) { return area.getLocation() == 38; });
+    QVERIFY(route7 != hordes.end());
+    QCOMPARE(route7->getHordeCount(), u8(3));
+    QCOMPARE(route7->getHorde(1)[0].getSpecie(), u16(54)); // Psyduck x5
+    QCOMPARE(route7->getNames()[1], std::string("Psyduck \u00d75"));
+
+    // Route 5's third horde is Plusle x4 with a Minun on X, Minun x4 with a Plusle on Y
+    auto route5 = std::ranges::find_if(hordes, [](const EncounterArea6 &area) { return area.getLocation() == 28; });
+    QCOMPARE(route5->getNames()[2], std::string("Plusle \u00d74, Minun"));
+    auto hordesY = Encounters6::getEncounters(Encounter6::HordeSweetScent, Game::Y);
+    auto route5Y = std::ranges::find_if(hordesY, [](const EncounterArea6 &area) { return area.getLocation() == 28; });
+    QCOMPARE(route5Y->getNames()[2], std::string("Minun \u00d74, Plusle"));
+    QCOMPARE(route5Y->getDelay(), 339u);
+
+    auto grass = Encounters6::getEncounters(Encounter6::Grass, Game::X);
+    auto terminus = std::ranges::find_if(grass, [](const EncounterArea6 &area) { return area.getLocation() == 140; });
+    QVERIFY(terminus != grass.end());
+    QCOMPARE(terminus->getPokemon(0).getSpecie(), u16(305)); // Lairon on X, Steelix on Y
+    QCOMPARE(terminus->getPokemon(0).getMaxLevel(), u8(46));
+
+    auto ambush = Encounters6::getEncounters(Encounter6::Ambush, Game::X);
+    auto route6 = std::ranges::find_if(ambush, [](const EncounterArea6 &area) { return area.getLocation() == 34; });
+    QCOMPARE(route6->getPokemon(0).getSpecie(), u16(543)); // Venipede bush
+    QCOMPARE(route6->getDelay(), 62u);
+    auto terminusShadow = std::ranges::find_if(ambush, [](const EncounterArea6 &area) { return area.getLocation() == 140; });
+    QCOMPARE(terminusShadow->getDelay(), 32u);
+
+    auto safari = Encounters6::getEncounters(Encounter6::FriendSafari, Game::X);
+    QCOMPARE(safari.size(), size_t(1));
+    QCOMPARE(safari[0].getPokemon().size(), size_t(189)); // 187 species plus Floette forms 1 and 3
+
+    auto rods = Encounters6::getEncounters(Encounter6::SuperRod, Game::X);
+    auto route3 = std::ranges::find_if(rods, [](const EncounterArea6 &area) { return area.getLocation() == 16; });
+    QCOMPARE(route3->getPokemon(0).getSpecie(), u16(130)); // Gyarados
+    QCOMPARE(Translator::getLocations({ 16, 140 }, Game::X), (std::vector<std::string> { "Route 3", "Terminus Cave" }));
 }
 
 void Gen6Test::eggChain()
@@ -455,7 +529,8 @@ void Gen6Test::seedTimes()
 void Gen6Test::narrowSameBoot()
 {
     // Second catch of the same boot: a grass Psyduck triggered 500 frames after the Zygarde
-    WildGenerator6 wild(801, 0, 0, Encounter6::Grass, Lead::None, 54, 20, 0, false, profileX, allFilter());
+    std::vector<Slot> psyduck = { Slot(54, 20, 20, PersonalLoader::getPersonal(Game::X, 54)) };
+    WildGenerator6 wild(801, 0, 0, Encounter6::Grass, Lead::None, psyduck, 0, 0, false, profileX, allFilter());
     auto second = wild.generate(0xAA56F2F4);
     QCOMPARE(second.size(), size_t(1));
 

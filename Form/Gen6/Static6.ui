@@ -153,6 +153,11 @@
         </item>
         <item>
          <property name="text">
+          <string>Gifts</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>Stationary</string>
          </property>
         </item>

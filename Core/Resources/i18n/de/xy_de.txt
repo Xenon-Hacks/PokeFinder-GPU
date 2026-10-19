@@ -1,0 +1,38 @@
+12,Route 2
+14,Nouvaria-Wald
+16,Route 3
+20,Route 4
+28,Route 5
+34,Route 6
+36,Magnum-Opus-Palast
+38,Route 7
+40,Relievera City
+42,Route 8
+44,Petrophia
+46,Route 9
+50,Route 10
+54,Route 11
+56,Spiegelhöhle
+58,Yantara City
+62,Route 12
+66,Route 13
+68,Route 14
+70,Romantia City
+74,Route 15
+78,Route 16
+82,Frosthöhle
+84,Route 17
+88,Route 18
+90,Mosaia
+92,Route 19
+96,Route 20
+98,Pokémon-Dorf
+100,Route 21
+102,Route 22
+104,Siegesstraße
+112,Azurbucht
+132,Leuchthöhle
+134,Geolinkhöhle
+140,Omega-Höhle
+142,Hotelruine
+148,Kontaktsafari

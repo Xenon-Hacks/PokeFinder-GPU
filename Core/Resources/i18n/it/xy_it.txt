@@ -1,0 +1,38 @@
+12,Percorso 2
+14,Bosco Novartopoli
+16,Percorso 3
+20,Percorso 4
+28,Percorso 5
+34,Percorso 6
+36,Reggia Aurea
+38,Percorso 7
+40,Altoripoli
+42,Percorso 8
+44,Petroglifari
+46,Percorso 9
+50,Percorso 10
+54,Percorso 11
+56,Grotta dei Riflessi
+58,Yantaropoli
+62,Percorso 12
+66,Percorso 13
+68,Percorso 14
+70,Romantopoli
+74,Percorso 15
+78,Percorso 16
+82,Caverna Gelata
+84,Percorso 17
+88,Percorso 18
+90,Ponte Mosaico
+92,Percorso 19
+96,Percorso 20
+98,Valle dei Pokémon
+100,Percorso 21
+102,Percorso 22
+104,Via Vittoria
+112,Baia Azzurra
+132,Grotta dei Bagliori
+134,Grotta Trait d’Union
+140,Grotta Climax
+142,Albergo Diroccato
+148,Safari Amici

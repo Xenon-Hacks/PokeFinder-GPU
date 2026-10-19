@@ -20,6 +20,7 @@
 #ifndef STATICGENERATOR6_HPP
 #define STATICGENERATOR6_HPP
 
+#include <Core/Gen6/Pokemon6.hpp>
 #include <Core/Gen6/Profile6.hpp>
 #include <Core/Gen6/StaticTemplate6.hpp>
 #include <Core/Parents/Filters/StateFilter.hpp>
@@ -30,7 +31,8 @@ class State6;
 /**
  * @brief Static encounter generator for X/Y
  *
- * Advances are the MT frame of the button press. The EC is MT output advance + delay + 60.
+ * Advances are the MT frame of the button press. The EC is MT output advance + delay + 60 for encounters, which run the
+ * 60-output container, and advance + delay for gifts and fossils, which do not.
  */
 class StaticGenerator6 : public StaticGenerator<StaticTemplate6, Profile6, StateFilter>
 {
@@ -57,6 +59,17 @@ public:
      * @return Vector of computed states
      */
     std::vector<State6> generate(u32 seed) const;
+
+    /**
+     * @brief Builds the generation request a template makes
+     *
+     * @param staticTemplate Pokemon template
+     * @param profile Profile information
+     * @param lead Encounter lead
+     *
+     * @return Generation request
+     */
+    static Gen6::Request6 getRequest(const StaticTemplate6 &staticTemplate, const Profile6 &profile, Lead lead);
 };
 
 #endif // STATICGENERATOR6_HPP
