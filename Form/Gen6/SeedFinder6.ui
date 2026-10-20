@@ -494,7 +494,7 @@
 <item row="0" column="0" colspan="2">
 <widget class="QLabel" name="labelRecoverHelp">
 <property name="text">
- <string>No save backup? Find the seed of a boot with the All 2^32 search and narrowing, then enter it and when its title screen appeared. A second boot is an optional check</string>
+ <string>No save backup? Find the seed of a boot with the All 2^32 search and narrowing, then enter it and the console time of the A press on the title screen (the press-to-seed ms above is added). A second boot is an optional check. The save seed changes on every in-game save</string>
 </property>
 </widget>
 </item>
@@ -511,7 +511,7 @@
 <item row="2" column="0">
 <widget class="QLabel" name="labelTitleA">
 <property name="text">
- <string>Title A</string>
+ <string>A press A</string>
 </property>
 </widget>
 </item>
@@ -531,7 +531,7 @@
 <item row="4" column="0">
 <widget class="QLabel" name="labelTitleB">
 <property name="text">
- <string>Title B</string>
+ <string>A press B</string>
 </property>
 </widget>
 </item>

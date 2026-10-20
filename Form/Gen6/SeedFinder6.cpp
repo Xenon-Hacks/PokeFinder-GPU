@@ -434,14 +434,16 @@ void SeedFinder6::calibrate()
 
 void SeedFinder6::recover()
 {
+    // The seed is set about 0.67 s after the A press on the title screen; the press-to-seed field holds the calibrated value
+    u64 pressToSeed = ui->textBoxTitleDelay->getUInt();
     std::vector<SeedWindow6::Boot> boots;
     if (!ui->textBoxRecoverSeedA->text().isEmpty())
     {
-        boots.push_back({ SeedWindowUI6::consoleMs(ui->dateTimeEditRecoverA->dateTime()), ui->textBoxRecoverSeedA->getUInt() });
+        boots.push_back({ SeedWindowUI6::consoleMs(ui->dateTimeEditRecoverA->dateTime()) + pressToSeed, ui->textBoxRecoverSeedA->getUInt() });
     }
     if (!ui->textBoxRecoverSeedB->text().isEmpty())
     {
-        boots.push_back({ SeedWindowUI6::consoleMs(ui->dateTimeEditRecoverB->dateTime()), ui->textBoxRecoverSeedB->getUInt() });
+        boots.push_back({ SeedWindowUI6::consoleMs(ui->dateTimeEditRecoverB->dateTime()) + pressToSeed, ui->textBoxRecoverSeedB->getUInt() });
     }
     if (boots.empty())
     {
