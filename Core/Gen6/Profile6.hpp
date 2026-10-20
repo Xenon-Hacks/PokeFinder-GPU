@@ -47,7 +47,7 @@ public:
 
     /**
      * @brief Returns the save term of the MT seed. The game seeds MT with this value plus the console clock in milliseconds
-     * every time the title screen loads.
+     * 86 frames after the first A press on the title screen.
      *
      * @return Save seed term
      */

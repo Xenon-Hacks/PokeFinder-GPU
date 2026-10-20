@@ -35,7 +35,7 @@ ProfileEditor6::ProfileEditor6(QWidget *parent) : QDialog(parent), ui(new Ui::Pr
     ui->textBoxSID->setValues(InputType::TIDSID);
 
     ui->textBoxSaveSeed->setValues(InputType::Seed32Bit);
-    ui->labelSaveSeed->setToolTip(tr("u32 at save offset 0x4200. The game adds the console clock in ms to it at the title screen. It "
+    ui->labelSaveSeed->setToolTip(tr("u32 at save offset 0x4200. The game adds the console clock in ms to it 86 frames after the title-screen A press. It "
                                      "changes on every in-game save, so reload it from the save you will play from."));
 
     ui->comboBoxVersion->setup({ toInt(Game::X), toInt(Game::Y) });

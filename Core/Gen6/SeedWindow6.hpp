@@ -31,8 +31,8 @@
 /**
  * @brief X/Y seeds as a function of the console clock
  *
- * When the title screen loads the game seeds MT with save Misc[0x00] + T, where T is the console clock in ms since 2000-01-01
- * truncated to 32 bits. A seed therefore maps back to one console time every 2^32 ms (49 days 17:02:47.296).
+ * 86 frames after the first A press on the title screen the game seeds MT with save Misc[0x00] + T, where T is the console
+ * clock in ms since 2000-01-01 truncated to 32 bits. (A seed set when the title loads is overwritten by this one.) A seed therefore maps back to one console time every 2^32 ms (49 days 17:02:47.296).
  */
 namespace SeedWindow6
 {

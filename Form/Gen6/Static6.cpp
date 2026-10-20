@@ -50,7 +50,7 @@ Static6::Static6(QWidget *parent) : QWidget(parent), ui(new Ui::Static6)
     ui->textBoxMaxAdvances->setValues(InputType::Advance32Bit);
     ui->textBoxDelay->setValues(InputType::Advance32Bit);
 
-    ui->labelSeed->setToolTip(tr("Initial MT seed: save Misc[0x00] + console ms when the title screen loaded (Seed Finder)"));
+    ui->labelSeed->setToolTip(tr("Initial MT seed: save Misc[0x00] + console ms 86 frames after the title-screen A press (Seed Finder)"));
     ui->labelInitialAdvances->setToolTip(tr("MT frame of the button press (or the step that starts the encounter)"));
     ui->labelDelay->setToolTip(tr("MT frames from the press to the 60-frame skip before the EC"));
 

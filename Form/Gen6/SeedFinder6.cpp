@@ -99,14 +99,18 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->textBoxTimeSeed->setValues(InputType::Seed32Bit);
     ui->textBoxTitleDelay->setValues(InputType::Advance32Bit);
     ui->textBoxTargetFrame->setValues(InputType::Advance32Bit);
+    ui->textBoxLostTicks->setValues(InputType::Advance32Bit);
     ui->dateTimeEditAround->setDisplayFormat("yyyy-MM-dd hh:mm");
     ui->dateTimeEditAround->setDateTimeRange(QDateTime(QDate(2000, 1, 1), QTime(0, 0)), QDateTime(QDate(2099, 12, 31), QTime(23, 59)));
     ui->dateTimeEditAround->setDateTime(QDateTime::currentDateTime());
     ui->labelAround->setToolTip(tr("Earliest console time to aim for; the seed comes round once every 49 days 17:02:47.296"));
-    ui->labelPressToSeedMs->setToolTip(tr("ms from the A press on the title screen to the seed being set: about 670 on Azahar, "
-                                          "calibrate on hardware"));
+    ui->labelPressToSeedMs->setToolTip(tr("ms of console time from the A press on the title screen to the seed being set: 86 frames + about 16 ms "
+                                          "= 1453 on Azahar (X, measured from RAM). Calibrate on hardware, where a slower save read adds to it"));
+    ui->labelLostTicks->setToolTip(tr("MT ticks lost to load screens before the trigger: frames while the game is loading get no "
+                                      "per-frame advance. About 60 from the seed to Honey on Azahar (32-34 for the map load after "
+                                      "Continue, 27-29 for opening the bag); 0 if your target frame is already in frames"));
     ui->labelLeadS->setToolTip(tr("Seconds you want between confirming the clock and the timed press"));
-    ui->labelTargetFrame->setToolTip(tr("Frame to trigger the target at after the title screen (60 per second)"));
+    ui->labelTargetFrame->setToolTip(tr("MT frame (advances since the seed) to trigger the target at"));
     ui->labelPlan->setWordWrap(true);
     ui->labelPlan->setTextInteractionFlags(Qt::TextSelectableByMouse);
     ui->pushButtonCalibrate->setEnabled(false);
@@ -123,7 +127,7 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->labelToleranceS->setToolTip(tr("How far off each noted title time may be"));
     ui->pushButtonRecoverSave->setEnabled(false);
     ui->labelMinGap->setToolTip(tr("Fewest MT frames between the previous catch's trigger and this one"));
-    ui->labelMaxGap->setToolTip(tr("Most MT frames between the previous catch's trigger and this one (60 per second)"));
+    ui->labelMaxGap->setToolTip(tr("Most MT frames between the previous catch's trigger and this one (about 58 per second of play, 60 when idle)"));
     ui->labelNarrow->setWordWrap(true);
     ui->labelNarrowHelp->setWordWrap(true);
 
@@ -133,8 +137,8 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->dateTimeEditStart->setDateTime(now.addSecs(-30));
     ui->dateTimeEditEnd->setDateTime(now.addSecs(30));
 
-    ui->comboBoxMode->setToolTip(tr("The game seeds MT with the save's Misc[0x00] plus the console clock in ms, read about 0.67 s after "
-                                     "the A press on the title screen (Azahar). Misc[0x00] changes on every in-game save."));
+    ui->comboBoxMode->setToolTip(tr("The game seeds MT with the save's Misc[0x00] plus the console clock in ms, read 86 frames (about "
+                                     "1.45 s) after the A press on the title screen. Misc[0x00] changes on every in-game save."));
     ui->labelMinFrame->setToolTip(tr("MT frame of the trigger (button press or step); the EC is frame + delay + 60, or + delay for gifts"));
     ui->checkBoxContainer->setToolTip(tr("Encounters generate 6 dummy Pokemon (60 outputs) between the trigger and the EC; fossils and "
                                          "gifts go straight to the EC"));
@@ -395,9 +399,19 @@ void SeedFinder6::seedTime()
                        .arg(SeedWindowUI6::consoleTime(plan.target).toString("hh:mm:ss.zzz"));
     if (frame != 0)
     {
-        text += tr("3. Trigger the target at frame %1, %2 s after the title screen.\n")
+        // The main MT ticks once per main-loop pass, so frames spent loading add frames without advances
+        constexpr double frameMs = 1000.0 / 59.8261;
+        u32 lost = ui->textBoxLostTicks->getUInt();
+        u64 frames = static_cast<u64>(frame) + lost;
+        double afterPress = static_cast<double>(delay) + static_cast<double>(frames) * frameMs;
+        text += tr("3. Trigger the target at MT frame %1: %2 frames (%3 s) after the seed with %4 ticks lost to loading, "
+                   "%5 s after the A press (%6 frames on a 59.8261 fps timer).\n")
                     .arg(frame)
-                    .arg(static_cast<double>(frame) / 60.0, 0, 'f', 3);
+                    .arg(frames)
+                    .arg(static_cast<double>(frames) * frameMs / 1000.0, 0, 'f', 3)
+                    .arg(lost)
+                    .arg(afterPress / 1000.0, 0, 'f', 3)
+                    .arg(static_cast<u64>(afterPress / frameMs + 0.5));
     }
     text += tr("Afterwards, find the seed you got with a clock search, select its row and press Calibrate.");
     ui->labelPlan->setText(text);
@@ -434,7 +448,7 @@ void SeedFinder6::calibrate()
 
 void SeedFinder6::recover()
 {
-    // The seed is set about 0.67 s after the A press on the title screen; the press-to-seed field holds the calibrated value
+    // The seed is set 86 frames (about 1453 ms) after the A press on the title screen; the press-to-seed field holds the calibrated value
     u64 pressToSeed = ui->textBoxTitleDelay->getUInt();
     std::vector<SeedWindow6::Boot> boots;
     if (!ui->textBoxRecoverSeedA->text().isEmpty())
@@ -447,7 +461,7 @@ void SeedFinder6::recover()
     }
     if (boots.empty())
     {
-        QMessageBox msg(QMessageBox::Warning, tr("No boots"), tr("Enter the seed of at least one boot and when its title screen appeared"));
+        QMessageBox msg(QMessageBox::Warning, tr("No boots"), tr("Enter the seed of at least one boot and when you pressed A on its title screen"));
         msg.exec();
         return;
     }
