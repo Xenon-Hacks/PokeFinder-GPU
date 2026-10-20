@@ -32,7 +32,9 @@ u32 EncounterArea6::getDelay() const
     case Encounter6::RockSmash:
         return 274; // Yes press -> TinyMT decision and container, live X
     case Encounter6::HordeHoney:
-        return 200; // Honey press -> container, live X (first EC at press + 256..260; 3DSRNGTool uses 174)
+        // Honey press -> container: first EC at press + 256..260 on live X, 254..257 (mean 255.3, n = 25) on live Y Route 7;
+        // 3DSRNGTool uses 174
+        return 195;
     case Encounter6::HordeSweetScent:
         return 339; // Sweet Scent press -> container, live X (first EC at press + 399)
     case Encounter6::Ambush:

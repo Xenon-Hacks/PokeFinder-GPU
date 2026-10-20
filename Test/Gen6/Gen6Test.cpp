@@ -265,9 +265,9 @@ void Gen6Test::hordeGenerator()
     // Honey horde of Psyduck, hidden-ability member 3: members draw a 2-ability slot, the HA member skips the draw (live X)
     std::vector<Slot> horde(5, Slot(54, 20, 20, PersonalLoader::getPersonal(Game::X, 54)));
     EncounterArea6 route7(38, Encounter6::HordeHoney, horde);
-    QCOMPARE(route7.getDelay(), 200u);
+    QCOMPARE(route7.getDelay(), 195u);
 
-    WildGenerator6 generator(500, 0, route7.getDelay(), Encounter6::HordeHoney, Lead::None, horde, 3, 0, false, profileX, allFilter());
+    WildGenerator6 generator(500, 0, 200, Encounter6::HordeHoney, Lead::None, horde, 3, 0, false, profileX, allFilter());
     auto states = generator.generate(0xAA56F2F4);
     QCOMPARE(states.size(), size_t(5));
 
@@ -279,6 +279,37 @@ void Gen6Test::hordeGenerator()
     for (u8 i = 0; i < 5; i++)
     {
         QCOMPARE(states[i].getMember(), u8(i + 1));
+    }
+}
+
+void Gen6Test::hordeSpots()
+{
+    // Y tutorial hit (2026-10-20): seed B05DDFD3, Route 7 Honey Psyduck x5, Delay 200, Shiny Charm. The shiny Psyduck is member 3 at
+    // Advances 2527-2529 and only exists on 5 runs of 3 Advances, 13 apart (live Y)
+    std::vector<Slot> horde(5, Slot(54, 20, 20, PersonalLoader::getPersonal(Game::Y, 54)));
+    std::array<bool, 25> natures;
+    natures.fill(true);
+    std::array<bool, 16> powers;
+    powers.fill(true);
+    StateFilter filter(255, 255, 3, 1, 100, 0, 255, 0, 255, false, { 31, 31, 0, 31, 0, 31 }, { 31, 31, 31, 31, 31, 31 }, natures, powers);
+    WildGenerator6 generator(2520, 20, 200, Encounter6::HordeHoney, Lead::None, horde, 0, 0, false, profileY, filter);
+    auto states = generator.generate(0xB05DDFD3);
+    QVERIFY(!states.empty());
+
+    const State6 &state = states[0];
+    QCOMPARE(state.getPID(), 0x1A58DE69u);
+    QCOMPARE(state.getMember(), u8(3));
+    for (const auto &other : states)
+    {
+        QCOMPARE(other.getPID(), state.getPID());
+    }
+
+    std::array<u32, 5> first = { 2553, 2540, 2527, 2514, 2501 };
+    for (u8 member = 1; member <= 5; member++)
+    {
+        QVERIFY(state.hasSpot(member));
+        QCOMPARE(state.getSpotFirst(member), first[member - 1]);
+        QCOMPARE(state.getSpotLast(member), first[member - 1] + 2);
     }
 }
 

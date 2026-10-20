@@ -39,6 +39,7 @@ private slots:
     void staticGenerator();
     void wildGenerator();
     void hordeGenerator();
+    void hordeSpots();
     void giftGenerator();
     void encounterTables();
     void eggChain();

@@ -128,6 +128,7 @@ void Wild6::encounterIndexChanged(int index)
         bool horde = isHorde(encounter);
         ui->labelHaMember->setVisible(horde);
         ui->comboBoxHAMember->setVisible(horde);
+        ui->tableView->setColumnHidden(StateModel6::spotsColumn, !horde);
         ui->spinBoxIVCount->setValue(encounter == Encounter6::FriendSafari ? 2 : 0);
         ui->checkBoxShinyLocked->setEnabled(encounter == Encounter6::Grass);
         if (encounter != Encounter6::Grass)

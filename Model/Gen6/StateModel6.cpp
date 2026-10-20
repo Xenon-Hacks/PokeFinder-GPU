@@ -41,6 +41,23 @@ static QString abilityText(u8 ability, u16 abilityIndex)
     return QString("H: %1").arg(QString::fromStdString(Translator::getAbility(abilityIndex)));
 }
 
+static QString hordeSpots(const State6 &state)
+{
+    // Members in the order their spots come, the earliest spot is member 5
+    QStringList spots;
+    for (u8 member = 5; member >= 1; member--)
+    {
+        if (state.hasSpot(member))
+        {
+            u32 first = state.getSpotFirst(member);
+            u32 last = state.getSpotLast(member);
+            QString range = first == last ? QString::number(first) : QString("%1-%2").arg(first).arg(last);
+            spots.append(QString("%1 (%2)").arg(range).arg(member));
+        }
+    }
+    return spots.join(", ");
+}
+
 static QString consoleTime(u64 ms)
 {
     if (ms == 0)
@@ -56,7 +73,7 @@ StateModel6::StateModel6(QObject *parent) : TableModel(parent), showStats(false)
 
 int StateModel6::columnCount(const QModelIndex &parent) const
 {
-    return 18;
+    return 19;
 }
 
 QVariant StateModel6::data(const QModelIndex &index, int role) const
@@ -98,7 +115,14 @@ QVariant StateModel6::data(const QModelIndex &index, int role) const
             return hex32(state.getSeed());
         case 17:
             return consoleTime(state.getMs());
+        case 18:
+            return state.getMember() == 0 ? QString("-") : hordeSpots(state);
         }
+    }
+    else if (role == Qt::ToolTipRole && index.column() == 18)
+    {
+        return tr("Advances where this Pokemon appears, with the horde member in brackets. Each member starts 13 Advances after "
+                  "the one before (11 without the Shiny Charm), so any other Advance gives a different horde.");
     }
 
     return QVariant();

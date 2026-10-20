@@ -42,7 +42,7 @@ enum class Encounter6 : u8
     OldRod, ///< Advances count from the bite (the Pokemon is generated even if the bite is missed)
     GoodRod,
     SuperRod,
-    HordeHoney, ///< 5 Pokemon back to back; advances count from the Honey press (trigger ≈ +200)
+    HordeHoney, ///< 5 Pokemon back to back; advances count from the Honey press (trigger ≈ +195)
     HordeSweetScent, ///< 5 Pokemon back to back; advances count from the Sweet Scent press (trigger +339)
     Ambush, ///< Bushes, berry trees, cave shadows and drops (bush trigger = press + 62, shadow + 32)
     FriendSafari ///< 5 PID rolls without the Shiny Charm, 2 perfect IVs

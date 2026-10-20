@@ -390,9 +390,18 @@ void SeedFinder6::seedTime()
     planTimer = plan.timer;
     ui->pushButtonCalibrate->setEnabled(true);
 
+    // The title screen replays the intro about 45 s after PRESS START shows (about 15 s after launch); a press on the intro
+    // only skips it (live Y), so launch about 40 s before the A press
+    constexpr u64 launchBefore = 40000;
+    QString launch = plan.timer > launchBefore
+        ? tr("at %1 s on the timer, about 40 s before the A press").arg(static_cast<double>(plan.timer - launchBefore) / 1000.0, 0, 'f', 0)
+        : tr("right away");
     QString text = tr("1. Set the 3DS clock to %1 and start your timer the moment you confirm it.\n"
-                      "2. Press A on the title screen (PRESS START) at %2 ms (%3 s). The seed %4 is set at %5.\n")
+                      "2. Launch the game from the HOME Menu %2. The title screen replays its intro about 45 s after PRESS START "
+                      "shows, and an A press during the intro does not set the seed.\n"
+                      "3. Press A on the title screen (PRESS START) at %3 ms (%4 s). The seed %5 is set at %6.\n")
                        .arg(SeedWindowUI6::consoleTime(plan.clockSet).toString("yyyy-MM-dd hh:mm"))
+                       .arg(launch)
                        .arg(plan.timer)
                        .arg(static_cast<double>(plan.timer) / 1000.0, 0, 'f', 3)
                        .arg(QString::number(seed, 16).toUpper().rightJustified(8, '0'))
@@ -404,7 +413,7 @@ void SeedFinder6::seedTime()
         u32 lost = ui->textBoxLostTicks->getUInt();
         u64 frames = static_cast<u64>(frame) + lost;
         double afterPress = static_cast<double>(delay) + static_cast<double>(frames) * frameMs;
-        text += tr("3. Trigger the target at MT frame %1: %2 frames (%3 s) after the seed with %4 ticks lost to loading, "
+        text += tr("4. Trigger the target at MT frame %1: %2 frames (%3 s) after the seed with %4 ticks lost to loading, "
                    "%5 s after the A press (%6 frames on a 59.8261 fps timer).\n")
                     .arg(frame)
                     .arg(frames)
@@ -412,6 +421,9 @@ void SeedFinder6::seedTime()
                     .arg(lost)
                     .arg(afterPress / 1000.0, 0, 'f', 3)
                     .arg(static_cast<u64>(afterPress / frameMs + 0.5));
+        // Input timing, loading and the trigger animation each scatter by 1-2 frames, more than a 3-frame horde spot (live Y)
+        text += tr("The frame you land on scatters by a few frames from attempt to attempt. Adjust this timing from the average of "
+                   "3 to 5 misses, not from a single one.\n");
     }
     text += tr("Afterwards, find the seed you got with a clock search, select its row and press Calibrate.");
     ui->labelPlan->setText(text);

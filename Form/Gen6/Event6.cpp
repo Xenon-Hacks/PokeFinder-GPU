@@ -48,6 +48,7 @@ Event6::Event6(QWidget *parent) : QWidget(parent), ui(new Ui::Event6)
 
     model = new StateModel6(ui->tableView);
     ui->tableView->setModel(model);
+    ui->tableView->setColumnHidden(StateModel6::spotsColumn, true);
 
     ui->textBoxSeed->setValues(InputType::Seed32Bit);
     ui->textBoxInitialAdvances->setValues(InputType::Advance32Bit);

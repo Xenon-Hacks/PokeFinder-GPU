@@ -25,6 +25,8 @@
 #include <Core/Parents/PersonalInfo.hpp>
 #include <Core/RNG/MT.hpp>
 #include <Core/RNG/RNGList.hpp>
+#include <algorithm>
+#include <array>
 
 WildGenerator6::WildGenerator6(u32 initialAdvances, u32 maxAdvances, u32 delay, Encounter6 encounter, Lead lead,
                                const std::vector<Slot> &targets, u8 haMember, u8 ivCount, bool shinyLocked, const Profile6 &profile,
@@ -64,20 +66,67 @@ std::vector<State6> WildGenerator6::generate(u32 seed) const
         }
     }
 
-    RNGList<u32, MT, 256> rngList(seed, initialAdvances + offset + 60);
+    // A horde Pokemon shows as every member: each member starts 13 outputs (11 without the Shiny Charm) after the one before,
+    // so the target only exists on 5 short runs of Advances. Generate span Advances on both sides to find all of them.
+    constexpr u32 span = 96;
+    struct Key
+    {
+        u32 pid;
+        std::array<u8, 6> ivs;
+    };
+    std::array<std::array<Key, 5>, 256> history;
+    std::vector<size_t> pending;
+    size_t resolved = 0;
+
+    bool horde = members == 5;
+    u32 before = horde ? std::min(initialAdvances, span) : 0;
+    u32 after = horde ? span : 0;
+    u32 start = initialAdvances - before;
+
+    RNGList<u32, MT, 256> rngList(seed, start + offset + 60);
 
     std::vector<State6> states;
-    for (u32 cnt = 0; cnt <= maxAdvances; cnt++, rngList.advanceState())
+    for (u32 cnt = 0; cnt <= before + maxAdvances + after; cnt++, rngList.advanceState())
     {
+        u32 advance = start + cnt;
+        bool inRange = cnt >= before && cnt - before <= maxAdvances;
         for (u8 member = 0; member < members; member++)
         {
             const Slot &slot = targets[member];
             auto result = Gen6::generate(rngList, requests[member], slot.getInfo(), profile.getTID(), profile.getSID());
-
-            State6 state(initialAdvances + cnt, result, slot.getMaxLevel(), members == 5 ? member + 1 : 0, slot.getInfo());
-            if (filter.compare(state))
+            if (horde)
             {
-                states.emplace_back(state);
+                history[advance & 255][member] = { result.pid, result.ivs };
+            }
+
+            if (inRange)
+            {
+                State6 state(advance, result, slot.getMaxLevel(), horde ? member + 1 : 0, slot.getInfo());
+                if (filter.compare(state))
+                {
+                    if (horde)
+                    {
+                        pending.emplace_back(states.size());
+                    }
+                    states.emplace_back(state);
+                }
+            }
+        }
+
+        for (; resolved < pending.size() && states[pending[resolved]].getAdvances() + span <= advance; resolved++)
+        {
+            State6 &state = states[pending[resolved]];
+            u32 hit = state.getAdvances();
+            for (u32 x = hit - std::min(hit - start, span); x <= hit + span; x++)
+            {
+                for (u8 member = 0; member < members; member++)
+                {
+                    const Key &key = history[x & 255][member];
+                    if (key.pid == state.getPID() && key.ivs == state.getIVs())
+                    {
+                        state.addSpot(member + 1, x);
+                    }
+                }
             }
         }
     }

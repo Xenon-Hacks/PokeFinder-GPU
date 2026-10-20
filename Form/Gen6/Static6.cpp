@@ -43,6 +43,7 @@ Static6::Static6(QWidget *parent) : QWidget(parent), ui(new Ui::Static6)
 
     model = new StateModel6(ui->tableView);
     ui->tableView->setModel(model);
+    ui->tableView->setColumnHidden(StateModel6::spotsColumn, true);
     SeedWindowUI6::setup(ui->checkBoxWindow, ui->dateTimeEditStart, ui->dateTimeEditEnd, ui->textBoxSeed, ui->labelOdds, ui->tableView);
 
     ui->textBoxSeed->setValues(InputType::Seed32Bit);
