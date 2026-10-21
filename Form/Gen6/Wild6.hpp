@@ -33,7 +33,7 @@ namespace Ui
 }
 
 /**
- * @brief Wild encounter generator for X/Y (main MT side)
+ * @brief Wild encounter generator for X/Y and OR/AS (main MT side)
  */
 class Wild6 final : public QWidget
 {

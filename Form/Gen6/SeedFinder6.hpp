@@ -32,7 +32,7 @@ namespace Ui
 }
 
 /**
- * @brief Finds the X/Y initial MT seed from a caught Pokemon's IVs, on the GPU when available
+ * @brief Finds the X/Y initial MT seed (X/Y and OR/AS) from a caught Pokemon's IVs, on the GPU when available
  */
 class SeedFinder6 final : public QWidget
 {

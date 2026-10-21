@@ -59,6 +59,7 @@
 #include <Form/Gen6/SeedFinder6.hpp>
 #include <Form/Gen6/Static6.hpp>
 #include <Form/Gen6/Wild6.hpp>
+#include <Form/Gen6/Mirage6.hpp>
 #include <Form/Gen6/Profile/ProfileManager6.hpp>
 #include <Form/Gen8/Eggs8.hpp>
 #include <Form/Gen8/Event8.hpp>
@@ -137,6 +138,7 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonSeedFinder6, &QPushButton::clicked, this, &MainWindow::openSeedFinder6);
     connect(ui->pushButtonStatic6, &QPushButton::clicked, this, &MainWindow::openStatic6);
     connect(ui->pushButtonWild6, &QPushButton::clicked, this, &MainWindow::openWild6);
+    connect(ui->pushButtonMirage6, &QPushButton::clicked, this, &MainWindow::openMirage6);
     connect(ui->actionProfileManager6, &QAction::triggered, this, &MainWindow::openProfileManager6);
     connect(ui->pushButtonStatic8, &QPushButton::clicked, this, &MainWindow::openStatic8);
     connect(ui->pushButtonWild8, &QPushButton::clicked, this, &MainWindow::openWild8);
@@ -202,6 +204,7 @@ MainWindow::~MainWindow()
     delete seedFinder6;
     delete static6;
     delete wild6;
+    delete mirage6;
 
     delete egg8;
     delete event8;
@@ -774,6 +777,16 @@ void MainWindow::openWild6()
     }
     wild6->show();
     wild6->raise();
+}
+
+void MainWindow::openMirage6()
+{
+    if (!mirage6)
+    {
+        mirage6 = new Mirage6();
+    }
+    mirage6->show();
+    mirage6->raise();
 }
 
 void MainWindow::openProfileManager6() const

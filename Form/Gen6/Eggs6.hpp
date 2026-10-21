@@ -31,7 +31,7 @@ namespace Ui
 }
 
 /**
- * @brief Egg generator for X/Y
+ * @brief Egg generator for X/Y and OR/AS
  */
 class Eggs6 final : public QWidget
 {

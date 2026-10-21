@@ -164,7 +164,12 @@
 </item>
 <item>
 <property name="text">
- <string>Legend (1, 3 IVs)</string>
+ <string>X/Y legend (1, 3 IVs)</string>
+</property>
+</item>
+<item>
+<property name="text">
+ <string>OR/AS legend (1, 3 IVs, ability)</string>
 </property>
 </item>
 <item>

@@ -29,10 +29,11 @@
 class State6;
 
 /**
- * @brief Static encounter generator for X/Y
+ * @brief Static encounter, gift and trade generator for X/Y and OR/AS
  *
  * Advances are the MT frame of the button press. The EC is MT output advance + delay + 60 for encounters, which run the
- * 60-output container, and advance + delay for gifts and fossils, which do not.
+ * 60-output container, and advance + delay for gifts, fossils and trades, which do not. Trades are generated with the trade
+ * OT's ID, so they are never shiny.
  */
 class StaticGenerator6 : public StaticGenerator<StaticTemplate6, Profile6, StateFilter>
 {

@@ -35,10 +35,11 @@ ProfileEditor6::ProfileEditor6(QWidget *parent) : QDialog(parent), ui(new Ui::Pr
     ui->textBoxSID->setValues(InputType::TIDSID);
 
     ui->textBoxSaveSeed->setValues(InputType::Seed32Bit);
-    ui->labelSaveSeed->setToolTip(tr("u32 at save offset 0x4200. The game adds the console clock in ms to it 86 frames after the title-screen A press. It "
-                                     "changes on every in-game save, so reload it from the save you will play from."));
+    ui->labelSaveSeed->setToolTip(tr("u32 at save offset 0x4200. The game adds the console clock in ms to it after the title-screen A press "
+                                     "(86 frames later on X/Y, 236 on Omega Ruby, 237 on Alpha Sapphire). It changes on every in-game save, "
+                                     "so reload it from the save you will play from."));
 
-    ui->comboBoxVersion->setup({ toInt(Game::X), toInt(Game::Y) });
+    ui->comboBoxVersion->setup({ toInt(Game::X), toInt(Game::Y), toInt(Game::OR), toInt(Game::AS) });
 
     connect(ui->pushButtonLoadSave, &QPushButton::clicked, this, &ProfileEditor6::loadSave);
     connect(ui->pushButtonOkay, &QPushButton::clicked, this, &ProfileEditor6::okay);
@@ -90,7 +91,7 @@ void ProfileEditor6::okay()
 
 void ProfileEditor6::loadSave()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select an X/Y save (main)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select an X/Y/OR/AS save (main)"));
     if (fileName.isEmpty())
     {
         return;
@@ -106,7 +107,7 @@ void ProfileEditor6::loadSave()
     Save6 save = Save6::parse(reinterpret_cast<const u8 *>(data.constData()), static_cast<size_t>(data.size()));
     if (!save.valid)
     {
-        QMessageBox msg(QMessageBox::Warning, tr("Invalid save"), tr("Select a decrypted X/Y save (0x65600 bytes)"));
+        QMessageBox msg(QMessageBox::Warning, tr("Invalid save"), tr("Select a decrypted X/Y save (0x65600 bytes) or OR/AS save (0x76000 bytes)"));
         msg.exec();
         return;
     }

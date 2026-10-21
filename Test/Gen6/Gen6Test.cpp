@@ -20,12 +20,14 @@
 #include "Gen6Test.hpp"
 #include <Core/Enum/Game.hpp>
 #include <Core/Enum/Lead.hpp>
+#include <Core/Enum/Shiny.hpp>
 #include <Core/Gen6/EncounterArea6.hpp>
 #include <Core/Gen6/Encounters6.hpp>
 #include <Core/Gen6/Generators/EggGenerator6.hpp>
 #include <Core/Gen6/Generators/IDGenerator6.hpp>
 #include <Core/Gen6/Generators/StaticGenerator6.hpp>
 #include <Core/Gen6/Generators/WildGenerator6.hpp>
+#include <Core/Gen6/Mirage6.hpp>
 #include <Core/Gen6/Pokemon6.hpp>
 #include <Core/Gen6/Profile6.hpp>
 #include <Core/Gen6/Save6.hpp>
@@ -37,6 +39,7 @@
 #include <Core/Gen6/WC6.hpp>
 #include <Core/Parents/PersonalLoader.hpp>
 #include <Core/Parents/Slot.hpp>
+#include <Core/RNG/MT.hpp>
 #include <Core/Util/Translator.hpp>
 #include <Core/Parents/States/IDState.hpp>
 #include <Core/Util/OpenCL.hpp>
@@ -58,6 +61,44 @@ namespace
     // Javier's saves
     const Profile6 profileX("X", Game::X, 35323, 15424, false, 0xcc72d50f);
     const Profile6 profileY("Y", Game::Y, 28952, 46381, true, 0xc2a451a2);
+    const Profile6 profileOR("OR", Game::OR, 15307, 30418, false, 0xf6e71ef6);
+    const Profile6 profileAS("AS", Game::AS, 49857, 14586, false, 0xd07bcdbf);
+
+    /**
+     * @brief MT output whose rand(n) is \p value
+     */
+    constexpr u32 randOutput(u32 value, u32 n)
+    {
+        return static_cast<u32>(((static_cast<u64>(value) << 32) + n - 1) / n);
+    }
+
+    /**
+     * @brief MT output whose >> 27 IV is \p iv
+     */
+    constexpr u32 ivOutput(u8 iv)
+    {
+        return (static_cast<u32>(iv) << 27) | 0x123456;
+    }
+
+    /**
+     * @brief Finds the template of \p specie that \p version has
+     */
+    const StaticTemplate6 *findStatic(u16 specie, Game version)
+    {
+        for (int category = 0; category < 6; category++)
+        {
+            int size;
+            const StaticTemplate6 *templates = Encounters6::getStaticEncounters(category, &size);
+            for (int i = 0; i < size; i++)
+            {
+                if (templates[i].getSpecie() == specie && (templates[i].getVersion() & version) != Game::None)
+                {
+                    return &templates[i];
+                }
+            }
+        }
+        return nullptr;
+    }
 
     /**
      * @brief Replays recorded MT outputs
@@ -84,7 +125,7 @@ namespace
 
     const StaticTemplate6 *findStatic(u16 specie)
     {
-        for (int category = 0; category < 5; category++)
+        for (int category = 0; category < 6; category++)
         {
             int size;
             const StaticTemplate6 *templates = Encounters6::getStaticEncounters(category, &size);
@@ -264,7 +305,7 @@ void Gen6Test::hordeGenerator()
 {
     // Honey horde of Psyduck, hidden-ability member 3: members draw a 2-ability slot, the HA member skips the draw (live X)
     std::vector<Slot> horde(5, Slot(54, 20, 20, PersonalLoader::getPersonal(Game::X, 54)));
-    EncounterArea6 route7(38, Encounter6::HordeHoney, horde);
+    EncounterArea6 route7(38, Encounter6::HordeHoney, horde, Game::X);
     QCOMPARE(route7.getDelay(), 195u);
 
     WildGenerator6 generator(500, 0, 200, Encounter6::HordeHoney, Lead::None, horde, 3, 0, false, profileX, allFilter());
@@ -620,4 +661,229 @@ void Gen6Test::recoverSaveSeed()
     // A wrong seed for boot B is caught
     boots[1].seed ^= 0x00100000;
     QVERIFY(!SeedWindow6::recoverSaveSeed(boots, 2000).consistent);
+}
+
+void Gen6Test::orasStatic()
+{
+    // OR statics generated live through the Regice script with the Groudon / Deoxys rows (research Part V A5): EC, 1 PID roll, perfect-IV
+    // picks with re-roll, the other IVs, the ability (drawn although the legend has one ability), nature, and no gender draw
+    const StaticTemplate6 *groudon = findStatic(383, Game::OR);
+    QVERIFY(groudon != nullptr);
+    QCOMPARE(groudon->getDelay(), u16(3831));
+    QVERIFY(groudon->getShiny() == Shiny::Never);
+    Outputs outputs = { 0x6F600C72, 0xBA11B6DB, randOutput(1, 6), randOutput(1, 6), randOutput(3, 6), randOutput(4, 6), ivOutput(3),
+                        ivOutput(4), ivOutput(19), 0x12345678, randOutput(13, 25), 0xFFFFFFFF };
+    Gen6::Request6 request = StaticGenerator6::getRequest(*groudon, profileOR, Lead::None);
+    ReplayRNG rng { outputs.data() };
+    auto result = Gen6::generate(rng, request, groudon->getInfo(), profileOR.getTID(), profileOR.getSID());
+    State6 state(0, result, groudon->getLevel(), 0, groudon->getInfo());
+    compare(state, 0x6F600C72, 0xBA11B6DB, { 3, 31, 4, 31, 31, 19 }, 0, 13, 2);
+    QCOMPARE(rng.index, 11u);
+
+    // Deoxys row 58: picks 4, 5, 5 (re-roll), 2; ability draw 2
+    const StaticTemplate6 *deoxys = findStatic(386, Game::OR);
+    QCOMPARE(deoxys->getDelay(), u16(301));
+    outputs = { 0xBE0E5968, 0x753241D5, randOutput(4, 6), randOutput(5, 6), randOutput(5, 6), randOutput(2, 6), ivOutput(12),
+                ivOutput(27), ivOutput(19), 0x92345678, randOutput(19, 25), 0xFFFFFFFF };
+    request = StaticGenerator6::getRequest(*deoxys, profileOR, Lead::None);
+    rng = { outputs.data() };
+    result = Gen6::generate(rng, request, deoxys->getInfo(), profileOR.getTID(), profileOR.getSID());
+    State6 deoxysState(0, result, deoxys->getLevel(), 0, deoxys->getInfo());
+    compare(deoxysState, 0xBE0E5968, 0x753241D5, { 12, 27, 31, 19, 31, 31 }, 1, 19, 2);
+    QCOMPARE(rng.index, 11u);
+
+    // Shiny lock: a shiny roll comes out PID ^ 0x10000000 (Groudon forced to 4D190000 -> 5D190000, live OR)
+    Profile6 forced("forced", Game::OR, 0x4D19 ^ 0x0000, 0, false, 0);
+    outputs = { 0x4D190000, 0x4D190000, randOutput(0, 6), randOutput(1, 6), randOutput(2, 6), 0, 0, 0, 0, 0, 0 };
+    request = StaticGenerator6::getRequest(*groudon, forced, Lead::None);
+    rng = { outputs.data() };
+    result = Gen6::generate(rng, request, groudon->getInfo(), forced.getTID(), forced.getSID());
+    QCOMPARE(result.pid, 0x5D190000u);
+
+    // The static generator adds the 60-output container after the delay
+    StaticGenerator6 generator(100, 0, groudon->getDelay(), Lead::None, *groudon, profileOR, allFilter());
+    auto states = generator.generate(0x12345678);
+    QCOMPARE(states.size(), size_t(1));
+    MT mt(0x12345678);
+    mt.advance(100 + 3831 + 60);
+    QCOMPARE(states[0].getEC(), mt.next());
+
+    QVERIFY(findStatic(382, Game::AS) != nullptr); // Kyogre on AS only
+    QVERIFY(findStatic(382, Game::OR) == nullptr);
+    QCOMPARE(findStatic(717, Game::Y)->getDelay(), u16(209)); // Yveltal
+}
+
+void Gen6Test::orasGift()
+{
+    // Gifts skip every fixed field (live OR/AS through the fossil scientist): Beldum = EC, PID, HP, Atk, SpA, Spe, nature (7 outputs)
+    const StaticTemplate6 *beldum = findStatic(374, Game::OR);
+    QVERIFY(beldum != nullptr);
+    QVERIFY(beldum->getGift());
+    QVERIFY(!beldum->getMeasured());
+    Outputs outputs = { 0x11111111, 0x22222222, ivOutput(5), ivOutput(6), ivOutput(7), ivOutput(8), randOutput(7, 25), 0xFFFFFFFF };
+    Gen6::Request6 request = StaticGenerator6::getRequest(*beldum, profileOR, Lead::None);
+    ReplayRNG rng { outputs.data() };
+    auto result = Gen6::generate(rng, request, beldum->getInfo(), profileOR.getTID(), profileOR.getSID());
+    QCOMPARE(result.ivs, (IVs { 5, 6, 31, 7, 31, 8 }));
+    QCOMPARE(result.nature, u8(7));
+    QCOMPARE(result.ability, u8(0));
+    QCOMPARE(rng.index, 7u);
+
+    // Castform = EC, PID, 5 IVs (SpA fixed 31), nature Lax, female
+    const StaticTemplate6 *castform = findStatic(351, Game::AS);
+    outputs = { 0x11111111, 0x22222222, ivOutput(1), ivOutput(2), ivOutput(3), ivOutput(4), ivOutput(5), 0xFFFFFFFF };
+    request = StaticGenerator6::getRequest(*castform, profileAS, Lead::None);
+    rng = { outputs.data() };
+    result = Gen6::generate(rng, request, castform->getInfo(), profileAS.getTID(), profileAS.getSID());
+    QCOMPARE(result.ivs, (IVs { 1, 2, 3, 31, 4, 5 }));
+    QCOMPARE(result.nature, u8(9));
+    QCOMPARE(result.gender, u8(1));
+    QCOMPARE(rng.index, 7u);
+
+    // Cosplay Pikachu is shiny-locked with 3 perfect IVs, the hidden ability and female fixed: EC, PID, picks, 3 IVs, nature
+    const StaticTemplate6 *pikachu = findStatic(25, Game::OR);
+    QVERIFY(pikachu->getShiny() == Shiny::Never);
+    outputs = { 0x11111111, 0x22222222, randOutput(4, 6), randOutput(1, 6), randOutput(3, 6), ivOutput(28), ivOutput(16), ivOutput(5),
+                randOutput(8, 25), 0xFFFFFFFF };
+    request = StaticGenerator6::getRequest(*pikachu, profileOR, Lead::None);
+    rng = { outputs.data() };
+    result = Gen6::generate(rng, request, pikachu->getInfo(), profileOR.getTID(), profileOR.getSID());
+    QCOMPARE(result.ivs, (IVs { 28, 31, 16, 31, 31, 5 }));
+    QCOMPARE(result.ability, u8(2));
+    QCOMPARE(result.nature, u8(8));
+    QCOMPARE(rng.index, 9u);
+
+    // OR/AS starter: 11 outputs at the pick A + 140 with no container (live OR Torchic)
+    const StaticTemplate6 *torchic = findStatic(255, Game::OR);
+    QCOMPARE(torchic->getDelay(), u16(140));
+    QVERIFY(torchic->getMeasured());
+    StaticGenerator6 generator(50, 0, torchic->getDelay(), Lead::None, *torchic, profileOR, allFilter());
+    auto states = generator.generate(0x12345678);
+    MT mt(0x12345678);
+    mt.advance(50 + 140);
+    QCOMPARE(states[0].getEC(), mt.next());
+}
+
+void Gen6Test::inGameTrade()
+{
+    // X Steelix trade (live X, H21): 7 draws, EC, PID locked against the trade OT 19250/0, 5 random IVs (Def fixed 31), no container
+    const StaticTemplate6 *steelix = findStatic(208, Game::X);
+    QVERIFY(steelix != nullptr);
+    QVERIFY(steelix->getTrade());
+    QCOMPARE(steelix->getTradeTID(), u16(19250));
+    Outputs outputs = { 0xD04168E1, 0xFD1573A7, ivOutput(9), ivOutput(31), ivOutput(28), ivOutput(24), ivOutput(14), 0xFFFFFFFF };
+    Gen6::Request6 request = StaticGenerator6::getRequest(*steelix, profileX, Lead::None);
+    ReplayRNG rng { outputs.data() };
+    auto result = Gen6::generate(rng, request, steelix->getInfo(), steelix->getTradeTID(), 0);
+    QCOMPARE(result.ec, 0xD04168E1u);
+    QCOMPARE(result.pid, 0xFD1573A7u);
+    QCOMPARE(result.ivs, (IVs { 9, 31, 31, 28, 24, 14 }));
+    QCOMPARE(result.nature, u8(8));
+    QCOMPARE(result.ability, u8(0));
+    QCOMPARE(rng.index, 7u);
+
+    // The generator uses the trade OT's ID, so a trade is never shiny even when the PID would be shiny for the player
+    StaticGenerator6 generator(0, 2000, steelix->getDelay(), Lead::None, *steelix, profileX, allFilter());
+    auto states = generator.generate(0x12345678);
+    QCOMPARE(states.size(), size_t(2001));
+    for (const auto &state : states)
+    {
+        QCOMPARE(state.getShiny(), u8(0));
+        QCOMPARE(state.getIVs()[2], u8(31));
+    }
+
+    QVERIFY(findStatic(222, Game::AS)->getTrade()); // Corsola
+}
+
+void Gen6Test::orasEncounterTables()
+{
+    QVERIFY(hasEncounter(Encounter6::TallGrass, Game::OR));
+    QVERIFY(!hasEncounter(Encounter6::TallGrass, Game::X));
+    QVERIFY(!hasEncounter(Encounter6::FriendSafari, Game::AS));
+    QVERIFY(!hasEncounter(Encounter6::Ambush, Game::OR));
+    QVERIFY(hasEncounter(Encounter6::HordeHoney, Game::AS));
+
+    auto grass = Encounters6::getEncounters(Encounter6::Grass, Game::OR);
+    auto route101 = std::ranges::find_if(grass, [](const EncounterArea6 &area) { return area.getLocation() == 204; });
+    QVERIFY(route101 != grass.end());
+    QCOMPARE(route101->getPokemon(0).getSpecie(), u16(265)); // Wurmple
+    QCOMPARE(Translator::getLocations({ 204 }, Game::OR), (std::vector<std::string> { "Route 101" }));
+
+    auto hordes = Encounters6::getEncounters(Encounter6::HordeHoney, Game::OR);
+    auto route102 = std::ranges::find_if(hordes, [](const EncounterArea6 &area) { return area.getLocation() == 206; });
+    QVERIFY(route102 != hordes.end());
+    QCOMPARE(route102->getHordeCount(), u8(3));
+    QCOMPARE(route102->getDelay(), 177u);
+    QCOMPARE(Encounters6::getEncounters(Encounter6::HordeSweetScent, Game::AS)[0].getDelay(), 317u);
+    QCOMPARE(Encounters6::getEncounters(Encounter6::HordeSweetScent, Game::OR)[0].getDelay(), 321u);
+    QCOMPARE(Encounters6::getEncounters(Encounter6::HordeHoney, Game::Y)[0].getDelay(), 195u);
+
+    QVERIFY(!Encounters6::getEncounters(Encounter6::TallGrass, Game::AS).empty());
+    QVERIFY(!Encounters6::getEncounters(Encounter6::RockSmash, Game::OR).empty());
+    QVERIFY(Encounters6::getEncounters(Encounter6::FriendSafari, Game::OR).empty());
+
+    // OR/AS personal data has the Primal and Cosplay forms
+    QCOMPARE(PersonalLoader::getPersonal(Game::OR, 25)->getFormCount(), u8(7));
+}
+
+void Gen6Test::orasSaveParse()
+{
+    // Javier's OR/AS save copies (not in the repo); skipped elsewhere
+    QFile orFile("D:/Claude/Gen6-RNG-Research/OR_orig.sav");
+    QFile asFile("D:/Claude/Gen6-RNG-Research/AS_egg_ready.sav");
+    if (!orFile.open(QIODevice::ReadOnly) || !asFile.open(QIODevice::ReadOnly))
+    {
+        QSKIP("OR/AS saves not available");
+    }
+
+    QByteArray data = orFile.readAll();
+    Save6 save = Save6::parse(reinterpret_cast<const u8 *>(data.constData()), static_cast<size_t>(data.size()));
+    QVERIFY(save.valid);
+    QVERIFY(save.version == Game::OR);
+    QCOMPARE(save.tid, u16(15307));
+    QCOMPARE(save.sid, u16(30418));
+    QVERIFY(!save.shinyCharm);
+    QCOMPARE(save.saveSeed, 0xF6E71EF6u);
+    QCOMPARE(save.mirageValue, 0x4E1DF7CAu);
+
+    data = asFile.readAll();
+    save = Save6::parse(reinterpret_cast<const u8 *>(data.constData()), static_cast<size_t>(data.size()));
+    QVERIFY(save.valid);
+    QVERIFY(save.version == Game::AS);
+    QCOMPARE(save.tid, u16(49857));
+    QVERIFY(save.eggReady);
+    QCOMPARE(save.eggSeed, 0x4935B78441B958D0ull);
+}
+
+void Gen6Test::pressToSeed()
+{
+    // Title A press -> seed on Azahar: X/Y 86 frames (1453 ms), OR 236 frames, AS 237 frames
+    QCOMPARE(SeedWindow6::pressToSeedMs(Game::X), 1453u);
+    QCOMPARE(SeedWindow6::pressToSeedMs(Game::Y), 1453u);
+    QCOMPARE(SeedWindow6::pressToSeedMs(Game::OR), 3945u);
+    QCOMPARE(SeedWindow6::pressToSeedMs(Game::AS), 3960u);
+}
+
+void Gen6Test::mirageSpots()
+{
+    // Daily value chain from Javier's OR save, one step per day (live OR)
+    std::array<u32, 6> chain = { 0x4E1DF7CA, 0x3873C59F, 0xEC4DE272, 0x26ED8211, 0xBD1A4B21, 0x291E1E58 };
+    for (size_t i = 0; i + 1 < chain.size(); i++)
+    {
+        QCOMPARE(MirageSpot6::nextDay(chain[i]), chain[i + 1]);
+    }
+
+    // BD1A4B21 with TID 15307 shows spot 1, Crescent Isle (landed on, zone 467)
+    QCOMPARE(MirageSpot6::spot(0xBD1A4B21, 15307), u8(1));
+    auto days = MirageSpot6::calendar(0x26ED8211, 15307, 3);
+    QCOMPARE(days.size(), size_t(3));
+    QCOMPARE(days[1].value, 0xBD1A4B21u);
+    QCOMPARE(days[1].spot, u8(1));
+    QVERIFY(days[1].kind == MirageSpot6::Kind::CrescentIsle);
+    QCOMPARE(days[1].zone, u16(467));
+    QCOMPARE(days[1].item, u16(93)); // TinyMT_first(BD1A4B21) % 6 = 0: Heart Scale
+
+    QCOMPARE(MirageSpot6::zone(12), u16(194)); // Mirage Cave 3 on the sky map
+    QCOMPARE(MirageSpot6::zone(33), u16(466));
+    QVERIFY(MirageSpot6::kind(25) == MirageSpot6::Kind::Island);
 }

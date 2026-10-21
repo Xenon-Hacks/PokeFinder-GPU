@@ -124,6 +124,8 @@
 322,Électriseur
 323,Magmariseur
 326,Griffe Rasoir
+327,Croc Rasoir
+537,Bel'Écaille
 541,Ballon
 545,Bulbe
 546,Pile

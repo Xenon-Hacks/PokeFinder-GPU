@@ -30,7 +30,7 @@ namespace Ui
 }
 
 /**
- * @brief TID/SID generator for X/Y
+ * @brief TID/SID generator for X/Y and OR/AS
  */
 class IDs6 final : public QWidget
 {

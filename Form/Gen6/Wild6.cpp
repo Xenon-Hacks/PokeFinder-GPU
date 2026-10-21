@@ -29,6 +29,7 @@
 #include <Form/Gen6/SeedWindowUI6.hpp>
 #include <Model/Gen6/StateModel6.hpp>
 #include <QSettings>
+#include <QStandardItemModel>
 
 static const QString settingPrefix = QStringLiteral("wild6");
 
@@ -37,7 +38,7 @@ Wild6::Wild6(QWidget *parent) : QWidget(parent), ui(new Ui::Wild6)
     ui->setupUi(this);
     setAttribute(Qt::WA_QuitOnClose, false);
 
-    ui->profileDisplay->setup(settingPrefix, Game::XY);
+    ui->profileDisplay->setup(settingPrefix, Game::Gen6);
 
     model = new StateModel6(ui->tableView);
     ui->tableView->setModel(model);
@@ -50,7 +51,8 @@ Wild6::Wild6(QWidget *parent) : QWidget(parent), ui(new Ui::Wild6)
 
     ui->labelInitialAdvances->setToolTip(
         tr("MT frame of the trigger: the encounter step, the Rock Smash Yes press, the fishing bite or the Honey / Sweet Scent press"));
-    ui->labelDelay->setToolTip(tr("MT frames from the trigger to the 60-output container before the EC (Azahar values, calibrate on hardware)"));
+    ui->labelDelay->setToolTip(tr("MT frames from the trigger to the 60-output container before the EC (Azahar values, calibrate on hardware). "
+                                  "Honey 195 on X/Y, 177 on OR/AS; Sweet Scent 339 on X, 321 on OR, 317 on AS"));
     ui->comboBoxEncounter->setToolTip(tr("Which slot appears, the lead check and held items come from the TinyMT and are not modelled: "
                                          "pick the target you are after"));
     ui->comboBoxLocation->setToolTip(tr("Locations that have this encounter type in the selected game"));
@@ -221,5 +223,17 @@ void Wild6::generate()
 void Wild6::profileChanged(const Profile6 &profile)
 {
     currentProfile = &profile;
+
+    // Only offer the encounter types the profile's game has (flowers, ambush and Friend Safari on X/Y, long grass on OR/AS)
+    auto *items = qobject_cast<QStandardItemModel *>(ui->comboBoxEncounter->model());
+    for (int i = 0; i < ui->comboBoxEncounter->count(); i++)
+    {
+        items->item(i)->setEnabled(hasEncounter(static_cast<Encounter6>(i), profile.getVersion()));
+    }
+    if (!hasEncounter(static_cast<Encounter6>(ui->comboBoxEncounter->currentIndex()), profile.getVersion()))
+    {
+        ui->comboBoxEncounter->setCurrentIndex(0);
+    }
+
     encounterIndexChanged(ui->comboBoxEncounter->currentIndex());
 }

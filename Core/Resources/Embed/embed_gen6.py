@@ -7,9 +7,14 @@ from .embed_util import write_data
 # game's 79-slot zone table in order: 12 grass, 12 yellow flowers, 12 purple flowers, 12 red flowers, 12 rough terrain,
 # 5 surf, 5 rock smash, 3 old rod, 3 good rod, 3 super rod. Type 7 areas are the 3 hordes x 5 members, type 1 areas are
 # the ambush spots (bushes, berry trees, cave shadows and drops).
+#
+# OR/AS data (encounter_or.pkl, encounter_as.pkl) has the same area format with the ORAS zone table: type 0 areas hold
+# 12 grass, 12 long grass, 3 DexNav-only slots, 5 surf, 3 old rod, 3 good rod, 3 super rod; type 6 areas are the 5 Rock Smash
+# slots and type 7 areas the 3 hordes x 5 members.
 
 # Encounter6 enum order
-GRASS, YELLOW, PURPLE, RED, ROUGH, SURF, ROCK_SMASH, OLD_ROD, GOOD_ROD, SUPER_ROD, HORDE_HONEY, HORDE_SWEET_SCENT, AMBUSH, SAFARI = range(14)
+GRASS, YELLOW, PURPLE, RED, ROUGH, SURF, ROCK_SMASH, OLD_ROD, GOOD_ROD, SUPER_ROD, HORDE_HONEY, HORDE_SWEET_SCENT, AMBUSH, SAFARI,     TALL_GRASS = range(15)
+DEXNAV = None  # DexNav-only slots, not a wild encounter the tab generates
 
 ZONE_LAYOUT = (
     (GRASS, 12), (YELLOW, 12), (PURPLE, 12), (RED, 12), (ROUGH, 12), (SURF, 5), (ROCK_SMASH, 5), (OLD_ROD, 3), (GOOD_ROD, 3),
@@ -25,6 +30,9 @@ FRIEND_SAFARI = (
     541, 544, 548, 551, 556, 557, 561, 569, 572, 575, 578, 581, 586, 587, 596, 597, 600, 608, 611, 614, 618, 619, 621, 623, 624, 627,
     629, 636, 651, 654, 657, 660, 662, 668, 673, 674, 677, 682, 684, 686, 689, 694, 701, 702, 705, 707, 708, 710, 712, 714)
 FRIEND_SAFARI_LOCATION = 148
+
+ZONE_LAYOUT_ORAS = (
+    (GRASS, 12), (TALL_GRASS, 12), (DEXNAV, 3), (SURF, 5), (OLD_ROD, 3), (GOOD_ROD, 3), (SUPER_ROD, 3))
 
 
 def _read_areas(path: str):
@@ -46,7 +54,7 @@ def _read_areas(path: str):
     return areas
 
 
-def _split(areas):
+def _split(areas, oras=False):
     """Groups slots by (encounter type, location); the slot order is kept, duplicates merged into one level range"""
     tables = {}
 
@@ -74,13 +82,19 @@ def _split(areas):
     for location, type, slots in areas:
         if type == 0:
             index = 0
-            for encounter, size in ZONE_LAYOUT:
-                add(encounter, location, slots[index:index + size])
+            for encounter, size in (ZONE_LAYOUT_ORAS if oras else ZONE_LAYOUT):
+                if encounter is not None:
+                    add(encounter, location, slots[index:index + size])
                 index += size
         elif type == 7:
             add_horde(location, slots)
-        elif type == 1:
+        elif type == 1 and not oras:
             add(AMBUSH, location, slots)
+        elif type == 6 and oras:
+            add(ROCK_SMASH, location, slots)
+
+    if oras:
+        return tables
 
     tables[(SAFARI, FRIEND_SAFARI_LOCATION)] = [(specie, 30, 30) for specie in FRIEND_SAFARI] + [
         (670 | (1 << 11), 30, 30), (670 | (3 << 11), 30, 30)]
@@ -121,8 +135,8 @@ def _array(name: str, blob: bytes):
 
 def embed_encounters6(parent_dir: str, output_dir: str):
     arrays = []
-    for game in ("x", "y"):
+    for game in ("x", "y", "or", "as"):
         areas = _read_areas(f"{parent_dir}/Encounters6/encounter_{game}.bin")
-        arrays.append(_array(f"ENCOUNTERS_{game.upper()}", _blob(_split(areas))))
+        arrays.append(_array(f"ENCOUNTERS_{game.upper()}", _blob(_split(areas, game in ("or", "as")))))
 
     write_data(arrays, f"{output_dir}/EncounterData6.hpp", ("Core/Global.hpp", "array"))

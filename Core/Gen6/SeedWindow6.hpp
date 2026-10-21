@@ -20,6 +20,7 @@
 #ifndef SEEDWINDOW6_HPP
 #define SEEDWINDOW6_HPP
 
+#include <Core/Enum/Game.hpp>
 #include <Core/Gen6/States/State6.hpp>
 #include <Core/Global.hpp>
 #include <algorithm>
@@ -29,15 +30,39 @@
 #include <vector>
 
 /**
- * @brief X/Y seeds as a function of the console clock
+ * @brief Gen 6 seeds as a function of the console clock
  *
- * 86 frames after the first A press on the title screen the game seeds MT with save Misc[0x00] + T, where T is the console
- * clock in ms since 2000-01-01 truncated to 32 bits. (A seed set when the title loads is overwritten by this one.) A seed therefore maps back to one console time every 2^32 ms (49 days 17:02:47.296).
+ * After the first A press on the title screen the game seeds MT with save Misc[0x00] + T, where T is the console clock in ms
+ * since 2000-01-01 truncated to 32 bits: 86 frames later on X/Y, 236 on Omega Ruby and 237 on Alpha Sapphire (OR/AS run the
+ * title animation and an asynchronous save read first). (A seed set when the title loads is overwritten by this one.) A seed therefore maps back to one console time every 2^32 ms (49 days 17:02:47.296).
  */
 namespace SeedWindow6
 {
     constexpr u64 period = 1ULL << 32; ///< ms between two console times that give the same seed
     constexpr u64 maxConsoleMs = 36525ULL * 86400000ULL - 1; ///< 2099-12-31 23:59:59.999, the latest 3DS clock setting
+
+    /**
+     * @brief Default ms of console time from the title-screen A press to the seed (Azahar, measured from RAM)
+     *
+     * X/Y: 86 frames + about 16 ms = 1453 (X 4 runs, Y about 80). Omega Ruby: 236 frames, T - press 3928..3962 ms in 10 runs.
+     * Alpha Sapphire: 237..238 frames, 3960 ms. On OR/AS 12 of those frames are a save read, which may take longer on a cartridge.
+     *
+     * @param version Game version
+     *
+     * @return Press-to-seed delay in ms
+     */
+    constexpr u64 pressToSeedMs(Game version)
+    {
+        if ((version & Game::AS) != Game::None)
+        {
+            return 3960;
+        }
+        if ((version & Game::OR) != Game::None)
+        {
+            return 3945;
+        }
+        return 1453;
+    }
 
     /**
      * @brief Seed the title screen sets at console time \p ms

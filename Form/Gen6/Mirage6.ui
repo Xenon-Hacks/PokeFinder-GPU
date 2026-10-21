@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+<class>Mirage6</class>
+<widget class="QWidget" name="Mirage6">
+<property name="geometry">
+<rect>
+<x>0</x>
+<y>0</y>
+<width>720</width>
+<height>600</height>
+</rect>
+</property>
+<property name="windowTitle">
+ <string>Mirage Spots (OR/AS)</string>
+</property>
+<layout class="QGridLayout" name="gridLayout">
+<item row="0" column="0">
+<widget class="QGroupBox" name="groupBoxSave">
+<property name="title">
+ <string>Save</string>
+</property>
+<layout class="QGridLayout" name="gridLayoutSave">
+<item row="0" column="0">
+<widget class="QLabel" name="labelValue">
+<property name="text">
+ <string>Daily Value</string>
+</property>
+</widget>
+</item>
+<item row="0" column="1">
+<widget class="TextBox" name="textBoxValue"/>
+</item>
+<item row="1" column="0">
+<widget class="QLabel" name="labelTID">
+<property name="text">
+ <string>TID</string>
+</property>
+</widget>
+</item>
+<item row="1" column="1">
+<widget class="TextBox" name="textBoxTID"/>
+</item>
+<item row="2" column="0">
+<widget class="QLabel" name="labelStart">
+<property name="text">
+ <string>Last Played</string>
+</property>
+</widget>
+</item>
+<item row="2" column="1">
+<widget class="QDateEdit" name="dateEditStart">
+<property name="calendarPopup">
+ <bool>true</bool>
+</property>
+</widget>
+</item>
+<item row="3" column="0">
+<widget class="QLabel" name="labelDays">
+<property name="text">
+ <string>Days</string>
+</property>
+</widget>
+</item>
+<item row="3" column="1">
+<widget class="QSpinBox" name="spinBoxDays">
+<property name="minimum">
+ <number>1</number>
+</property>
+<property name="maximum">
+ <number>3650</number>
+</property>
+<property name="value">
+ <number>60</number>
+</property>
+</widget>
+</item>
+<item row="4" column="0">
+<widget class="QPushButton" name="pushButtonLoadSave">
+<property name="text">
+ <string>Load Save</string>
+</property>
+</widget>
+</item>
+<item row="4" column="1">
+<widget class="QPushButton" name="pushButtonGenerate">
+<property name="text">
+ <string>Generate</string>
+</property>
+</widget>
+</item>
+</layout>
+</widget>
+</item>
+<item row="0" column="1">
+<widget class="QLabel" name="labelHelp">
+<property name="wordWrap">
+ <bool>true</bool>
+</property>
+<property name="alignment">
+ <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+</property>
+</widget>
+</item>
+<item row="1" column="0" colspan="2">
+<widget class="QTableWidget" name="tableWidget">
+<property name="editTriggers">
+ <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+</property>
+<property name="selectionBehavior">
+ <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+</property>
+<attribute name="horizontalHeaderStretchLastSection">
+ <bool>true</bool>
+</attribute>
+<attribute name="verticalHeaderVisible">
+ <bool>false</bool>
+</attribute>
+</widget>
+</item>
+</layout>
+</widget>
+<customwidgets>
+<customwidget>
+<class>TextBox</class>
+<extends>QLineEdit</extends>
+<header>Form/Controls/TextBox.hpp</header>
+</customwidget>
+</customwidgets>
+<resources/>
+<connections/>
+</ui>

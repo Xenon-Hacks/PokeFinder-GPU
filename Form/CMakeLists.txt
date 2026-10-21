@@ -85,6 +85,7 @@ set(PROJECT_UI
     Gen6/Eggs6.ui
     Gen6/Event6.ui
     Gen6/IDs6.ui
+    Gen6/Mirage6.ui
     Gen6/Profile/ProfileDisplay6.ui
     Gen6/Profile/ProfileEditor6.ui
     Gen6/Profile/ProfileManager6.ui
@@ -231,6 +232,8 @@ set(PROJECT_SOURCES
     Gen6/Event6.hpp
     Gen6/IDs6.cpp
     Gen6/IDs6.hpp
+    Gen6/Mirage6.cpp
+    Gen6/Mirage6.hpp
     Gen6/Profile/ProfileDisplay6.cpp
     Gen6/Profile/ProfileDisplay6.hpp
     Gen6/Profile/ProfileEditor6.cpp

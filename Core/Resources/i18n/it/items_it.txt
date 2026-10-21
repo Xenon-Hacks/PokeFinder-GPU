@@ -124,6 +124,8 @@
 322,Elettritore
 323,Magmatore
 326,Affilartiglio
+327,Affilodente
+537,Squama Bella
 541,Palloncino
 545,Bulbo
 546,Ricaripila

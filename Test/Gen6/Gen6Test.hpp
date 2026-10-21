@@ -23,7 +23,7 @@
 #include <QObject>
 
 /**
- * @brief X/Y tests. The live cases replay MT output streams rebuilt from RAM snapshots of Javier's Azahar sessions
+ * @brief X/Y and OR/AS tests. The live cases replay MT output streams rebuilt from RAM snapshots of Javier's Azahar sessions
  * (Gen6-RNG-Research/results) and expect the Pokemon the game actually created.
  */
 class Gen6Test : public QObject
@@ -53,6 +53,13 @@ private slots:
     void narrowSameBoot();
     void timerPlan();
     void recoverSaveSeed();
+    void orasStatic();
+    void orasGift();
+    void inGameTrade();
+    void orasEncounterTables();
+    void orasSaveParse();
+    void pressToSeed();
+    void mirageSpots();
 };
 
 #endif // GEN6TEST_HPP

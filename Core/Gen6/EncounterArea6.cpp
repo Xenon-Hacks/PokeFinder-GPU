@@ -25,18 +25,43 @@
 #include <Core/Util/Translator.hpp>
 #include <algorithm>
 
+bool hasEncounter(Encounter6 encounter, Game version)
+{
+    bool oras = (version & Game::ORAS) != Game::None;
+    switch (encounter)
+    {
+    case Encounter6::YellowFlowers:
+    case Encounter6::PurpleFlowers:
+    case Encounter6::RedFlowers:
+    case Encounter6::RoughTerrain:
+    case Encounter6::Ambush:
+    case Encounter6::FriendSafari:
+        return !oras;
+    case Encounter6::TallGrass:
+        return oras;
+    default:
+        return true;
+    }
+}
+
 u32 EncounterArea6::getDelay() const
 {
+    bool oras = (version & Game::ORAS) != Game::None;
     switch (encounter)
     {
     case Encounter6::RockSmash:
-        return 274; // Yes press -> TinyMT decision and container, live X
+        return 274; // Yes press -> TinyMT decision and container, live X (OR 272..275)
     case Encounter6::HordeHoney:
         // Honey press -> container: first EC at press + 256..260 on live X, 254..257 (mean 255.3, n = 25) on live Y Route 7;
-        // 3DSRNGTool uses 174
-        return 195;
+        // OR Route 103 trigger at press + 177 (3 runs) and AS + 177; 3DSRNGTool uses 174
+        return oras ? 177 : 195;
     case Encounter6::HordeSweetScent:
-        return 339; // Sweet Scent press -> container, live X (first EC at press + 399)
+        // Sweet Scent press -> container: X Route 7 + 339 (first EC at press + 399), OR Route 103 + 321, AS + 317
+        if (oras)
+        {
+            return (version & Game::AS) != Game::None ? 317 : 321;
+        }
+        return 339;
     case Encounter6::Ambush:
         // Cave shadows and drops: Reflection Cave, Victory Road, Glittering Cave, Terminus Cave (shadow walked onto: press + 32).
         // Bushes on Routes 6 and 18: press + 62 (Route 6 bush, live X). Berry trees on Route 7 were not timed.
@@ -96,7 +121,19 @@ namespace Encounters6
 {
     std::vector<EncounterArea6> getEncounters(Encounter6 encounter, Game version)
     {
-        const u8 *data = (version & Game::Y) != Game::None ? ENCOUNTERS_Y.data() : ENCOUNTERS_X.data();
+        const u8 *data;
+        if ((version & Game::AS) != Game::None)
+        {
+            data = ENCOUNTERS_AS.data();
+        }
+        else if ((version & Game::OR) != Game::None)
+        {
+            data = ENCOUNTERS_OR.data();
+        }
+        else
+        {
+            data = (version & Game::Y) != Game::None ? ENCOUNTERS_Y.data() : ENCOUNTERS_X.data();
+        }
         auto u16le = [data](size_t offset) { return static_cast<u16>(data[offset] | (data[offset + 1] << 8)); };
 
         // Both horde triggers share the horde table
@@ -131,7 +168,7 @@ namespace Encounters6
                     slots.emplace_back(specie, form, data[offset + j * 4 + 2], data[offset + j * 4 + 3],
                                        PersonalLoader::getPersonal(version, specie, form));
                 }
-                areas.emplace_back(location, encounter, slots);
+                areas.emplace_back(location, encounter, slots, version);
             }
             offset += static_cast<size_t>(slotCount) * 4;
         }

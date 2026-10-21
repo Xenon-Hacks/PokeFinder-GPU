@@ -241,6 +241,7 @@ add_library(PokeFinderCore STATIC
     Gen6/Generators/StaticGenerator6.hpp
     Gen6/Generators/WildGenerator6.cpp
     Gen6/Generators/WildGenerator6.hpp
+    Gen6/Mirage6.hpp
     Gen6/Pokemon6.hpp
     Gen6/Profile6.cpp
     Gen6/Profile6.hpp

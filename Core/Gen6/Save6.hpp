@@ -25,13 +25,15 @@
 #include <cstddef>
 
 /**
- * @brief RNG-relevant fields of a decrypted X/Y save ("main", 0x65600 bytes)
+ * @brief RNG-relevant fields of a decrypted Gen 6 save ("main": X/Y 0x65600 bytes, OR/AS 0x76000 bytes)
  */
 struct Save6
 {
-    static constexpr size_t size = 0x65600;
+    static constexpr size_t size = 0x65600; ///< X/Y
+    static constexpr size_t sizeORAS = 0x76000; ///< Omega Ruby / Alpha Sapphire
 
-    u64 eggSeed = 0; ///< Daycare egg seed (Daycare 0x1B200 + 0x1E8)
+    u64 eggSeed = 0; ///< Daycare egg seed (Daycare + 0x1E8; daycare at 0x1B200 on X/Y, 0x1BC00 on OR/AS)
+    u32 mirageValue = 0; ///< OR/AS RandomGroup daily value at 0x1600 (Mirage spot of the day), 0 on X/Y
     u32 saveSeed = 0; ///< Misc[0x00] at 0x4200, the save term of the MT seed
     Game version = Game::None;
     u16 sid = 0;
@@ -46,15 +48,16 @@ struct Save6
      * @param data Save data
      * @param length Save size
      *
-     * @return Parsed save, valid is false when the size is not an X/Y save
+     * @return Parsed save, valid is false when the size is not a Gen 6 save
      */
     static Save6 parse(const u8 *data, size_t length)
     {
         Save6 save;
-        if (length != size)
+        if (length != size && length != sizeORAS)
         {
             return save;
         }
+        bool oras = length == sizeORAS;
 
         auto u16le = [data](size_t offset) { return static_cast<u16>(data[offset] | (data[offset + 1] << 8)); };
         auto u32le = [data](size_t offset) {
@@ -62,12 +65,22 @@ struct Save6
                 | (static_cast<u32>(data[offset + 3]) << 24);
         };
 
+        // Misc[0x00], MyStatus, the key items and the daycare layout are shared; only the daycare block moved on OR/AS
         constexpr size_t myStatus = 0x14000;
-        constexpr size_t daycare = 0x1b200;
+        size_t daycare = oras ? 0x1bc00 : 0x1b200;
 
         save.tid = u16le(myStatus);
         save.sid = u16le(myStatus + 2);
-        save.version = data[myStatus + 4] == 25 ? Game::Y : Game::X;
+        u8 game = data[myStatus + 4];
+        if (oras)
+        {
+            save.version = game == 26 ? Game::AS : Game::OR;
+            save.mirageValue = u32le(0x1600);
+        }
+        else
+        {
+            save.version = game == 25 ? Game::Y : Game::X;
+        }
         save.saveSeed = u32le(0x4200);
         save.eggReady = data[daycare + 0x1e0] != 0;
         save.eggSeed = (static_cast<u64>(u32le(daycare + 0x1ec)) << 32) | u32le(daycare + 0x1e8);

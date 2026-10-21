@@ -39,7 +39,7 @@ Static6::Static6(QWidget *parent) : QWidget(parent), ui(new Ui::Static6)
     ui->setupUi(this);
     setAttribute(Qt::WA_QuitOnClose, false);
 
-    ui->profileDisplay->setup(settingPrefix, Game::XY);
+    ui->profileDisplay->setup(settingPrefix, Game::Gen6);
 
     model = new StateModel6(ui->tableView);
     ui->tableView->setModel(model);
@@ -51,9 +51,10 @@ Static6::Static6(QWidget *parent) : QWidget(parent), ui(new Ui::Static6)
     ui->textBoxMaxAdvances->setValues(InputType::Advance32Bit);
     ui->textBoxDelay->setValues(InputType::Advance32Bit);
 
-    ui->labelSeed->setToolTip(tr("Initial MT seed: save Misc[0x00] + console ms 86 frames after the title-screen A press (Seed Finder)"));
+    ui->labelSeed->setToolTip(tr("Initial MT seed: save Misc[0x00] + console ms 86 frames (X/Y) or 236 frames (OR/AS) after the title-screen A press (Seed Finder)"));
     ui->labelInitialAdvances->setToolTip(tr("MT frame of the button press (or the step that starts the encounter)"));
-    ui->labelDelay->setToolTip(tr("MT frames from the press to the 60-frame skip before the EC"));
+    ui->labelDelay->setToolTip(tr("MT frames from the press to the 60-frame skip before the EC (encounters), or to the EC (gifts, "
+                                  "fossils and trades)"));
 
     ui->comboMenuLead->addAction(tr("None"), toInt(Lead::None));
     ui->comboMenuLead->addMenu(tr("Synchronize"), Translator::getNatures());
@@ -159,6 +160,20 @@ void Static6::pokemonIndexChanged(int index)
         ui->spinBoxIVCount->setValue(staticTemplate->getIVCount());
         ui->textBoxDelay->setText(QString::number(staticTemplate->getDelay()));
         ui->comboMenuLead->setEnabled(!staticTemplate->getGift());
+
+        QString note;
+        if (staticTemplate->getTrade())
+        {
+            note = tr("Generated on the A press that closes \"Let's start our Pokémon trade!\", with the trade OT's ID %1, so it is "
+                      "never shiny. The frame offset from that press was not timed: set Delay from a test trade.")
+                       .arg(staticTemplate->getTradeTID());
+        }
+        else if (!staticTemplate->getMeasured())
+        {
+            note = tr("This delay was not measured in the game (3DSRNGTool value or an estimate). Check it with a test catch and correct "
+                      "Delay before relying on it.");
+        }
+        ui->labelDelayNote->setText(note);
     }
 }
 

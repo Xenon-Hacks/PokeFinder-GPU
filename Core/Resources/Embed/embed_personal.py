@@ -32,7 +32,8 @@ def embed_personal(parent_dir: str, output_dir: str):
                     else:
                         offset = 0x4c
                 elif index == 6:
-                    offset = 0x40
+                    # OR/AS entries are 0x50 bytes; the first 0x40 match X/Y
+                    offset = 0x50 if "ao" in os.path.basename(file) else 0x40
                 elif index == 8:
                     if "swsh" in file:
                         offset = 0xb0

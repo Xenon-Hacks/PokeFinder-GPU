@@ -38,7 +38,7 @@ Eggs6::Eggs6(QWidget *parent) : QWidget(parent), ui(new Ui::Eggs6)
     ui->setupUi(this);
     setAttribute(Qt::WA_QuitOnClose, false);
 
-    ui->profileDisplay->setup(settingPrefix, Game::XY);
+    ui->profileDisplay->setup(settingPrefix, Game::Gen6);
 
     model = new EggModel6(ui->tableView);
     ui->tableView->setModel(model);
@@ -139,7 +139,7 @@ void Eggs6::generate()
 
 void Eggs6::loadSave()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select an X/Y save (main)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select an X/Y/OR/AS save (main)"));
     if (fileName.isEmpty())
     {
         return;
@@ -155,7 +155,7 @@ void Eggs6::loadSave()
     Save6 save = Save6::parse(reinterpret_cast<const u8 *>(data.constData()), static_cast<size_t>(data.size()));
     if (!save.valid)
     {
-        QMessageBox msg(QMessageBox::Warning, tr("Invalid save"), tr("Select a decrypted X/Y save (0x65600 bytes)"));
+        QMessageBox msg(QMessageBox::Warning, tr("Invalid save"), tr("Select a decrypted X/Y save (0x65600 bytes) or OR/AS save (0x76000 bytes)"));
         msg.exec();
         return;
     }

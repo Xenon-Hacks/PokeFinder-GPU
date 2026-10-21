@@ -28,7 +28,7 @@
 enum class Game : u32;
 
 /**
- * @brief X/Y wild encounter types
+ * @brief Gen 6 wild encounter types. Flowers, rough terrain, ambush spots and the Friend Safari are X/Y only; long grass is OR/AS only.
  */
 enum class Encounter6 : u8
 {
@@ -38,15 +38,21 @@ enum class Encounter6 : u8
     RedFlowers,
     RoughTerrain,
     Surf,
-    RockSmash, ///< Advances count from the Yes press (decision at Yes + 274)
+    RockSmash, ///< Advances count from the Yes press (decision at Yes + 274 on X, + 272..275 on OR)
     OldRod, ///< Advances count from the bite (the Pokemon is generated even if the bite is missed)
     GoodRod,
     SuperRod,
-    HordeHoney, ///< 5 Pokemon back to back; advances count from the Honey press (trigger ≈ +195)
-    HordeSweetScent, ///< 5 Pokemon back to back; advances count from the Sweet Scent press (trigger +339)
+    HordeHoney, ///< 5 Pokemon back to back; advances count from the Honey press (trigger ≈ +195 on X/Y, +177 on OR/AS)
+    HordeSweetScent, ///< 5 Pokemon back to back; advances count from the Sweet Scent press (trigger +339 on X, +321 OR, +317 AS)
     Ambush, ///< Bushes, berry trees, cave shadows and drops (bush trigger = press + 62, shadow + 32)
-    FriendSafari ///< 5 PID rolls without the Shiny Charm, 2 perfect IVs
+    FriendSafari, ///< 5 PID rolls without the Shiny Charm, 2 perfect IVs
+    TallGrass ///< OR/AS long grass (same generation as grass)
 };
+
+/**
+ * @brief Whether \p encounter exists in \p version
+ */
+bool hasEncounter(Encounter6 encounter, Game version);
 
 /**
  * @brief Converts enum to number
@@ -65,7 +71,7 @@ constexpr bool isHorde(Encounter6 encounter)
 }
 
 /**
- * @brief One X/Y location's slots for one encounter type. Species and slot come from the TinyMT, which the Gen 6 tab does not
+ * @brief One Gen 6 location's slots for one encounter type. Species and slot come from the TinyMT, which the Gen 6 tab does not
  * model, so the slots only tell the user what can appear and give the generator the species' personal data.
  */
 class EncounterArea6
@@ -77,9 +83,10 @@ public:
      * @param location Met location
      * @param encounter Encounter type
      * @param pokemon Slots; hordes hold 5 slots per horde
+     * @param version Game the area belongs to
      */
-    EncounterArea6(u16 location, Encounter6 encounter, const std::vector<Slot> &pokemon) :
-        pokemon(pokemon), location(location), encounter(encounter)
+    EncounterArea6(u16 location, Encounter6 encounter, const std::vector<Slot> &pokemon, Game version) :
+        pokemon(pokemon), version(version), location(location), encounter(encounter)
     {
     }
 
@@ -137,6 +144,7 @@ public:
 
 private:
     std::vector<Slot> pokemon;
+    Game version;
     u16 location;
     Encounter6 encounter;
 };

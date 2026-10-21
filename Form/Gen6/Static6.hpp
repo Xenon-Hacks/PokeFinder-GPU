@@ -31,7 +31,7 @@ namespace Ui
 }
 
 /**
- * @brief Static encounter generator for X/Y
+ * @brief Static encounter, gift and trade generator for X/Y and OR/AS
  */
 class Static6 final : public QWidget
 {

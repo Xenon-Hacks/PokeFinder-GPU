@@ -43,6 +43,16 @@
        <string>Y</string>
       </property>
      </item>
+     <item>
+      <property name="text">
+       <string>Omega Ruby</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Alpha Sapphire</string>
+      </property>
+     </item>
     </widget>
    </item>
    <item row="0" column="2">

@@ -205,6 +205,13 @@
           </property>
          </widget>
         </item>
+        <item row="6" column="0">
+         <widget class="QPushButton" name="pushButtonMirage6">
+          <property name="text">
+           <string>Mirage Spots (OR/AS)</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="tabGen8">

@@ -55,7 +55,8 @@ namespace
         { 0, 5, 2, true, true }, // Friend Safari
         { 0, 7, 2, true, true }, // Friend Safari + Shiny Charm
         { 81, 1, 0, true, false }, // Gift / fossil (OR fossil: A press + 81; X/Y not timed)
-        { 0, 1, 3, false, true } // Legend
+        { 0, 1, 3, false, true }, // X/Y legend: fixed ability, no ability draw
+        { 0, 1, 3, true, true } // OR/AS legend: the ability is drawn even for single-ability legends (live OR)
     };
 
     bool parseRange(const QString &text, u8 &min, u8 &max)
@@ -86,7 +87,7 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->setupUi(this);
     setAttribute(Qt::WA_QuitOnClose, false);
 
-    ui->profileDisplay->setup(settingPrefix, Game::XY);
+    ui->profileDisplay->setup(settingPrefix, Game::Gen6);
 
     model = new SeedModel6(ui->tableView);
     ui->tableView->setModel(model);
@@ -104,11 +105,14 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->dateTimeEditAround->setDateTimeRange(QDateTime(QDate(2000, 1, 1), QTime(0, 0)), QDateTime(QDate(2099, 12, 31), QTime(23, 59)));
     ui->dateTimeEditAround->setDateTime(QDateTime::currentDateTime());
     ui->labelAround->setToolTip(tr("Earliest console time to aim for; the seed comes round once every 49 days 17:02:47.296"));
-    ui->labelPressToSeedMs->setToolTip(tr("ms of console time from the A press on the title screen to the seed being set: 86 frames + about 16 ms "
-                                          "= 1453 on Azahar (X, measured from RAM). Calibrate on hardware, where a slower save read adds to it"));
+    ui->labelPressToSeedMs->setToolTip(tr("ms of console time from the A press on the title screen to the seed being set, measured from RAM on "
+                                          "Azahar: X/Y 86 frames + about 16 ms = 1453, Omega Ruby 236 frames = 3945, Alpha Sapphire 237 frames "
+                                          "= 3960. It follows the profile's game until you calibrate it. Calibrate on hardware, where a slower "
+                                          "save read adds to it (most of all on OR/AS)"));
     ui->labelLostTicks->setToolTip(tr("MT ticks lost to load screens before the trigger: frames while the game is loading get no "
-                                      "per-frame advance. About 60 from the seed to Honey on Azahar (32-34 for the map load after "
-                                      "Continue, 27-29 for opening the bag); 0 if your target frame is already in frames"));
+                                      "per-frame advance. About 60 from the seed to Honey on Azahar on every game (X/Y: 32-34 for the "
+                                      "map load after Continue, 27-29 for opening the bag; OR/AS Route 103: 59-60). About 52 to Sweet "
+                                      "Scent on OR/AS. 0 if your target frame is already in frames"));
     ui->labelLeadS->setToolTip(tr("Seconds you want between confirming the clock and the timed press"));
     ui->labelTargetFrame->setToolTip(tr("MT frame (advances since the seed) to trigger the target at"));
     ui->labelPlan->setWordWrap(true);
@@ -137,12 +141,14 @@ SeedFinder6::SeedFinder6(QWidget *parent) : QWidget(parent), ui(new Ui::SeedFind
     ui->dateTimeEditStart->setDateTime(now.addSecs(-30));
     ui->dateTimeEditEnd->setDateTime(now.addSecs(30));
 
-    ui->comboBoxMode->setToolTip(tr("The game seeds MT with the save's Misc[0x00] plus the console clock in ms, read 86 frames (about "
-                                     "1.45 s) after the A press on the title screen. Misc[0x00] changes on every in-game save."));
+    ui->comboBoxMode->setToolTip(tr("The game seeds MT with the save's Misc[0x00] plus the console clock in ms, read after the A press on "
+                                     "the title screen: 86 frames (about 1.45 s) later on X/Y, 236 (about 3.95 s) on OR/AS. Misc[0x00] "
+                                     "changes on every in-game save."));
     ui->labelMinFrame->setToolTip(tr("MT frame of the trigger (button press or step); the EC is frame + delay + 60, or + delay for gifts"));
     ui->checkBoxContainer->setToolTip(tr("Encounters generate 6 dummy Pokemon (60 outputs) between the trigger and the EC; fossils and "
                                          "gifts go straight to the EC"));
-    ui->labelDelay->setToolTip(tr("MT frames from the press to the 60-frame skip (Mewtwo 3, Zygarde 2, Xerneas 161, Yveltal 210)"));
+    ui->labelDelay->setToolTip(tr("MT frames from the press to the 60-frame skip (Mewtwo 3, Zygarde 2, Xerneas 161, Yveltal 209; "
+                                  "OR/AS Regice 186, Deoxys 301, Groudon 3831, Kyogre 3843)"));
 
     ui->comboBoxNature->addItem(tr("Any"), 255);
     const auto &natures = Translator::getNatures();
@@ -224,6 +230,14 @@ void SeedFinder6::modeIndexChanged(int index)
 void SeedFinder6::profileChanged(const Profile6 &profile)
 {
     currentProfile = &profile;
+
+    // Follow the game's press-to-seed default unless the user has calibrated it
+    u64 current = ui->textBoxTitleDelay->getUInt();
+    if (current == 0 || current == SeedWindow6::pressToSeedMs(Game::X) || current == SeedWindow6::pressToSeedMs(Game::OR)
+        || current == SeedWindow6::pressToSeedMs(Game::AS))
+    {
+        ui->textBoxTitleDelay->setText(QString::number(SeedWindow6::pressToSeedMs(profile.getVersion())));
+    }
 }
 
 bool SeedFinder6::readCatch(SeedSearch6Settings &settings)
@@ -391,7 +405,7 @@ void SeedFinder6::seedTime()
     ui->pushButtonCalibrate->setEnabled(true);
 
     // The title screen replays the intro about 45 s after PRESS START shows (about 15 s after launch); a press on the intro
-    // only skips it (live Y), so launch about 40 s before the A press
+    // only skips it (live Y; not timed on OR/AS), so launch about 40 s before the A press
     constexpr u64 launchBefore = 40000;
     QString launch = plan.timer > launchBefore
         ? tr("at %1 s on the timer, about 40 s before the A press").arg(static_cast<double>(plan.timer - launchBefore) / 1000.0, 0, 'f', 0)
@@ -460,7 +474,8 @@ void SeedFinder6::calibrate()
 
 void SeedFinder6::recover()
 {
-    // The seed is set 86 frames (about 1453 ms) after the A press on the title screen; the press-to-seed field holds the calibrated value
+    // The seed is set 86 frames (about 1453 ms, X/Y) or 236 frames (about 3945 ms, OR/AS) after the A press on the title screen; the
+    // press-to-seed field holds the game's default or the calibrated value
     u64 pressToSeed = ui->textBoxTitleDelay->getUInt();
     std::vector<SeedWindow6::Boot> boots;
     if (!ui->textBoxRecoverSeedA->text().isEmpty())

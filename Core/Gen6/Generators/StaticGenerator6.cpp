@@ -35,7 +35,7 @@ Gen6::Request6 StaticGenerator6::getRequest(const StaticTemplate6 &staticTemplat
     Gen6::Request6 request;
     bool locked = staticTemplate.getShiny() == Shiny::Never;
     request.pidType = locked ? Gen6::PIDType::Locked : Gen6::PIDType::Random;
-    // Gifts (fossils) roll once even with the Shiny Charm, verified live on Y 1.5
+    // Gifts (fossils) and trades roll once even with the Shiny Charm, verified live on Y 1.5 and X (Steelix trade)
     request.pidRolls = (locked || staticTemplate.getGift() || !profile.getShinyCharm()) ? 1 : 3;
     request.ivs = staticTemplate.getIVs();
     request.ivCount = staticTemplate.getIVCount();
@@ -60,14 +60,18 @@ std::vector<State6> StaticGenerator6::generate(u32 seed) const
     const PersonalInfo *info = staticTemplate.getInfo();
     Gen6::Request6 request = getRequest(staticTemplate, profile, lead);
 
-    // Encounters run the 60-output container (6 dummy Pokemon) between the trigger and the EC; gifts and fossils do not
+    // Encounters run the 60-output container (6 dummy Pokemon) between the trigger and the EC; gifts, fossils and trades do not
     u32 container = staticTemplate.getGift() ? 0 : 60;
     RNGList<u32, MT, 128> rngList(seed, initialAdvances + offset + container);
+
+    // An in-game trade is generated with the trade OT's ID (secret ID 0) and shiny-locked against it (live X Steelix)
+    u16 tid = staticTemplate.getTrade() ? staticTemplate.getTradeTID() : profile.getTID();
+    u16 sid = staticTemplate.getTrade() ? 0 : profile.getSID();
 
     std::vector<State6> states;
     for (u32 cnt = 0; cnt <= maxAdvances; cnt++, rngList.advanceState())
     {
-        auto result = Gen6::generate(rngList, request, info, profile.getTID(), profile.getSID());
+        auto result = Gen6::generate(rngList, request, info, tid, sid);
 
         State6 state(initialAdvances + cnt, result, staticTemplate.getLevel(), 0, info);
         if (filter.compare(state))

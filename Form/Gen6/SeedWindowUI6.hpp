@@ -77,7 +77,7 @@ namespace SeedWindowUI6
         end->setDateTime(now.addSecs(1));
 
         check->setToolTip(QObject::tr("Generate every seed the title screen can set in this console clock window (Misc[0x00] + ms, "
-                                      "read 86 frames, about 1.45 s, after the A press on the title screen). The odds line shows how many of those "
+                                      "read 86 frames (X/Y, about 1.45 s) or 236 frames (OR/AS, about 3.95 s) after the A press on the title screen). The odds line shows how many of those "
                                       "seeds have a result that passes the filters."));
         odds->setWordWrap(true);
 
