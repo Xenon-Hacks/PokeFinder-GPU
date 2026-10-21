@@ -887,3 +887,38 @@ void Gen6Test::mirageSpots()
     QCOMPARE(MirageSpot6::zone(33), u16(466));
     QVERIFY(MirageSpot6::kind(25) == MirageSpot6::Kind::Island);
 }
+
+void Gen6Test::orasResortDaycare()
+{
+    // OR/AS saves hold two daycares of 0x1F0 bytes at 0x1BC00: Route 117, then the Battle Resort, each with its own egg seed
+    std::vector<u8> data(Save6::sizeORAS, 0);
+    data[0x14004] = 27; // Omega Ruby
+    auto put32 = [&data](size_t offset, u32 value) {
+        for (int i = 0; i < 4; i++)
+        {
+            data[offset + i] = static_cast<u8>(value >> (8 * i));
+        }
+    };
+
+    Save6 save = Save6::parse(data.data(), data.size());
+    QVERIFY(save.valid);
+    QVERIFY(!save.resortUsed);
+
+    size_t resort = 0x1BC00 + 0x1F0;
+    data[resort] = 1; // slot 1 occupied
+    data[resort + 0x1E0] = 1; // egg waiting
+    put32(resort + 0x1E8, 0x89ABCDEF);
+    put32(resort + 0x1EC, 0x01234567);
+    put32(0x1BC00 + 0x1E8, 0x11111111);
+    save = Save6::parse(data.data(), data.size());
+    QVERIFY(save.resortUsed);
+    QVERIFY(save.eggReadyResort);
+    QVERIFY(!save.eggReady);
+    QCOMPARE(save.eggSeedResort, 0x0123456789ABCDEFull);
+    QCOMPARE(save.eggSeed, 0x11111111ull);
+
+    // X/Y saves have one daycare
+    std::vector<u8> xy(Save6::size, 0);
+    xy[0x1B200 + 0x1F0] = 1;
+    QVERIFY(!Save6::parse(xy.data(), xy.size()).resortUsed);
+}

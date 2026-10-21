@@ -231,13 +231,18 @@ void SeedFinder6::profileChanged(const Profile6 &profile)
 {
     currentProfile = &profile;
 
-    // Follow the game's press-to-seed default unless the user has calibrated it
-    u64 current = ui->textBoxTitleDelay->getUInt();
-    if (current == 0 || current == SeedWindow6::pressToSeedMs(Game::X) || current == SeedWindow6::pressToSeedMs(Game::OR)
-        || current == SeedWindow6::pressToSeedMs(Game::AS))
+    // X/Y and OR/AS seed about 2.5 s apart after the press, so a value calibrated on one must not carry over to the other: keep one
+    // calibrated value per game family, and show the game's default where none was calibrated
+    auto family = [](Game version) { return (version & Game::ORAS) != Game::None ? 1 : 0; };
+    if (pressToSeedVersion != 0)
     {
-        ui->textBoxTitleDelay->setText(QString::number(SeedWindow6::pressToSeedMs(profile.getVersion())));
+        Game old = static_cast<Game>(pressToSeedVersion);
+        u64 current = ui->textBoxTitleDelay->getUInt();
+        pressToSeed[family(old)] = current == SeedWindow6::pressToSeedMs(old) ? 0 : current;
     }
+    pressToSeedVersion = toInt(profile.getVersion());
+    u64 calibrated = pressToSeed[family(profile.getVersion())];
+    ui->textBoxTitleDelay->setText(QString::number(calibrated != 0 ? calibrated : SeedWindow6::pressToSeedMs(profile.getVersion())));
 }
 
 bool SeedFinder6::readCatch(SeedSearch6Settings &settings)

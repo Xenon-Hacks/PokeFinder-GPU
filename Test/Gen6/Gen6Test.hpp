@@ -60,6 +60,7 @@ private slots:
     void orasSaveParse();
     void pressToSeed();
     void mirageSpots();
+    void orasResortDaycare();
 };
 
 #endif // GEN6TEST_HPP

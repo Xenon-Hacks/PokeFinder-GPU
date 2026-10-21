@@ -29,6 +29,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QSettings>
 
 static const QString settingPrefix = QStringLiteral("egg6");
@@ -160,8 +161,26 @@ void Eggs6::loadSave()
         return;
     }
 
-    ui->textBoxEggSeed->setText(QString::number(save.eggSeed, 16).toUpper().rightJustified(16, '0'));
-    if (!save.eggReady)
+    u64 eggSeed = save.eggSeed;
+    bool eggReady = save.eggReady;
+    if (save.resortUsed)
+    {
+        // OR/AS have a second daycare at the Battle Resort with its own egg seed
+        QMessageBox ask(QMessageBox::Question, tr("Which daycare?"),
+                        tr("This save uses both daycares. Load the egg seed from which one?"));
+        QPushButton *route117 = ask.addButton(tr("Route 117"), QMessageBox::AcceptRole);
+        QPushButton *resort = ask.addButton(tr("Battle Resort"), QMessageBox::AcceptRole);
+        ask.setDefaultButton(save.eggReadyResort && !save.eggReady ? resort : route117);
+        ask.exec();
+        if (ask.clickedButton() == resort)
+        {
+            eggSeed = save.eggSeedResort;
+            eggReady = save.eggReadyResort;
+        }
+    }
+
+    ui->textBoxEggSeed->setText(QString::number(eggSeed, 16).toUpper().rightJustified(16, '0'));
+    if (!eggReady)
     {
         QMessageBox msg(QMessageBox::Information, tr("No egg waiting"),
                         tr("The daycare has no egg waiting; the seed is for the next egg it makes"));

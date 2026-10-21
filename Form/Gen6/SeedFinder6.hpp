@@ -67,6 +67,8 @@ private:
 
     const Profile6 *currentProfile;
     SeedModel6 *model;
+    unsigned long long pressToSeed[2] = { 0, 0 }; ///< Calibrated press-to-seed ms for X/Y and OR/AS, 0 for the game's default
+    unsigned int pressToSeedVersion = 0; ///< Game of the profile the press-to-seed field belongs to, 0 before the first profile
     unsigned long long planClockSet = 0;
     unsigned long long planTimer = 0;
     unsigned int recovered = 0;

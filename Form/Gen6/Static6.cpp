@@ -31,6 +31,8 @@
 #include <Form/Gen6/SeedWindowUI6.hpp>
 #include <Model/Gen6/StateModel6.hpp>
 #include <QSettings>
+#include <algorithm>
+#include <vector>
 
 static const QString settingPrefix = QStringLiteral("static6");
 
@@ -105,14 +107,30 @@ void Static6::categoryIndexChanged(int index)
         int size;
         const StaticTemplate6 *templates = Encounters6::getStaticEncounters(index, &size);
 
-        ui->comboBoxPokemon->clear();
+        std::vector<int> shown;
         for (int i = 0; i < size; i++)
         {
             if ((currentProfile->getVersion() & templates[i].getVersion()) != Game::None)
             {
-                ui->comboBoxPokemon->addItem(
-                    QString::fromStdString(Translator::getSpecie(templates[i].getSpecie(), templates[i].getForm())), i);
+                shown.emplace_back(i);
             }
+        }
+
+        auto name = [templates](int i) {
+            return QString::fromStdString(Translator::getSpecie(templates[i].getSpecie(), templates[i].getForm()));
+        };
+
+        ui->comboBoxPokemon->clear();
+        for (int i : shown)
+        {
+            // The same species can appear more than once (OR/AS Kecleon on Routes 119/120, Lavaridge and Mossdeep): add the level
+            QString text = name(i);
+            bool repeated = std::ranges::count_if(shown, [&](int j) { return name(j) == text; }) > 1;
+            if (repeated)
+            {
+                text = tr("%1 (Lv. %2)").arg(text).arg(templates[i].getLevel());
+            }
+            ui->comboBoxPokemon->addItem(text, i);
         }
     }
 }

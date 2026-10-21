@@ -33,12 +33,15 @@ struct Save6
     static constexpr size_t sizeORAS = 0x76000; ///< Omega Ruby / Alpha Sapphire
 
     u64 eggSeed = 0; ///< Daycare egg seed (Daycare + 0x1E8; daycare at 0x1B200 on X/Y, 0x1BC00 on OR/AS)
+    u64 eggSeedResort = 0; ///< OR/AS Battle Resort daycare egg seed (second daycare, 0x1BC00 + 0x1F0 + 0x1E8)
     u32 mirageValue = 0; ///< OR/AS RandomGroup daily value at 0x1600 (Mirage spot of the day), 0 on X/Y
     u32 saveSeed = 0; ///< Misc[0x00] at 0x4200, the save term of the MT seed
     Game version = Game::None;
     u16 sid = 0;
     u16 tid = 0;
     bool eggReady = false; ///< Daycare + 0x1E0
+    bool eggReadyResort = false; ///< OR/AS Battle Resort daycare + 0x1E0
+    bool resortUsed = false; ///< OR/AS Battle Resort daycare holds a Pokemon or an egg
     bool shinyCharm = false; ///< Key item 632
     bool valid = false;
 
@@ -84,6 +87,14 @@ struct Save6
         save.saveSeed = u32le(0x4200);
         save.eggReady = data[daycare + 0x1e0] != 0;
         save.eggSeed = (static_cast<u64>(u32le(daycare + 0x1ec)) << 32) | u32le(daycare + 0x1e8);
+        if (oras)
+        {
+            // Two 0x1F0-byte daycares (PKHeX Daycare6AO): Route 117, then the Battle Resort. Each slot is 0xF0 bytes, occupied flag first.
+            size_t resort = daycare + 0x1f0;
+            save.eggReadyResort = data[resort + 0x1e0] != 0;
+            save.eggSeedResort = (static_cast<u64>(u32le(resort + 0x1ec)) << 32) | u32le(resort + 0x1e8);
+            save.resortUsed = save.eggReadyResort || data[resort] != 0 || data[resort + 0xf0] != 0;
+        }
         for (size_t offset = 0x400; offset < 0x400 + 0xb90; offset += 4)
         {
             u16 count = u16le(offset + 2);
