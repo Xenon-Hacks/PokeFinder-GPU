@@ -1,3 +1,26 @@
+# PokéFinder-GPU
+
+A fork of [PokéFinder](https://github.com/Admiral-Fish/PokeFinder) by Admiral-Fish that adds GPU (OpenCL) accelerated searching and tabs for Generation 6 and 7, built from live-verified RNG research. It tracks upstream closely: everything below the "PokéFinder" heading is upstream's own README.
+
+[Latest release](https://github.com/Xenon-Hacks/PokeFinder-GPU/releases/latest) · [Credits for every project, data source and tool used](CREDITS.md)
+
+What this fork adds (each item lands as its own pull request; see the release notes for what is in a given build):
+
+- Gen 5 Wild and Static searchers can run on the GPU, with a CPU re-check of every hit, and can search every profile of a game at once
+- Gen 6 (X, Y, Omega Ruby, Alpha Sapphire): seed finder, seed window and timer, Wild, Static, Eggs, Events, IDs, Mirage spots
+- Gen 7 (Sun, Moon, Ultra Sun, Ultra Moon): needle seed finder, Honey and field timeline, statics, gifts, fishing, trades, eggs
+
+Versions are numbered after the upstream release they are built on, as `4.4.2-gpu.1`, `4.4.2-gpu.2` and so on.
+
+Building on Windows: Visual Studio 2022 Build Tools, CMake 3.31 or newer, Qt 6.10 and Python 3.14, then
+
+```
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DTEST=ON -DCMAKE_PREFIX_PATH=C:/Qt/6.10.3/msvc2022_64
+cmake --build build --parallel
+```
+
+---
+
 # PokéFinder
 
 Join the PokéFinder Discord server to talk about development and contribute.
