@@ -29,7 +29,7 @@ file(GLOB_RECURSE ALL_EMBED_FILES ${CMAKE_CURRENT_SOURCE_DIR}/Resources/*)
 list(FILTER ALL_EMBED_FILES EXCLUDE REGEX "/EncounterTables/")
 
 set(EMBED_DATA_FILES ${ALL_EMBED_FILES})
-list(FILTER EMBED_DATA_FILES INCLUDE REGEX "\\.(bin|txt)$")
+list(FILTER EMBED_DATA_FILES INCLUDE REGEX "\\.(bin|txt|tsv)$")
 
 set(EMBED_PYTHON_FILES ${ALL_EMBED_FILES})
 list(FILTER EMBED_PYTHON_FILES INCLUDE REGEX "\\.py$")
@@ -40,6 +40,7 @@ set(EMBED_HEADERS
     ${EMBED_PATH}/EncounterData4.hpp
     ${EMBED_PATH}/EncounterData5.hpp
     ${EMBED_PATH}/EncounterData6.hpp
+    ${EMBED_PATH}/EncounterData7.hpp
     ${EMBED_PATH}/EncounterData8.hpp
     ${EMBED_PATH}/i18n.hpp
     ${EMBED_PATH}/Personal.hpp
@@ -255,13 +256,23 @@ add_library(PokeFinderCore STATIC
     Gen6/TinyTimeline6.cpp
     Gen6/TinyTimeline6.hpp
     Gen6/WC6.hpp
+    Gen7/EncounterArea7.cpp
+    Gen7/EncounterArea7.hpp
+    Gen7/FieldTimeline7.cpp
+    Gen7/FieldTimeline7.hpp
     Gen7/Gen7.hpp
+    Gen7/Generators/HoneyGenerator7.cpp
+    Gen7/Generators/HoneyGenerator7.hpp
     Gen7/Generators/IDGenerator7.cpp
     Gen7/Generators/IDGenerator7.hpp
     Gen7/Profile7.cpp
     Gen7/Profile7.hpp
     Gen7/Searchers/NeedleSearcher7.cpp
     Gen7/Searchers/NeedleSearcher7.hpp
+    Gen7/Spot7.hpp
+    Gen7/Spots7.cpp
+    Gen7/States/HoneyState7.hpp
+    Gen7/Timer7.hpp
     Gen8/Den.hpp
     Gen8/EncounterArea8.cpp
     Gen8/EncounterArea8.hpp

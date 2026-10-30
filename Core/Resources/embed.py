@@ -7,6 +7,7 @@ from Embed.embed_gen3 import embed_encounters3
 from Embed.embed_gen4 import embed_encounters4
 from Embed.embed_gen5 import embed_encounters5
 from Embed.embed_gen6 import embed_encounters6
+from Embed.embed_gen7 import embed_encounters7
 from Embed.embed_gen8 import embed_encounters8
 from Embed.embed_personal import embed_personal
 from Embed.embed_strings import embed_strings
@@ -26,6 +27,7 @@ def main():
     embed_encounters4(SCRIPT_FOLDER, args.input_dir, args.output_dir)
     embed_encounters5(SCRIPT_FOLDER, args.input_dir, args.output_dir)
     embed_encounters6(SCRIPT_FOLDER, args.output_dir)
+    embed_encounters7(SCRIPT_FOLDER, args.output_dir)
     embed_encounters8(SCRIPT_FOLDER, args.input_dir, args.output_dir)
     embed_personal(SCRIPT_FOLDER, args.output_dir)
     embed_strings(SCRIPT_FOLDER, args.output_dir)

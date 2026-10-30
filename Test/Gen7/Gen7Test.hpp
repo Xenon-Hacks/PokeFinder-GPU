@@ -32,6 +32,12 @@ private slots:
     void needleSearcherCPU();
     void needleSearcherGPU();
     void needleSearcherGPUFull();
+    void spots();
+    void encounterTables();
+    void honeyUSUM();
+    void honeySpecial();
+    void honeyProofRun();
+    void timer();
 };
 
 #endif // GEN7TEST_HPP

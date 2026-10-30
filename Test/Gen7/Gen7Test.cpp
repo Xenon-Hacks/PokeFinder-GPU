@@ -19,7 +19,16 @@
 
 #include "Gen7Test.hpp"
 #include <Core/Enum/Game.hpp>
+#include <Core/Gen7/EncounterArea7.hpp>
+#include <Core/Gen7/FieldTimeline7.hpp>
 #include <Core/Gen7/Gen7.hpp>
+#include <Core/Gen7/Generators/HoneyGenerator7.hpp>
+#include <Core/Gen7/Profile7.hpp>
+#include <Core/Gen7/Spot7.hpp>
+#include <Core/Gen7/Timer7.hpp>
+#include <Core/Enum/Lead.hpp>
+#include <Core/Parents/Filters/StateFilter.hpp>
+#include <Core/Parents/PersonalLoader.hpp>
 #include <Core/Gen7/Generators/IDGenerator7.hpp>
 #include <Core/Gen7/Searchers/NeedleSearcher7.hpp>
 #include <Core/Parents/Filters/IDFilter.hpp>
@@ -164,4 +173,198 @@ void Gen7Test::needleSearcherGPUFull()
     QVERIFY2(searcher.getUsedGPU(), searcher.getError().data());
     QVERIFY(std::ranges::find(seeds, seed) != seeds.end());
     QVERIFY(seeds.size() <= 3); // 8 needles: unique in most boots, a few extras in the rest
+}
+
+static StateFilter allFilter7()
+{
+    std::array<bool, 25> natures;
+    natures.fill(true);
+    std::array<bool, 16> powers;
+    powers.fill(true);
+    return StateFilter(255, 255, 255, 1, 100, 0, 255, 0, 255, false, { 0, 0, 0, 0, 0, 0 }, { 31, 31, 31, 31, 31, 31 }, natures, powers);
+}
+
+static Spot7 customSpot(Game games, u8 models, u32 persist, u8 pre, u8 delay)
+{
+    return Spot7 { games, 0, 3, "test", { 0, 0, 0 }, models, persist, 0, models, persist, pre, delay, 4, 0, false, 0.0f, 29.913f, false, 0.0f, "" };
+}
+
+void Gen7Test::spots()
+{
+    // PRE-Moon 61 tiles (Sun = Moon), PRE-US / PRE-UM 52 usable tiles each, 35 USUM-only areas
+    QCOMPARE(Spots7::getSpots(Game::Moon).size(), size_t(61));
+    QCOMPARE(Spots7::getSpots(Game::Sun).size(), size_t(61));
+    QCOMPARE(Spots7::getSpots(Game::US).size(), size_t(52 + 35));
+    QCOMPARE(Spots7::getSpots(Game::UM).size(), size_t(52 + 35));
+
+    const Spot7 *route1 = Spots7::getSpot(Game::Moon, 0, 3);
+    QVERIFY(route1);
+    QCOMPARE(route1->continueModels, u8(23));
+    QVERIFY(route1->continuePersists(0) && route1->continuePersists(21) && route1->continuePersists(22) && !route1->continuePersists(1));
+    QCOMPARE(route1->honeyDelay, u8(93));
+    QCOMPARE(route1->honeyPreDraws, u8(0));
+
+    const Spot7 *kalae = Spots7::getSpot(Game::US, 8, 0); // US Kala'e Bay keeps encounter id 0 at (17563, 3527)
+    QVERIFY(kalae);
+    QCOMPARE(kalae->continueModels, u8(2));
+    QCOMPARE(kalae->honeyModels, u8(19));
+    QCOMPARE(kalae->honeyDelay, u8(63));
+    QCOMPARE(kalae->honeyPreDraws, u8(1));
+
+    const Spot7 *tenCarat = Spots7::getSpot(Game::Moon, 19, 0);
+    QVERIFY(tenCarat && tenCarat->hardwareTimer);
+    QCOMPARE(tenCarat->hardwareOffset, -100.7f);
+    QCOMPARE(tenCarat->azaharOffset, -62.2f);
+
+    const Spot7 *route17 = Spots7::getSpot(Game::US, 172, 0);
+    QVERIFY(route17 && (route17->flags & Spot7::Rain) && route17->honeyPreDraws == 3 && route17->fidget == 3);
+    QVERIFY(Spots7::getSpot(Game::Moon, 999, 0) == nullptr);
+}
+
+void Gen7Test::encounterTables()
+{
+    // Moon Route 1 beach grass (zone 0, table 3): Lv 5-7, rates 20/20/10/10/10/10/10/5/4/1, day Yungoos/Wingull/Slowpoke, night
+    // Alolan Rattata for Yungoos (handoff proof run 14.3). The step trace's slot roll 91 picked Slowpoke (4.2).
+    auto day = Encounters7::getEncounters(Game::Moon, 0, 3, false);
+    QCOMPARE(day.size(), size_t(1));
+    const auto &table = day[0];
+    QCOMPARE(table.getRates(), (std::array<u8, 10> { 20, 20, 10, 10, 10, 10, 10, 5, 4, 1 }));
+    QCOMPARE(table.getPokemon(0).getSpecie(), u16(734)); // Yungoos
+    QCOMPARE(table.getPokemon(1).getSpecie(), u16(278)); // Wingull
+    QCOMPARE(table.getPokemon(0).getMinLevel(), u8(5));
+    QCOMPARE(table.getPokemon(0).getMaxLevel(), u8(7));
+    QCOMPARE(table.getEncounterSlot(91), u8(7));
+    QCOMPARE(table.getPokemon(7).getSpecie(), u16(79)); // Slowpoke
+    QCOMPARE(table.getEncounterSlot(0), u8(0));
+    QCOMPARE(table.getEncounterSlot(99), u8(9));
+
+    auto night = Encounters7::getEncounters(Game::Moon, 0, 3, true);
+    QCOMPARE(night[0].getPokemon(0).getSpecie(), u16(19)); // Rattata
+    QCOMPARE(night[0].getPokemon(0).getForm(), u8(1)); // Alolan
+    QVERIFY(night[0].getPokemon(0).getInfo() != nullptr);
+
+    // Ultra Sun has its own zone numbering (Route 1 beach = zone 0 too) and no table at an unknown zone
+    QCOMPARE(Encounters7::getEncounters(Game::US, 0, 3, false).size(), size_t(1));
+    QVERIFY(Encounters7::getEncounters(Game::Moon, 9999, 0, false).empty());
+}
+
+void Gen7Test::honeyUSUM()
+{
+    // Ultra Sun Route 1 beach (F 18, persist [0, 16, 17], pre 1, D 63): seed E6FB0960, bag 1787 -> lead 1931, Wingull EC B84EC798,
+    // PID 8589A51A, IVs 16/12/7/25/19/10, nature 9, female = battle RAM (handoff 3.9)
+    // The logged runs used the first-pass preset (F 18, M 2 persistent models) and were recorded before the Use draw was found
+    // (UR V.2, superseded by the per-tile work): their bag advance already includes it, so pre 0 here. The clean-save preset in
+    // the table lists 3 persistent models and pre 1 for that tile.
+    Profile7 us("-", Game::US, 12345, 54321, false, false);
+    Spot7 spot = customSpot(Game::US, 18, 0x3, 0, 63);
+    auto areas = Encounters7::getEncounters(Game::US, 0, 2, false); // US Route 1 beach grass is table 2 (Moon: 3)
+    QCOMPARE(areas.size(), size_t(1));
+
+    HoneyGenerator7 generator(477, 1, 1, spot, areas[0], Lead::None, us, allFilter7());
+    generator.setPersistFresh(true);
+    HoneyState7 state = generator.generateAt(0xE6FB0960, 1787);
+    QCOMPARE(state.getLeadAdvance(), 1931u);
+    QCOMPARE(state.getSpecie(), u16(278));
+    QCOMPARE(state.getEC(), 0xB84EC798u);
+    QCOMPARE(state.getPID(), 0x8589A51Au);
+    QCOMPARE(state.getIVs(), (std::array<u8, 6> { 16, 12, 7, 25, 19, 10 }));
+    QCOMPARE(state.getNature(), u8(9));
+    QCOMPARE(state.getGender(), u8(1));
+
+    // Ultra Moon: seed AD8BE716, bag 1639 -> lead 1754, Wingull EC C867107B, PID 682E2830, IVs 1/25/29/5/5/0, nature 0, item 571
+    Profile7 um("-", Game::UM, 12345, 54321, false, false);
+    HoneyGenerator7 generatorUM(477, 1, 1, spot, Encounters7::getEncounters(Game::UM, 0, 2, false)[0], Lead::None, um, allFilter7());
+    generatorUM.setPersistFresh(true);
+    HoneyState7 moon = generatorUM.generateAt(0xAD8BE716, 1639);
+    QCOMPARE(moon.getLeadAdvance(), 1754u);
+    QCOMPARE(moon.getEC(), 0xC867107Bu);
+    QCOMPARE(moon.getPID(), 0x682E2830u);
+    QCOMPARE(moon.getIVs(), (std::array<u8, 6> { 1, 25, 29, 5, 5, 0 }));
+    QCOMPARE(moon.getNature(), u8(0));
+    QCOMPARE(moon.getItem(), u16(571));
+}
+
+void Gen7Test::honeySpecial()
+{
+    // Necrozma at Ten Carat Hill, Farthest Hollow (19/0: F 1, persist [0], D 93), 5 %: seed 3D7A71E9, bag 7875 -> roll 3 at 7969 ->
+    // EC B3269580 at 8041 = roll + 72, PID BE10670D, IVs 26/31/31/27/31/21, Relaxed (handoff 4.7)
+    Profile7 moon("-", Game::Moon, 12345, 54321, false, false);
+    const Spot7 *spot = Spots7::getSpot(Game::Moon, 19, 0);
+    QVERIFY(spot);
+    auto areas = Encounters7::getEncounters(Game::Moon, 19, 0, false);
+    QCOMPARE(areas.size(), size_t(1));
+
+    HoneyGenerator7 generator(417, 1, 1, *spot, areas[0], Lead::None, moon, allFilter7());
+    generator.setSpecial(SpecialTarget7 { 800, 0, 75, 5, 3, true });
+    HoneyState7 necrozma = generator.generateAt(0x3D7A71E9, 7875);
+    QVERIFY(necrozma.getSpecial());
+    QCOMPARE(necrozma.getSpecie(), u16(800));
+    QCOMPARE(necrozma.getEC(), 0xB3269580u);
+    QCOMPARE(necrozma.getPID(), 0xBE10670Du);
+    QCOMPARE(necrozma.getIVs(), (std::array<u8, 6> { 26, 31, 31, 27, 31, 21 }));
+    QCOMPARE(necrozma.getNature(), u8(7)); // Relaxed
+
+    // gen7sim's logged cases with the older "persistent models start fresh" reading: Nihilego (F 11, M 2, D 94, 80 %) EC 0A09123D,
+    // Pheromosa (F 12, M 7, D 93, 50 %) EC 8EF5DA2D
+    Spot7 nihilegoSpot = customSpot(Game::Moon, 11, 0x3, 0, 94);
+    HoneyGenerator7 nihilego(417, 1, 1, nihilegoSpot, areas[0], Lead::None, moon, allFilter7());
+    nihilego.setPersistFresh(true);
+    nihilego.setSpecial(SpecialTarget7 { 793, 0, 55, 80, 3, true });
+    QCOMPARE(nihilego.generateAt(0x4EB9CF4E, 1210).getEC(), 0x0A09123Du);
+
+    Spot7 pheromosaSpot = customSpot(Game::Moon, 12, 0x7f, 0, 93);
+    HoneyGenerator7 pheromosa(417, 1, 1, pheromosaSpot, areas[0], Lead::None, moon, allFilter7());
+    pheromosa.setPersistFresh(true);
+    pheromosa.setSpecial(SpecialTarget7 { 795, 0, 60, 50, 3, true });
+    QCOMPARE(pheromosa.generateAt(0xCE557808, 1764).getEC(), 0x8EF5DA2Du);
+}
+
+void Gen7Test::honeyProofRun()
+{
+    // Shiny Yungoos by needles + Honey, no RAM reads (Azahar, 2026-10-20): seed 33FFEA15 from 8 needles, Route 1 beach grass preset
+    // L 23 / persist [0, 9, 19, 22] (that save), X menu about 9 s after Continue, bag frame 974 (35.55 s): shiny Yungoos F Lv 7,
+    // EC 3A884008, PID 878355C4, IVs 30/13/25/6/26/1, Naughty (handoff 3.9, proof run 14)
+    QCOMPARE(NeedleSearcher7::needlesFor(0x33FFEA15, 417, 8), (std::vector<u8> { 1, 7, 6, 1, 14, 11, 16, 7 }));
+
+    Profile7 moon("-", Game::Moon, 12345, 54321, false, false);
+    Spot7 spot = customSpot(Game::Moon, 23, (1u << 0) | (1u << 9) | (1u << 19) | (1u << 22), 0, 93);
+    auto areas = Encounters7::getEncounters(Game::Moon, 0, 3, false);
+
+    Timer7 azahar { -89.3f, 29.91f };
+    QVERIFY(std::abs(azahar.seconds(974) - 35.55) < 0.01);
+    u32 menuFrame = static_cast<u32>(azahar.frame(9.0));
+    QVERIFY(menuFrame > 4 && menuFrame < 406);
+
+    HoneyGenerator7 generator(417 + 8, 974, 974, spot, areas[0], Lead::None, moon, allFilter7());
+    generator.setMenuFrame(menuFrame);
+    auto states = generator.generate(0x33FFEA15);
+    QCOMPARE(states.size(), size_t(1));
+    const HoneyState7 &yungoos = states[0];
+    QCOMPARE(yungoos.getFrame(), 974u);
+    QCOMPARE(yungoos.getSpecie(), u16(734));
+    QCOMPARE(yungoos.getLevel(), u8(7));
+    QCOMPARE(yungoos.getEC(), 0x3A884008u);
+    QCOMPARE(yungoos.getPID(), 0x878355C4u);
+    QCOMPARE(yungoos.getIVs(), (std::array<u8, 6> { 30, 13, 25, 6, 26, 1 }));
+    QCOMPARE(yungoos.getNature(), u8(4)); // Naughty
+    QCOMPARE(yungoos.getGender(), u8(1));
+
+    // The player's profile makes it shiny: the run's TSV matched the PID
+    u16 psv = ((0x878355C4u >> 16) ^ (0x878355C4u & 0xffff)) >> 4;
+    Profile7 player("-", Game::Moon, 0, static_cast<u16>(psv << 4), false, false);
+    HoneyGenerator7 shiny(417 + 8, 974, 974, spot, areas[0], Lead::None, player, allFilter7());
+    shiny.setMenuFrame(menuFrame);
+    QVERIFY(shiny.generate(0x33FFEA15)[0].getShiny() != 0);
+}
+
+void Gen7Test::timer()
+{
+    // Hardware: Ten Carat Hill O = -100.7 at 29.9 fps; one-press calibration recovers the offset
+    Timer7 timer { -100.7f, 29.9f };
+    double t = timer.seconds(1050);
+    QVERIFY(std::abs(t - (1050 + 100.7) / 29.9) < 1e-6);
+    QVERIFY(std::abs(timer.frame(t) - 1050) < 1e-3);
+    QVERIFY(std::abs(timer.calibrate(t, 1050) - (-100.7f)) < 1e-3);
+    QVERIFY(std::abs(timer.calibrate(t, 1049) - (-101.7f)) < 1e-3);
+    QVERIFY(std::abs(Timer7::fitFps(10.0, 199, 40.0, 1096) - 29.9f) < 1e-3);
 }
