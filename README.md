@@ -10,7 +10,7 @@ What this fork adds (each item lands as its own pull request; see the release no
 - Gen 6 (X, Y, Omega Ruby, Alpha Sapphire): seed finder, seed window and timer, Wild, Static, Eggs, Events, IDs, Mirage spots
 - Gen 7 (Sun, Moon, Ultra Sun, Ultra Moon): needle seed finder, Honey and field timeline, statics, gifts, fishing, trades, eggs
 
-Versions are numbered after the upstream release they are built on, as `4.4.2-gpu.1`, `4.4.2-gpu.2` and so on.
+Releases are named after the upstream release they are built on plus `-GPU` (`4.4.2-GPU`; a later build on the same upstream release would be `4.4.2-GPU.2`). The release tag is `v` + that name, which the in-app update check compares against.
 
 Building on Windows: Visual Studio 2022 Build Tools, CMake 3.31 or newer, Qt 6.10 and Python 3.14, then
 
