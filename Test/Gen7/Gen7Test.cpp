@@ -433,7 +433,8 @@ void Gen7Test::gifts()
     QCOMPARE(states[0].getNature(), u8(9)); // Lax
     QCOMPARE(states[0].getLevel(), u8(5));
 
-    // Moon Type: Null (seed 35594014, advances 17230..): EC 6B2FBD4B, IVs 23/31/29/20/31/31, Careful, with the ability draw
+    // Moon Type: Null (seed 35594014, advances 17230..): EC 6B2FBD4B, IVs 23/31/29/20/31/31, with the ability draw. The research
+    // log records the nature draw as 21 (Gentle); its "Careful" label is a slip
     const StaticTemplate7 *typeNull = findStatic7(3, Game::Moon, 772);
     QVERIFY(typeNull && typeNull->getAbilityDraw());
     StaticGenerator7 nullGenerator(17230, 0, 3, Lead::None, *typeNull, moon, allFilter7());
@@ -441,7 +442,7 @@ void Gen7Test::gifts()
     QCOMPARE(nullStates.size(), size_t(1));
     QCOMPARE(nullStates[0].getEC(), 0x6B2FBD4Bu);
     QCOMPARE(nullStates[0].getIVs(), (std::array<u8, 6> { 23, 31, 29, 20, 31, 31 }));
-    QCOMPARE(nullStates[0].getNature(), u8(23)); // Careful
+    QCOMPARE(nullStates[0].getNature(), u8(21)); // Gentle
 
     // Sun Cosmog (seed F9EB5EAA): EC 242158C5, IVs 31/13/10/23/31/31, Lonely at 6520 or 6521
     Profile7 sun("-", Game::Sun, 12345, 54321, false, false);
