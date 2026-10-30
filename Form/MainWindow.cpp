@@ -61,6 +61,7 @@
 #include <Form/Gen6/Wild6.hpp>
 #include <Form/Gen6/Mirage6.hpp>
 #include <Form/Gen6/TinyMT6.hpp>
+#include <Form/Gen7/Honey7.hpp>
 #include <Form/Gen7/IDs7.hpp>
 #include <Form/Gen7/Profile/ProfileManager7.hpp>
 #include <Form/Gen7/SeedFinder7.hpp>
@@ -145,6 +146,7 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonMirage6, &QPushButton::clicked, this, &MainWindow::openMirage6);
     connect(ui->pushButtonTinyMT6, &QPushButton::clicked, this, &MainWindow::openTinyMT6);
     connect(ui->pushButtonIDs7, &QPushButton::clicked, this, &MainWindow::openIDs7);
+    connect(ui->pushButtonHoney7, &QPushButton::clicked, this, &MainWindow::openHoney7);
     connect(ui->pushButtonSeedFinder7, &QPushButton::clicked, this, &MainWindow::openSeedFinder7);
     connect(ui->actionProfileManager7, &QAction::triggered, this, &MainWindow::openProfileManager7);
     connect(ui->actionProfileManager6, &QAction::triggered, this, &MainWindow::openProfileManager6);
@@ -214,6 +216,7 @@ MainWindow::~MainWindow()
     delete wild6;
     delete mirage6;
     delete tinyMT6;
+    delete honey7;
     delete ids7;
     delete seedFinder7;
 
@@ -808,6 +811,18 @@ void MainWindow::openTinyMT6()
     }
     tinyMT6->show();
     tinyMT6->raise();
+}
+
+void MainWindow::openHoney7()
+{
+    if (!honey7)
+    {
+        honey7 = new Honey7();
+        connect(honey7, &Honey7::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged7, honey7, &Honey7::updateProfiles);
+    }
+    honey7->show();
+    honey7->raise();
 }
 
 void MainWindow::openIDs7()

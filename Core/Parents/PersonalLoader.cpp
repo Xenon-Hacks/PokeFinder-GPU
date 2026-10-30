@@ -57,6 +57,11 @@ namespace PersonalLoader
         {
             return PERSONAL_AO.data();
         }
+        else if ((version & Game::Gen7) != Game::None)
+        {
+            // Ultra Sun / Ultra Moon personal data covers Sun / Moon too
+            return PERSONAL_UU.data();
+        }
         else if ((version & Game::XY) != Game::None)
         {
             return PERSONAL_XY.data();

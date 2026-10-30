@@ -93,6 +93,7 @@ set(PROJECT_UI
     Gen6/SeedFinder6.ui
     Gen6/Static6.ui
     Gen6/Wild6.ui
+    Gen7/Honey7.ui
     Gen7/IDs7.ui
     Gen7/Profile/ProfileDisplay7.ui
     Gen7/Profile/ProfileEditor7.ui
@@ -255,6 +256,8 @@ set(PROJECT_SOURCES
     Gen6/Static6.hpp
     Gen6/Wild6.cpp
     Gen6/Wild6.hpp
+    Gen7/Honey7.cpp
+    Gen7/Honey7.hpp
     Gen7/IDs7.cpp
     Gen7/IDs7.hpp
     Gen7/Profile/ProfileDisplay7.cpp
