@@ -46,7 +46,9 @@ enum class Encounter6 : u8
     HordeSweetScent, ///< 5 Pokemon back to back; advances count from the Sweet Scent press (trigger +339 on X, +321 OR, +317 AS)
     Ambush, ///< Bushes, berry trees, cave shadows and drops (bush trigger = press + 62, shadow + 32)
     FriendSafari, ///< 5 PID rolls without the Shiny Charm, 2 perfect IVs
-    TallGrass ///< OR/AS long grass (same generation as grass)
+    TallGrass, ///< OR/AS long grass (same generation as grass)
+    HordeNatural, ///< Horde triggered by a step (same table as Honey hordes, no pre-advance; advances count from the step)
+    DexNav ///< OR/AS DexNav-only slots; the Pokemon is generated at the patch trigger + 60 and its potential IVs overwrite the drawn ones
 };
 
 /**
@@ -67,7 +69,7 @@ constexpr u8 toInt(Encounter6 encounter)
  */
 constexpr bool isHorde(Encounter6 encounter)
 {
-    return encounter == Encounter6::HordeHoney || encounter == Encounter6::HordeSweetScent;
+    return encounter == Encounter6::HordeHoney || encounter == Encounter6::HordeSweetScent || encounter == Encounter6::HordeNatural;
 }
 
 /**

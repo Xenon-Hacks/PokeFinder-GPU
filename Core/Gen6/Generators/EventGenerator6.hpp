@@ -46,7 +46,8 @@ public:
      * @param profile Profile Information
      * @param filter State filter
      */
-    EventGenerator6(u32 initialAdvances, u32 maxAdvances, u32 delay, const WC6 &wc6, const Profile6 &profile, const StateFilter &filter);
+    EventGenerator6(u32 initialAdvances, u32 maxAdvances, u32 delay, const WC6 &wc6, const Profile6 &profile, const StateFilter &filter,
+                    bool generateTwice = false);
 
     /**
      * @brief Generates states
@@ -59,6 +60,7 @@ public:
 
 private:
     WC6 wc6;
+    bool generateTwice; ///< OR/AS generate the gift twice and keep the second (3DSRNGTool, not run live)
 };
 
 #endif // EVENTGENERATOR6_HPP

@@ -60,6 +60,7 @@
 #include <Form/Gen6/Static6.hpp>
 #include <Form/Gen6/Wild6.hpp>
 #include <Form/Gen6/Mirage6.hpp>
+#include <Form/Gen6/TinyMT6.hpp>
 #include <Form/Gen6/Profile/ProfileManager6.hpp>
 #include <Form/Gen8/Eggs8.hpp>
 #include <Form/Gen8/Event8.hpp>
@@ -139,6 +140,7 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonStatic6, &QPushButton::clicked, this, &MainWindow::openStatic6);
     connect(ui->pushButtonWild6, &QPushButton::clicked, this, &MainWindow::openWild6);
     connect(ui->pushButtonMirage6, &QPushButton::clicked, this, &MainWindow::openMirage6);
+    connect(ui->pushButtonTinyMT6, &QPushButton::clicked, this, &MainWindow::openTinyMT6);
     connect(ui->actionProfileManager6, &QAction::triggered, this, &MainWindow::openProfileManager6);
     connect(ui->pushButtonStatic8, &QPushButton::clicked, this, &MainWindow::openStatic8);
     connect(ui->pushButtonWild8, &QPushButton::clicked, this, &MainWindow::openWild8);
@@ -205,6 +207,7 @@ MainWindow::~MainWindow()
     delete static6;
     delete wild6;
     delete mirage6;
+    delete tinyMT6;
 
     delete egg8;
     delete event8;
@@ -787,6 +790,16 @@ void MainWindow::openMirage6()
     }
     mirage6->show();
     mirage6->raise();
+}
+
+void MainWindow::openTinyMT6()
+{
+    if (!tinyMT6)
+    {
+        tinyMT6 = new TinyMT6();
+    }
+    tinyMT6->show();
+    tinyMT6->raise();
 }
 
 void MainWindow::openProfileManager6() const

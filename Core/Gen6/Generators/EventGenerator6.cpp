@@ -25,8 +25,8 @@
 #include <Core/RNG/RNGList.hpp>
 
 EventGenerator6::EventGenerator6(u32 initialAdvances, u32 maxAdvances, u32 delay, const WC6 &wc6, const Profile6 &profile,
-                                 const StateFilter &filter) :
-    Generator(initialAdvances, maxAdvances, delay, Method::None, profile, filter), wc6(wc6)
+                                 const StateFilter &filter, bool generateTwice) :
+    Generator(initialAdvances, maxAdvances, delay, Method::None, profile, filter), wc6(wc6), generateTwice(generateTwice)
 {
 }
 
@@ -67,6 +67,11 @@ std::vector<State6> EventGenerator6::generate(u32 seed) const
     std::vector<State6> states;
     for (u32 cnt = 0; cnt <= maxAdvances; cnt++, rngList.advanceState())
     {
+        if (generateTwice)
+        {
+            // The first generation is a throwaway block of the same shape
+            Gen6::generate(rngList, request, info, tid, sid);
+        }
         auto result = Gen6::generate(rngList, request, info, tid, sid);
 
         State6 state(initialAdvances + cnt, result, wc6.getLevel(), 0, info);
