@@ -80,12 +80,24 @@ public:
      */
     static u8 getPIDRolls(Encounter6 encounter, bool shinyCharm, bool shinyLocked);
 
+    /**
+     * @brief Sets the DexNav potential: after the IVs are drawn the first potential stats (HP, Atk, Def) are set to 31 in place
+     * with no extra draw (live AS/OR: potential 1 overwrote the drawn HP). The stat order past HP is inferred.
+     *
+     * @param potential Perfect IVs, 0-3
+     */
+    void setPotential(u8 potential)
+    {
+        this->potential = potential;
+    }
+
 private:
     std::vector<Slot> targets;
     Encounter6 encounter;
     Lead lead;
     u8 haMember;
     u8 ivCount;
+    u8 potential = 0;
     bool shinyLocked;
 };
 

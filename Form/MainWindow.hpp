@@ -46,6 +46,7 @@ class SeedFinder6;
 class Static6;
 class Wild6;
 class Mirage6;
+class TinyMT6;
 class Eggs8;
 class Event8;
 class IDs8;
@@ -140,6 +141,7 @@ private:
     Static6 *static6 = nullptr;
     Wild6 *wild6 = nullptr;
     Mirage6 *mirage6 = nullptr;
+    TinyMT6 *tinyMT6 = nullptr;
 
     // Gen 8
     Eggs8 *egg8 = nullptr;
@@ -368,6 +370,11 @@ private slots:
      * @brief Opens the Gen 6 Mirage Spots window
      */
     void openMirage6();
+
+    /**
+     * @brief Opens the Gen 6 TinyMT tools window
+     */
+    void openTinyMT6();
 
     /**
      * @brief Opens the Gen 6 Profile Manager window

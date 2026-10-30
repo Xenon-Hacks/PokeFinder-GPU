@@ -132,6 +132,9 @@ void Wild6::encounterIndexChanged(int index)
         ui->comboBoxHAMember->setVisible(horde);
         ui->tableView->setColumnHidden(StateModel6::spotsColumn, !horde);
         ui->spinBoxIVCount->setValue(encounter == Encounter6::FriendSafari ? 2 : 0);
+        // DexNav potential overwrites the first IVs after the draw; everything else picks perfect IVs with rand(6)
+        ui->labelIvCount->setText(encounter == Encounter6::DexNav ? tr("Potential") : tr("Perfect IVs"));
+        ui->spinBoxIVCount->setMaximum(encounter == Encounter6::DexNav ? 3 : 6);
         ui->checkBoxShinyLocked->setEnabled(encounter == Encounter6::Grass);
         if (encounter != Encounter6::Grass)
         {
@@ -206,8 +209,13 @@ void Wild6::generate()
     u8 haMember = isHorde(encounter) ? static_cast<u8>(ui->comboBoxHAMember->currentIndex()) : 0;
 
     auto filter = ui->filter->getFilter<StateFilter>();
-    WildGenerator6 generator(initialAdvances, maxAdvances, delay, encounter, lead, targets, haMember, ui->spinBoxIVCount->value(),
+    bool dexNav = encounter == Encounter6::DexNav;
+    WildGenerator6 generator(initialAdvances, maxAdvances, delay, encounter, lead, targets, haMember, dexNav ? 0 : ui->spinBoxIVCount->value(),
                              ui->checkBoxShinyLocked->isChecked(), *currentProfile, filter);
+    if (dexNav)
+    {
+        generator.setPotential(static_cast<u8>(ui->spinBoxIVCount->value()));
+    }
 
     if (ui->checkBoxWindow->isChecked())
     {

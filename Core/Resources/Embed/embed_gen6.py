@@ -14,7 +14,7 @@ from .embed_util import write_data
 
 # Encounter6 enum order
 GRASS, YELLOW, PURPLE, RED, ROUGH, SURF, ROCK_SMASH, OLD_ROD, GOOD_ROD, SUPER_ROD, HORDE_HONEY, HORDE_SWEET_SCENT, AMBUSH, SAFARI,     TALL_GRASS = range(15)
-DEXNAV = None  # DexNav-only slots, not a wild encounter the tab generates
+HORDE_NATURAL, DEXNAV = 15, 16  # natural hordes share the horde table; DexNav-only slots are their own type
 
 ZONE_LAYOUT = (
     (GRASS, 12), (YELLOW, 12), (PURPLE, 12), (RED, 12), (ROUGH, 12), (SURF, 5), (ROCK_SMASH, 5), (OLD_ROD, 3), (GOOD_ROD, 3),
@@ -83,8 +83,7 @@ def _split(areas, oras=False):
         if type == 0:
             index = 0
             for encounter, size in (ZONE_LAYOUT_ORAS if oras else ZONE_LAYOUT):
-                if encounter is not None:
-                    add(encounter, location, slots[index:index + size])
+                add(encounter, location, slots[index:index + size])
                 index += size
         elif type == 7:
             add_horde(location, slots)

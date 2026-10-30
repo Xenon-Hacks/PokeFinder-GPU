@@ -34,6 +34,9 @@
 #include <Core/Gen6/Searchers/SeedSearcher6.hpp>
 #include <Core/Gen6/SeedWindow6.hpp>
 #include <Core/Gen6/StaticTemplate6.hpp>
+#include <Core/Gen6/TinyTimeline6.hpp>
+#include <Core/Gen6/Generators/EventGenerator6.hpp>
+#include <Core/RNG/TinyMT.hpp>
 #include <Core/Gen6/States/EggState6.hpp>
 #include <Core/Gen6/States/State6.hpp>
 #include <Core/Gen6/WC6.hpp>
@@ -921,4 +924,278 @@ void Gen6Test::orasResortDaycare()
     std::vector<u8> xy(Save6::size, 0);
     xy[0x1B200 + 0x1F0] = 1;
     QVERIFY(!Save6::parse(xy.data(), xy.size()).resortUsed);
+}
+
+void Gen6Test::tinyPreAdvance()
+{
+    // Honey pre-advance = 3 x party + 3 + 24 (outdoor) + shadows, verified under GDB in 9 zones (spec 7.4, 11.3)
+    const ZoneModel6 *route7 = ZoneModels6::getZone(264);
+    const ZoneModel6 *terminus = ZoneModels6::getZone(344);
+    const ZoneModel6 *reflection = ZoneModels6::getZone(306);
+    const ZoneModel6 *santalune = ZoneModels6::getZone(286);
+    QVERIFY(route7 && terminus && reflection && santalune);
+    QCOMPARE(route7->location, u16(38));
+    QCOMPARE(route7->honeyPreAdvance(6), 45u);
+    QCOMPARE(route7->honeyPreAdvance(1), 30u);
+    QCOMPARE(terminus->honeyPreAdvance(1), 11u);
+    QCOMPARE(reflection->honeyPreAdvance(1), 13u);
+    QCOMPARE(santalune->honeyPreAdvance(1), 6u);
+    QCOMPARE(terminus->sweetScentPreAdvance(), 9u);
+    QCOMPARE(santalune->sweetScentPreAdvance(), 4u);
+    QCOMPARE(route7->sweetScentPreAdvance(), 28u);
+
+    // The timeline consumes exactly those draws
+    TinyTimeline6 timeline(TinyMT(0x12345678), Game::Y);
+    timeline.bagClose(6);
+    timeline.fieldResume(*route7);
+    QCOMPARE(timeline.getDraws(), 45u);
+
+    int size = 0;
+    ZoneModels6::getZones(&size);
+    QCOMPARE(size, 44);
+    QCOMPARE(ZoneModels6::getZones(56).size(), size_t(4)); // Reflection Cave floors
+    QVERIFY(ZoneModels6::getZone(1) == nullptr);
+}
+
+void Gen6Test::tinyHordeTrigger()
+{
+    QCOMPARE(TinyTimeline6::hordeGroup(0), u8(0));
+    QCOMPARE(TinyTimeline6::hordeGroup(59), u8(0));
+    QCOMPARE(TinyTimeline6::hordeGroup(60), u8(1));
+    QCOMPARE(TinyTimeline6::hordeGroup(94), u8(1));
+    QCOMPARE(TinyTimeline6::hordeGroup(95), u8(2));
+    QCOMPARE(TinyTimeline6::hordeGroup(99), u8(2));
+
+    // X/Y: lead, slot, HA check (+ member), extra; OR/AS: lead, slot, HA check (+ member), 5 flutes, 1, 5 items
+    for (u32 seed = 1; seed < 200; seed++)
+    {
+        TinyTimeline6 xy(TinyMT(seed), Game::X);
+        auto decision = xy.hordeTrigger();
+        QCOMPARE(xy.getDraws(), decision.haMember == 0 ? 4u : 5u);
+        QVERIFY(decision.haMember <= 5);
+        QCOMPARE(decision.group, TinyTimeline6::hordeGroup(decision.slotRoll));
+
+        TinyTimeline6 oras(TinyMT(seed), Game::OR);
+        decision = oras.hordeTrigger();
+        // No extra draw on OR/AS: 5 flute boosts, one more draw, 5 held items follow the HA pick
+        QCOMPARE(oras.getDraws(), (decision.haMember == 0 ? 3u : 4u) + 11u);
+    }
+}
+
+void Gen6Test::tinyStepAndSlots()
+{
+    // 12-entry tables: cumulative 20/20/10/10/10/10/5/5/4/4/1/1
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Grass, 0), u8(0));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Grass, 19), u8(0));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Grass, 20), u8(1));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Grass, 40), u8(2));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Grass, 89), u8(7));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Grass, 98), u8(10));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Grass, 99), u8(11));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Surf, 49), u8(0));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Surf, 50), u8(1));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::Surf, 99), u8(4));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::SuperRod, 95), u8(2));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::FriendSafari, 33), u8(0));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::FriendSafari, 34), u8(1));
+    QCOMPARE(TinyTimeline6::slot(Encounter6::FriendSafari, 67), u8(2));
+
+    // X/Y grass step: step draw, lead, encounter check; on a hit roamer, slot, extra (6 draws); a miss is 3 draws.
+    // Surf and the Friend Safari skip the step and roamer draws; OR/AS skip them too but add the flute.
+    for (u32 seed = 1; seed < 300; seed++)
+    {
+        TinyTimeline6 grass(TinyMT(seed), Game::X);
+        auto step = grass.step(Encounter6::Grass, 100);
+        QVERIFY(step.encounter);
+        QCOMPARE(grass.getDraws(), 6u);
+        QCOMPARE(step.slot, TinyTimeline6::slot(Encounter6::Grass, step.slotRoll));
+
+        TinyTimeline6 miss(TinyMT(seed), Game::X);
+        QVERIFY(!miss.step(Encounter6::Grass, 0).encounter);
+        QCOMPARE(miss.getDraws(), 3u);
+
+        TinyTimeline6 surf(TinyMT(seed), Game::X);
+        surf.step(Encounter6::Surf, 100);
+        QCOMPARE(surf.getDraws(), 4u);
+
+        TinyTimeline6 safari(TinyMT(seed), Game::X);
+        auto safariStep = safari.step(Encounter6::FriendSafari, 13);
+        QCOMPARE(safariStep.encounter, safariStep.encounterRoll < 13);
+        QCOMPARE(safari.getDraws(), safariStep.encounter ? 4u : 2u);
+
+        TinyTimeline6 oras(TinyMT(seed), Game::OR);
+        oras.step(Encounter6::Grass, 100);
+        QCOMPARE(oras.getDraws(), 5u);
+    }
+}
+
+void Gen6Test::tinyTimers()
+{
+    // The player's idle timer fires again after 2 x rand(90) + 720 frames (live X/Y), one draw per firing
+    TinyTimeline6 timeline(TinyMT(0xC0FFEE), Game::X);
+    timeline.addTimer(0, TinyTimeline6::Timer::Fidget);
+    QCOMPARE(timeline.elapse(0), 1u);
+    QCOMPARE(timeline.getDraws(), 1u);
+    QCOMPARE(timeline.elapse(719), 0u);
+    u32 fired = timeline.elapse(2 * 89 + 1);
+    QCOMPARE(fired, 1u);
+    QCOMPARE(timeline.getFrame(), 720u + 178u);
+
+    // Blink engine: entry -> type 1 (2 x rand(60) + 124) or type 2 (12 / 20) -> ...; every firing is one draw
+    TinyTimeline6 blink(TinyMT(0xBEEF), Game::X);
+    blink.addTimer(0, TinyTimeline6::Timer::BlinkStart);
+    u32 draws = blink.elapse(1000);
+    QCOMPARE(blink.getDraws(), draws);
+    QVERIFY(draws >= 6); // at least one blink cycle every ~250 frames
+
+    // Without timers nothing draws
+    TinyTimeline6 quiet(TinyMT(1), Game::X);
+    QCOMPARE(quiet.elapse(100000), 0u);
+    QCOMPARE(quiet.getDraws(), 0u);
+}
+
+void Gen6Test::tinyFishingRockSmash()
+{
+    // OR run: delay draw 4E684F77 -> rand(7) = 2 -> bite 120 frames later (spec 11.3)
+    QCOMPARE(Gen6::rand(0x4E684F77, 7), 2u);
+    for (u32 seed = 1; seed < 50; seed++)
+    {
+        TinyMT reference(seed);
+        u32 expected = Gen6::rand(reference.next(), 7) * 30 + 60;
+        TinyTimeline6 timeline(TinyMT(seed), Game::X);
+        QCOMPARE(timeline.fishingDelay(), expected);
+        QVERIFY(expected >= 60 && expected <= 240);
+
+        TinyTimeline6 smash(TinyMT(seed), Game::X);
+        QVERIFY(smash.rockSmash() <= 2);
+    }
+}
+
+void Gen6Test::pokerus()
+{
+    struct Stub
+    {
+        std::vector<u32> values;
+        size_t index = 0;
+        u32 next()
+        {
+            return values[index++];
+        }
+    };
+
+    // Miss: rand(0x10000) on the modulo path is the low 16 bits; two draws (infect check and spread)
+    Stub miss { { 0x12340001, 0xFFFFFFFF } };
+    auto result = Pokerus6::battleEnd(miss, 6);
+    QVERIFY(!result.infected);
+    QCOMPARE(result.draws, 2u);
+    QCOMPARE(miss.index, size_t(2));
+
+    // Hit on 0x8000: spread, member rand(6) of the next output, strain rand(256) re-rolled while (strain & 7) == 0
+    Stub hit { { 0x00018000, 0, 0x80000000, 0x08000000, 0x15000000 } };
+    result = Pokerus6::battleEnd(hit, 6);
+    QVERIFY(result.infected);
+    QCOMPARE(result.member, u8(3));
+    QCOMPARE(result.strain, u8(0x15));
+    QCOMPARE(result.draws, 5u);
+
+    Stub hitC000 { { 0xC000, 0, 0, 0x01000000 } };
+    QVERIFY(Pokerus6::battleEnd(hitC000, 1).infected);
+}
+
+void Gen6Test::pokeRadar()
+{
+    // 3DSRNGTool PokeRadar.cs layout, exact against 18 logged calls on X: music, 4 rings (direction, location, good roll), empty patch
+    for (u32 seed = 1; seed < 200; seed++)
+    {
+        PokeRadar6 radar(TinyMT(seed), 3, 0, false);
+        QVERIFY(radar.music < 100);
+        for (u8 ring = 0; ring < 4; ring++)
+        {
+            const auto &patch = radar.patches[ring];
+            QCOMPARE(patch.ring, ring);
+            QVERIFY(patch.direction < 4);
+            QVERIFY(patch.location < ring * 2 + 3);
+            QVERIFY(patch.state <= 2);
+            QVERIFY(patch.x() <= 8 && patch.y() <= 8);
+        }
+        QCOMPARE(radar.patches[4].state, u8(3));
+        QVERIFY(radar.patches[4].ring < 3);
+        QCOMPARE(radar.shiny(), std::ranges::any_of(radar.patches, [](const PokeRadar6::Patch &p) { return p.state == 2; }));
+    }
+
+    // Chain 40+ or boost: a good patch is shiny with chance 1/100 instead of 1/(8100 - 200 x chain)
+    int shiny = 0;
+    for (u32 seed = 1; seed <= 2000; seed++)
+    {
+        shiny += PokeRadar6(TinyMT(seed), 1, 40, true).shiny() ? 1 : 0;
+    }
+    QVERIFY(shiny > 10 && shiny < 120);
+}
+
+void Gen6Test::dexNav()
+{
+    DexNav6::Settings settings { 0, 50, 0, true, true, false, false };
+    for (u32 seed = 1; seed < 200; seed++)
+    {
+        DexNav6 nav(TinyMT(seed), settings);
+        QVERIFY(nav.success);
+        QVERIFY(nav.potential <= 3);
+        QVERIFY(nav.slot < 12);
+        QVERIFY(nav.heldItem <= 1 || nav.heldItem == 3);
+        QVERIFY(nav.x >= -9 && nav.x <= 9 && nav.y >= -9 && nav.y <= 9);
+        QCOMPARE(nav.additionalDelay, u8(0));
+    }
+
+    // Step trigger: the search runs only when rand(100) < 50 after the lead and encounter draws
+    settings.activeSearch = false;
+    int triggered = 0;
+    for (u32 seed = 1; seed <= 400; seed++)
+    {
+        triggered += DexNav6(TinyMT(seed), settings).success ? 1 : 0;
+    }
+    QVERIFY(triggered > 120 && triggered < 280);
+}
+
+void Gen6Test::dexNavPotential()
+{
+    // Potential IVs overwrite the drawn IVs in place with no extra draw (live AS/OR: potential 1 wrote 31 over the drawn HP)
+    std::vector<Slot> slot { Slot(261, 3, 3, PersonalLoader::getPersonal(Game::OR, 261)) };
+    Profile6 profile("-", Game::OR, 12345, 54321, false, 0);
+    WildGenerator6 plain(100, 20, 0, Encounter6::DexNav, Lead::None, slot, 0, 0, false, profile, allFilter());
+    WildGenerator6 potential(100, 20, 0, Encounter6::DexNav, Lead::None, slot, 0, 0, false, profile, allFilter());
+    potential.setPotential(2);
+
+    auto base = plain.generate(0xDC59D5B3);
+    auto boosted = potential.generate(0xDC59D5B3);
+    QCOMPARE(base.size(), boosted.size());
+    for (size_t i = 0; i < base.size(); i++)
+    {
+        QCOMPARE(boosted[i].getPID(), base[i].getPID());
+        QCOMPARE(boosted[i].getNature(), base[i].getNature());
+        QCOMPARE(boosted[i].getIV(0), u8(31));
+        QCOMPARE(boosted[i].getIV(1), u8(31));
+        for (u8 iv = 2; iv < 6; iv++)
+        {
+            QCOMPARE(boosted[i].getIV(iv), base[i].getIV(iv));
+        }
+    }
+}
+
+void Gen6Test::eventGenerateTwice()
+{
+    // OR/AS generate the gift twice and keep the second block (3DSRNGTool): the first block is a throwaway of the same shape
+    WC6 card(251, 0, 10, 0, 0, false, 0, Gen6::PIDType::Random, 0, { 255, 255, 255, 255, 255, 255 }, 0, 3, Gen6::Random, 255, false);
+    Profile6 profile("-", Game::OR, 1, 2, false, 0);
+
+    EventGenerator6 once(0, 50, 0, card, profile, allFilter(), false);
+    EventGenerator6 twice(0, 50, 0, card, profile, allFilter(), true);
+    auto single = once.generate(0xB4ED70B5);
+    auto doubled = twice.generate(0xB4ED70B5);
+    QCOMPARE(single.size(), size_t(51));
+    QCOMPARE(doubled.size(), size_t(51));
+    QVERIFY(doubled[0].getPID() != single[0].getPID());
+    QVERIFY(doubled[0].getEC() != single[0].getEC());
+
+    MT mt(0xB4ED70B5);
+    QCOMPARE(single[0].getEC(), mt.next());
 }

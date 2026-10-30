@@ -314,6 +314,16 @@
 </property>
 </widget>
 </item>
+<item row="14" column="0" colspan="2">
+<widget class="QCheckBox" name="checkBoxGenerateTwice">
+<property name="toolTip">
+ <string>OR/AS generate the gift twice and keep the second block (3DSRNGTool; not verified live). X/Y generate it once.</string>
+</property>
+<property name="text">
+ <string>Generate twice (OR/AS)</string>
+</property>
+</widget>
+</item>
 <item row="13" column="1">
 <widget class="TextBox" name="textBoxSID"/>
 </item>

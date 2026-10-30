@@ -252,6 +252,8 @@ add_library(PokeFinderCore STATIC
     Gen6/States/EggState6.hpp
     Gen6/States/State6.hpp
     Gen6/StaticTemplate6.hpp
+    Gen6/TinyTimeline6.cpp
+    Gen6/TinyTimeline6.hpp
     Gen6/WC6.hpp
     Gen8/Den.hpp
     Gen8/EncounterArea8.cpp

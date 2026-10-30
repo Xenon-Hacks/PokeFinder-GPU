@@ -61,6 +61,16 @@ private slots:
     void pressToSeed();
     void mirageSpots();
     void orasResortDaycare();
+    void tinyPreAdvance();
+    void tinyHordeTrigger();
+    void tinyStepAndSlots();
+    void tinyTimers();
+    void tinyFishingRockSmash();
+    void pokerus();
+    void pokeRadar();
+    void dexNav();
+    void dexNavPotential();
+    void eventGenerateTwice();
 };
 
 #endif // GEN6TEST_HPP

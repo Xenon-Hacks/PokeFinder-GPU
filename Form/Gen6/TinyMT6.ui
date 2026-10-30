@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TinyMT6</class>
+ <widget class="QWidget" name="TinyMT6">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>TinyMT Tools Gen 6</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="groupBoxRNGInfo">
+     <property name="title">
+      <string>TinyMT</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayoutRNGInfo">
+      <item row="0" column="0" colspan="2">
+       <widget class="QComboBox" name="comboBoxSource">
+        <item>
+         <property name="text">
+          <string>TinyMT state</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>TinyMT seed</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelStateSeed0">
+        <property name="text">
+         <string>State 0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="TextBox" name="textBoxState0"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelState1">
+        <property name="text">
+         <string>State 1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="TextBox" name="textBoxState1"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelState2">
+        <property name="text">
+         <string>State 2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="TextBox" name="textBoxState2"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="labelState3">
+        <property name="text">
+         <string>State 3</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="TextBox" name="textBoxState3"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="labelIdleDraws">
+        <property name="text">
+         <string>Idle Draws (up to)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QSpinBox" name="spinBoxIdleDraws">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>50</number>
+        </property>
+        <property name="value">
+         <number>3</number>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <widget class="QPushButton" name="pushButtonGenerate">
+        <property name="text">
+         <string>Generate</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QGroupBox" name="groupBoxField">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>1</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Horde (X/Y)</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayoutField">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelGame">
+        <property name="text">
+         <string>Game</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="ComboBox" name="comboBoxGame">
+        <item>
+         <property name="text">
+          <string>X</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Y</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelMethod">
+        <property name="text">
+         <string>Method</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="comboBoxMethod">
+        <item>
+         <property name="text">
+          <string>Honey</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Sweet Scent</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelZone">
+        <property name="text">
+         <string>Zone</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="comboBoxZone"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelParty">
+        <property name="text">
+         <string>Party Size</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="spinBoxParty">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>6</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="labelLead">
+        <property name="text">
+         <string>Lead</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="ComboBox" name="comboBoxLead">
+        <item>
+         <property name="text">
+          <string>None</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Synchronize</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Cute Charm</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Compound Eyes</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="labelPreAdvance">
+        <property name="text">
+         <string>Pre-advance</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="labelPreAdvanceValue">
+        <property name="text">
+         <string>-</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <widget class="QLabel" name="labelNote">
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>The main MT decides the Pokemon (use the Wild window); the TinyMT decides the horde group, the lead check, the hidden-ability member and the held items. Uncounted NPC, weather and idle draws shift the result, so the table lists one row per possible idle-draw count.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="TableView" name="tableView"/>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TextBox</class>
+   <extends>QLineEdit</extends>
+   <header>Form/Controls/TextBox.hpp</header>
+  </customwidget>
+  <customwidget>
+   <class>ComboBox</class>
+   <extends>QComboBox</extends>
+   <header>Form/Controls/ComboBox.hpp</header>
+  </customwidget>
+  <customwidget>
+   <class>TableView</class>
+   <extends>QTableView</extends>
+   <header>Form/Controls/TableView.hpp</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

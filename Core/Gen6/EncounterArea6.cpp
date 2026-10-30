@@ -38,6 +38,7 @@ bool hasEncounter(Encounter6 encounter, Game version)
     case Encounter6::FriendSafari:
         return !oras;
     case Encounter6::TallGrass:
+    case Encounter6::DexNav:
         return oras;
     default:
         return true;
@@ -137,7 +138,7 @@ namespace Encounters6
         auto u16le = [data](size_t offset) { return static_cast<u16>(data[offset] | (data[offset + 1] << 8)); };
 
         // Both horde triggers share the horde table
-        u8 type = toInt(encounter == Encounter6::HordeSweetScent ? Encounter6::HordeHoney : encounter);
+        u8 type = toInt(isHorde(encounter) ? Encounter6::HordeHoney : encounter);
 
         std::vector<EncounterArea6> areas;
         size_t offset = 2;

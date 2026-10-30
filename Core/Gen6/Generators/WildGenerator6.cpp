@@ -94,6 +94,10 @@ std::vector<State6> WildGenerator6::generate(u32 seed) const
         {
             const Slot &slot = targets[member];
             auto result = Gen6::generate(rngList, requests[member], slot.getInfo(), profile.getTID(), profile.getSID());
+            for (u8 i = 0; i < potential && i < 6; i++)
+            {
+                result.ivs[i] = 31;
+            }
             if (horde)
             {
                 history[advance & 255][member] = { result.pid, result.ivs };

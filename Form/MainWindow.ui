@@ -212,6 +212,13 @@
           </property>
          </widget>
         </item>
+        <item row="7" column="0">
+         <widget class="QPushButton" name="pushButtonTinyMT6">
+          <property name="text">
+           <string>TinyMT Tools (X/Y)</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="tabGen8">

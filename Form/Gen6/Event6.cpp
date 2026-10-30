@@ -167,7 +167,7 @@ void Event6::generate()
     u32 delay = ui->textBoxDelay->getUInt();
 
     auto filter = ui->filter->getFilter<StateFilter>();
-    EventGenerator6 generator(initialAdvances, maxAdvances, delay, wc6, *currentProfile, filter);
+    EventGenerator6 generator(initialAdvances, maxAdvances, delay, wc6, *currentProfile, filter, ui->checkBoxGenerateTwice->isChecked());
 
     auto states = generator.generate(seed);
     model->addItems(states);
@@ -227,4 +227,7 @@ void Event6::importWC6()
 void Event6::profileChanged(const Profile6 &profile)
 {
     currentProfile = &profile;
+    bool oras = (profile.getVersion() & Game::ORAS) != Game::None;
+    ui->checkBoxGenerateTwice->setEnabled(oras);
+    ui->checkBoxGenerateTwice->setChecked(oras);
 }
