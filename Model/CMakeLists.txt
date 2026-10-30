@@ -65,6 +65,8 @@ add_library(PokeFinderModel STATIC
     Gen6/ProfileModel6.hpp
     Gen6/StateModel6.cpp
     Gen6/StateModel6.hpp
+    Gen7/ProfileModel7.cpp
+    Gen7/ProfileModel7.hpp
     Gen8/ProfileModel8.cpp
     Gen8/ProfileModel8.hpp
     Gen8/StaticModel8.cpp

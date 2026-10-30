@@ -47,6 +47,8 @@ class Static6;
 class Wild6;
 class Mirage6;
 class TinyMT6;
+class IDs7;
+class SeedFinder7;
 class Eggs8;
 class Event8;
 class IDs8;
@@ -87,6 +89,11 @@ signals:
      * @brief Emits that the Gen 6 profiles have been modified
      */
     void profilesChanged6();
+
+    /**
+     * @brief Emits that the Gen 7 profiles have been modified
+     */
+    void profilesChanged7();
 
     /**
      * @brief Emits that the profiles have been changed
@@ -142,6 +149,8 @@ private:
     Wild6 *wild6 = nullptr;
     Mirage6 *mirage6 = nullptr;
     TinyMT6 *tinyMT6 = nullptr;
+    IDs7 *ids7 = nullptr;
+    SeedFinder7 *seedFinder7 = nullptr;
 
     // Gen 8
     Eggs8 *egg8 = nullptr;
@@ -375,6 +384,21 @@ private slots:
      * @brief Opens the Gen 6 TinyMT tools window
      */
     void openTinyMT6();
+
+    /**
+     * @brief Opens the Gen 7 IDs window
+     */
+    void openIDs7();
+
+    /**
+     * @brief Opens the Gen 7 Seed Finder window
+     */
+    void openSeedFinder7();
+
+    /**
+     * @brief Opens the Gen 7 profile manager
+     */
+    void openProfileManager7() const;
 
     /**
      * @brief Opens the Gen 6 Profile Manager window

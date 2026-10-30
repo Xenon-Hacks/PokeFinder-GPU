@@ -61,6 +61,9 @@
 #include <Form/Gen6/Wild6.hpp>
 #include <Form/Gen6/Mirage6.hpp>
 #include <Form/Gen6/TinyMT6.hpp>
+#include <Form/Gen7/IDs7.hpp>
+#include <Form/Gen7/Profile/ProfileManager7.hpp>
+#include <Form/Gen7/SeedFinder7.hpp>
 #include <Form/Gen6/Profile/ProfileManager6.hpp>
 #include <Form/Gen8/Eggs8.hpp>
 #include <Form/Gen8/Event8.hpp>
@@ -141,6 +144,9 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonWild6, &QPushButton::clicked, this, &MainWindow::openWild6);
     connect(ui->pushButtonMirage6, &QPushButton::clicked, this, &MainWindow::openMirage6);
     connect(ui->pushButtonTinyMT6, &QPushButton::clicked, this, &MainWindow::openTinyMT6);
+    connect(ui->pushButtonIDs7, &QPushButton::clicked, this, &MainWindow::openIDs7);
+    connect(ui->pushButtonSeedFinder7, &QPushButton::clicked, this, &MainWindow::openSeedFinder7);
+    connect(ui->actionProfileManager7, &QAction::triggered, this, &MainWindow::openProfileManager7);
     connect(ui->actionProfileManager6, &QAction::triggered, this, &MainWindow::openProfileManager6);
     connect(ui->pushButtonStatic8, &QPushButton::clicked, this, &MainWindow::openStatic8);
     connect(ui->pushButtonWild8, &QPushButton::clicked, this, &MainWindow::openWild8);
@@ -208,6 +214,8 @@ MainWindow::~MainWindow()
     delete wild6;
     delete mirage6;
     delete tinyMT6;
+    delete ids7;
+    delete seedFinder7;
 
     delete egg8;
     delete event8;
@@ -802,6 +810,33 @@ void MainWindow::openTinyMT6()
     tinyMT6->raise();
 }
 
+void MainWindow::openIDs7()
+{
+    if (!ids7)
+    {
+        ids7 = new IDs7();
+    }
+    ids7->show();
+    ids7->raise();
+}
+
+void MainWindow::openSeedFinder7()
+{
+    if (!seedFinder7)
+    {
+        seedFinder7 = new SeedFinder7();
+    }
+    seedFinder7->show();
+    seedFinder7->raise();
+}
+
+void MainWindow::openProfileManager7() const
+{
+    auto *manager = new ProfileManager7();
+    connect(manager, &ProfileManager7::profilesChanged, this, &MainWindow::updateProfiles);
+    manager->show();
+}
+
 void MainWindow::openProfileManager6() const
 {
     auto *manager = new ProfileManager6();
@@ -924,6 +959,10 @@ void MainWindow::updateProfiles(int num)
     else if (num == 6)
     {
         emit profilesChanged6();
+    }
+    else if (num == 7)
+    {
+        emit profilesChanged7();
     }
     else if (num == 8)
     {

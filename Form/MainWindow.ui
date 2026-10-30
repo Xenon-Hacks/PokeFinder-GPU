@@ -221,6 +221,27 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tabGen7">
+       <attribute name="title">
+        <string>Gen 7</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_7">
+        <item row="0" column="0">
+         <widget class="QPushButton" name="pushButtonIDs7">
+          <property name="text">
+           <string>IDs</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="pushButtonSeedFinder7">
+          <property name="text">
+           <string>Seed Finder (needles, GPU)</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tabGen8">
        <attribute name="title">
         <string>Gen 8</string>
@@ -339,6 +360,12 @@
     </property>
     <addaction name="actionProfileManager6"/>
    </widget>
+   <widget class="QMenu" name="menuGen7Tools">
+    <property name="title">
+     <string>Gen 7 Tools</string>
+    </property>
+    <addaction name="actionProfileManager7"/>
+   </widget>
    <widget class="QMenu" name="menuGen8Tools">
     <property name="title">
      <string>Gen 8 Tools</string>
@@ -350,6 +377,7 @@
    <addaction name="menuGen4Tools"/>
    <addaction name="menuGen5Tools"/>
    <addaction name="menuGen6Tools"/>
+   <addaction name="menuGen7Tools"/>
    <addaction name="menuGen8Tools"/>
    <addaction name="menuTools"/>
   </widget>
@@ -429,6 +457,11 @@
    </property>
   </action>
   <action name="actionProfileManager6">
+   <property name="text">
+    <string>Profile Manager</string>
+   </property>
+  </action>
+  <action name="actionProfileManager7">
    <property name="text">
     <string>Profile Manager</string>
    </property>
