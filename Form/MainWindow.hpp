@@ -50,6 +50,7 @@ class TinyMT6;
 class Honey7;
 class IDs7;
 class Eggs7;
+class Fishing7;
 class Event7;
 class Pelago7;
 class SeedFinder7;
@@ -158,6 +159,7 @@ private:
     IDs7 *ids7 = nullptr;
     SeedFinder7 *seedFinder7 = nullptr;
     Eggs7 *eggs7 = nullptr;
+    Fishing7 *fishing7 = nullptr;
     Event7 *event7 = nullptr;
     Pelago7 *pelago7 = nullptr;
     Static7 *static7 = nullptr;
@@ -419,6 +421,11 @@ private slots:
      * @brief Opens the Gen 7 egg window
      */
     void openEggs7();
+
+    /**
+     * @brief Opens the Gen 7 fishing window
+     */
+    void openFishing7();
 
     /**
      * @brief Opens the Gen 7 Wonder Card window
