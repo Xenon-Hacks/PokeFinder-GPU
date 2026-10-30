@@ -83,6 +83,8 @@ qt_add_executable(PokeFinderTest
     Gen5/StaticGenerator5Test.hpp
     Gen5/WildGenerator5Test.cpp
     Gen5/WildGenerator5Test.hpp
+    Gen6/Gen6Test.cpp
+    Gen6/Gen6Test.hpp
     Gen8/EggGenerator8Test.cpp
     Gen8/EggGenerator8Test.hpp
     Gen8/EventGenerator8Test.cpp

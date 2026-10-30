@@ -53,6 +53,14 @@
 #include <Form/Gen5/Tools/Phenomenon.hpp>
 #include <Form/Gen5/Tools/SHA1CacheFinder.hpp>
 #include <Form/Gen5/Wild5.hpp>
+#include <Form/Gen6/Eggs6.hpp>
+#include <Form/Gen6/Event6.hpp>
+#include <Form/Gen6/IDs6.hpp>
+#include <Form/Gen6/SeedFinder6.hpp>
+#include <Form/Gen6/Static6.hpp>
+#include <Form/Gen6/Wild6.hpp>
+#include <Form/Gen6/Mirage6.hpp>
+#include <Form/Gen6/Profile/ProfileManager6.hpp>
 #include <Form/Gen8/Eggs8.hpp>
 #include <Form/Gen8/Event8.hpp>
 #include <Form/Gen8/IDs8.hpp>
@@ -124,6 +132,14 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonEgg8, &QPushButton::clicked, this, &MainWindow::openEgg8);
     connect(ui->pushButtonEvent8, &QPushButton::clicked, this, &MainWindow::openEvent8);
     connect(ui->pushButtonIDs8, &QPushButton::clicked, this, &MainWindow::openIDs8);
+    connect(ui->pushButtonEgg6, &QPushButton::clicked, this, &MainWindow::openEggs6);
+    connect(ui->pushButtonEvent6, &QPushButton::clicked, this, &MainWindow::openEvent6);
+    connect(ui->pushButtonIDs6, &QPushButton::clicked, this, &MainWindow::openIDs6);
+    connect(ui->pushButtonSeedFinder6, &QPushButton::clicked, this, &MainWindow::openSeedFinder6);
+    connect(ui->pushButtonStatic6, &QPushButton::clicked, this, &MainWindow::openStatic6);
+    connect(ui->pushButtonWild6, &QPushButton::clicked, this, &MainWindow::openWild6);
+    connect(ui->pushButtonMirage6, &QPushButton::clicked, this, &MainWindow::openMirage6);
+    connect(ui->actionProfileManager6, &QAction::triggered, this, &MainWindow::openProfileManager6);
     connect(ui->pushButtonStatic8, &QPushButton::clicked, this, &MainWindow::openStatic8);
     connect(ui->pushButtonWild8, &QPushButton::clicked, this, &MainWindow::openWild8);
     connect(ui->pushButtonUnderground, &QPushButton::clicked, this, &MainWindow::openUnderground);
@@ -181,6 +197,14 @@ MainWindow::~MainWindow()
     delete ids5;
     delete static5;
     delete wild5;
+
+    delete egg6;
+    delete event6;
+    delete ids6;
+    delete seedFinder6;
+    delete static6;
+    delete wild6;
+    delete mirage6;
 
     delete egg8;
     delete event8;
@@ -690,6 +714,93 @@ void MainWindow::openIDs8()
     ids8->raise();
 }
 
+void MainWindow::openEggs6()
+{
+    if (!egg6)
+    {
+        egg6 = new Eggs6();
+        connect(egg6, &Eggs6::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged6, egg6, &Eggs6::updateProfiles);
+    }
+    egg6->show();
+    egg6->raise();
+}
+
+void MainWindow::openEvent6()
+{
+    if (!event6)
+    {
+        event6 = new Event6();
+        connect(event6, &Event6::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged6, event6, &Event6::updateProfiles);
+    }
+    event6->show();
+    event6->raise();
+}
+
+void MainWindow::openIDs6()
+{
+    if (!ids6)
+    {
+        ids6 = new IDs6();
+    }
+    ids6->show();
+    ids6->raise();
+}
+
+void MainWindow::openSeedFinder6()
+{
+    if (!seedFinder6)
+    {
+        seedFinder6 = new SeedFinder6();
+        connect(seedFinder6, &SeedFinder6::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged6, seedFinder6, &SeedFinder6::updateProfiles);
+    }
+    seedFinder6->show();
+    seedFinder6->raise();
+}
+
+void MainWindow::openStatic6()
+{
+    if (!static6)
+    {
+        static6 = new Static6();
+        connect(static6, &Static6::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged6, static6, &Static6::updateProfiles);
+    }
+    static6->show();
+    static6->raise();
+}
+
+void MainWindow::openWild6()
+{
+    if (!wild6)
+    {
+        wild6 = new Wild6();
+        connect(wild6, &Wild6::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged6, wild6, &Wild6::updateProfiles);
+    }
+    wild6->show();
+    wild6->raise();
+}
+
+void MainWindow::openMirage6()
+{
+    if (!mirage6)
+    {
+        mirage6 = new Mirage6();
+    }
+    mirage6->show();
+    mirage6->raise();
+}
+
+void MainWindow::openProfileManager6() const
+{
+    auto *manager = new ProfileManager6();
+    connect(manager, &ProfileManager6::profilesChanged, this, &MainWindow::updateProfiles);
+    manager->show();
+}
+
 void MainWindow::openProfileManager8() const
 {
     auto *manager = new ProfileManager8();
@@ -801,6 +912,10 @@ void MainWindow::updateProfiles(int num)
     else if (num == 5)
     {
         emit profilesChanged5();
+    }
+    else if (num == 6)
+    {
+        emit profilesChanged6();
     }
     else if (num == 8)
     {

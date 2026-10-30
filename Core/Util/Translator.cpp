@@ -60,10 +60,12 @@ enum class Translation : u8
     Item,
     Move,
     Nature,
+    ORAS,
     Power,
     RS,
     Specie,
     SwSh,
+    XY,
     Count
 };
 
@@ -319,6 +321,14 @@ namespace Translator
         else if ((game & Game::BW2) != Game::None)
         {
             translation = Translation::BW2;
+        }
+        else if ((game & Game::ORAS) != Game::None)
+        {
+            translation = Translation::ORAS;
+        }
+        else if ((game & Game::Gen6) != Game::None)
+        {
+            translation = Translation::XY;
         }
         else if ((game & Game::SwSh) != Game::None)
         {

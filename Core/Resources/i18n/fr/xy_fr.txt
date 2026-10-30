@@ -1,0 +1,38 @@
+12,Route 2
+14,Forêt de Neuvartault
+16,Route 3
+20,Route 4
+28,Route 5
+34,Route 6
+36,Palais Chaydeuvre
+38,Route 7
+40,Relifac-le-Haut
+42,Route 8
+44,Roche-sur-Gliffe
+46,Route 9
+50,Route 10
+54,Route 11
+56,Grotte Miroitante
+58,Yantreizh
+62,Route 12
+66,Route 13
+68,Route 14
+70,Romant-sous-Bois
+74,Route 15
+78,Route 16
+82,Caverne Gelée
+84,Route 17
+88,Route 18
+90,Mozheim
+92,Route 19
+96,Route 20
+98,Village Pokémon
+100,Route 21
+102,Route 22
+104,Route Victoire
+112,Baie Azur
+132,Grotte Étincelante
+134,Cave Connecterre
+140,Grotte Coda
+142,Hôtel Désolation
+148,Safari des Amis

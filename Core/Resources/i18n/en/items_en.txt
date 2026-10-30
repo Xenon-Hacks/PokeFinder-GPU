@@ -124,6 +124,8 @@
 322,Electirizer
 323,Magmarizer
 326,Razor Claw
+327,Razor Fang
+537,Prism Scale
 541,Air Balloon
 545,Absorb Bulb
 546,Cell Battery

@@ -124,6 +124,8 @@
 322,Stromisierer
 323,Magmaisierer
 326,Scharfklaue
+327,Scharfzahn
+537,Schönschuppe
 541,Luftballon
 545,Knolle
 546,Akku

@@ -39,6 +39,7 @@ set(EMBED_HEADERS
     ${EMBED_PATH}/EncounterData3.hpp
     ${EMBED_PATH}/EncounterData4.hpp
     ${EMBED_PATH}/EncounterData5.hpp
+    ${EMBED_PATH}/EncounterData6.hpp
     ${EMBED_PATH}/EncounterData8.hpp
     ${EMBED_PATH}/i18n.hpp
     ${EMBED_PATH}/Personal.hpp
@@ -226,6 +227,32 @@ add_library(PokeFinderCore STATIC
     Gen5/StaticTemplate5.hpp
     Gen5/Tools/AdjacentSeedsCalculator.cpp
     Gen5/Tools/AdjacentSeedsCalculator.hpp
+    Gen6/EncounterArea6.cpp
+    Gen6/EncounterArea6.hpp
+    Gen6/Encounters6.cpp
+    Gen6/Encounters6.hpp
+    Gen6/Generators/EggGenerator6.cpp
+    Gen6/Generators/EggGenerator6.hpp
+    Gen6/Generators/EventGenerator6.cpp
+    Gen6/Generators/EventGenerator6.hpp
+    Gen6/Generators/IDGenerator6.cpp
+    Gen6/Generators/IDGenerator6.hpp
+    Gen6/Generators/StaticGenerator6.cpp
+    Gen6/Generators/StaticGenerator6.hpp
+    Gen6/Generators/WildGenerator6.cpp
+    Gen6/Generators/WildGenerator6.hpp
+    Gen6/Mirage6.hpp
+    Gen6/Pokemon6.hpp
+    Gen6/Profile6.cpp
+    Gen6/Profile6.hpp
+    Gen6/Save6.hpp
+    Gen6/Searchers/SeedSearcher6.cpp
+    Gen6/Searchers/SeedSearcher6.hpp
+    Gen6/SeedWindow6.hpp
+    Gen6/States/EggState6.hpp
+    Gen6/States/State6.hpp
+    Gen6/StaticTemplate6.hpp
+    Gen6/WC6.hpp
     Gen8/Den.hpp
     Gen8/EncounterArea8.cpp
     Gen8/EncounterArea8.hpp

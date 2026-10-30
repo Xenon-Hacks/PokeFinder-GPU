@@ -27,6 +27,7 @@
 class Profile3;
 class Profile4;
 class Profile5;
+class Profile6;
 class Profile8;
 enum class Game : u32;
 
@@ -164,6 +165,47 @@ namespace ProfileLoader5
      * @param original Profile being edited
      */
     void updateProfile(const Profile5 &update, const Profile5 &original);
+}
+
+namespace ProfileLoader6
+{
+    /**
+     * @brief Adds a profile to the stored json file
+     *
+     * @param profile Profile being added
+     */
+    void addProfile(const Profile6 &profile);
+
+    /**
+     * @brief Reads profiles from stored json file
+     *
+     * @param version Game version to filter by
+     *
+     * @return Vector of profiles
+     */
+    std::vector<Profile6> getProfiles(Game version);
+
+    /**
+     * @brief Replaces stored profiles
+     *
+     * @param profiles Ordered profiles to store
+     */
+    void setProfiles(const std::vector<Profile6> &profiles);
+
+    /**
+     * @brief Deletes a profile from the stored json file
+     *
+     * @param remove Profile being removed
+     */
+    void removeProfile(const Profile6 &remove);
+
+    /**
+     * @brief Updates a profile from the stored json file
+     *
+     * @param update Profile with new modifications
+     * @param original Profile being edited
+     */
+    void updateProfile(const Profile6 &update, const Profile6 &original);
 }
 
 namespace ProfileLoader8
