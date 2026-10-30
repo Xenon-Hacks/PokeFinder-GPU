@@ -35,6 +35,11 @@ private slots:
 
     void searchStatic_data();
     void searchStatic();
+
+    void searchRandomProfiles_data();
+    void searchRandomProfiles();
+
+    void searchMultipleProfiles();
 };
 
 #endif // IVSEARCHER5GPUTEST_HPP

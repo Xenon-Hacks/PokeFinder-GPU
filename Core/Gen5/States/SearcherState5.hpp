@@ -79,6 +79,16 @@ public:
     }
 
     /**
+     * @brief Returns the index of the profile the state was searched with
+     *
+     * @return Profile index
+     */
+    u8 getProfile() const
+    {
+        return profile;
+    }
+
+    /**
      * @brief Returns the interal state
      *
      * @return Internal state
@@ -98,11 +108,22 @@ public:
         return timer0;
     }
 
+    /**
+     * @brief Sets the index of the profile the state was searched with, used when one search covers several profiles
+     *
+     * @param profile Profile index
+     */
+    void setProfile(u8 profile)
+    {
+        this->profile = profile;
+    }
+
 private:
     u64 initialSeed;
     DateTime dt;
     Buttons buttons;
     u16 timer0;
+    u8 profile = 0;
     StateType state;
 };
 

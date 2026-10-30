@@ -166,7 +166,7 @@ WildSearcherModel5::WildSearcherModel5(QObject *parent) : TableModel(parent), sh
 
 int WildSearcherModel5::columnCount(const QModelIndex &parent) const
 {
-    return 23;
+    return 23 + (profileNames.size() > 1 ? 1 : 0);
 }
 
 QVariant WildSearcherModel5::data(const QModelIndex &index, int role) const
@@ -176,6 +176,10 @@ QVariant WildSearcherModel5::data(const QModelIndex &index, int role) const
         const auto &display = model[index.row()];
         const auto &state = display.getState();
         int column = index.column();
+        if (profileNames.size() > 1 && column == columnCount() - 1)
+        {
+            return profileNames.value(display.getProfile());
+        }
         switch (column)
         {
         case 0:
@@ -243,6 +247,10 @@ QVariant WildSearcherModel5::headerData(int section, Qt::Orientation orientation
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
+        if (profileNames.size() > 1 && section == columnCount() - 1)
+        {
+            return tr("Profile");
+        }
         return header[section];
     }
     return QVariant();
@@ -252,4 +260,14 @@ void WildSearcherModel5::setShowStats(bool flag)
 {
     showStats = flag;
     emit dataChanged(index(0, 10), index(rowCount() - 1, 15), { Qt::DisplayRole });
+}
+
+void WildSearcherModel5::setProfileNames(const QStringList &names)
+{
+    if (profileNames != names)
+    {
+        beginResetModel();
+        profileNames = names;
+        endResetModel();
+    }
 }

@@ -22,6 +22,7 @@
 
 #include <Core/Global.hpp>
 #include <QWidget>
+#include <vector>
 
 class Profile5;
 enum class Game : u32;
@@ -68,6 +69,13 @@ public:
      * @return false 0 profiles exist
      */
     bool hasProfiles() const;
+
+    /**
+     * @brief Returns the loaded profiles
+     *
+     * @return Profiles
+     */
+    const std::vector<Profile5> &getProfiles() const;
 
     /**
      * @brief Sets index to match the provided \p profile
