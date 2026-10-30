@@ -263,21 +263,30 @@ add_library(PokeFinderCore STATIC
     Gen7/FieldTimeline7.cpp
     Gen7/FieldTimeline7.hpp
     Gen7/Gen7.hpp
+    Gen7/Generators/EggGenerator7.cpp
+    Gen7/Generators/EggGenerator7.hpp
+    Gen7/Generators/EventGenerator7.cpp
+    Gen7/Generators/EventGenerator7.hpp
     Gen7/Generators/HoneyGenerator7.cpp
     Gen7/Generators/HoneyGenerator7.hpp
     Gen7/Generators/IDGenerator7.cpp
     Gen7/Generators/IDGenerator7.hpp
+    Gen7/Generators/PelagoGenerator7.cpp
+    Gen7/Generators/PelagoGenerator7.hpp
     Gen7/Generators/StaticGenerator7.cpp
     Gen7/Generators/StaticGenerator7.hpp
     Gen7/Profile7.cpp
     Gen7/Profile7.hpp
+    Gen7/Save7.hpp
     Gen7/Searchers/NeedleSearcher7.cpp
     Gen7/Searchers/NeedleSearcher7.hpp
     Gen7/Spot7.hpp
     Gen7/Spots7.cpp
+    Gen7/States/EggState7.hpp
     Gen7/States/HoneyState7.hpp
     Gen7/StaticTemplate7.hpp
     Gen7/Timer7.hpp
+    Gen7/WC7.hpp
     Gen8/Den.hpp
     Gen8/EncounterArea8.cpp
     Gen8/EncounterArea8.hpp

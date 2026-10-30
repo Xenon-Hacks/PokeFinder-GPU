@@ -41,6 +41,10 @@ private slots:
     void statics();
     void gifts();
     void trades();
+    void eggs();
+    void wonderCards();
+    void pelago();
+    void save();
 };
 
 #endif // GEN7TEST_HPP

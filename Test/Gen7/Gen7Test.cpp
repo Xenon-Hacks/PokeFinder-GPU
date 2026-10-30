@@ -21,6 +21,14 @@
 #include <Core/Enum/Game.hpp>
 #include <Core/Gen7/EncounterArea7.hpp>
 #include <Core/Gen7/Encounters7.hpp>
+#include <Core/Gen7/Generators/EggGenerator7.hpp>
+#include <Core/Gen7/Generators/EventGenerator7.hpp>
+#include <Core/Gen7/Generators/PelagoGenerator7.hpp>
+#include <Core/Gen7/Save7.hpp>
+#include <Core/Gen7/States/EggState7.hpp>
+#include <Core/Gen7/WC7.hpp>
+#include <Core/Parents/Daycare.hpp>
+#include <vector>
 #include <Core/Gen7/Generators/StaticGenerator7.hpp>
 #include <Core/Gen7/StaticTemplate7.hpp>
 #include <Core/Gen7/FieldTimeline7.hpp>
@@ -492,4 +500,226 @@ void Gen7Test::trades()
     QCOMPARE(sm[1].getSpecie(), u16(761));
     QCOMPARE(sm[1].getTradeTSV(), u16(20683 ^ 9));
     QCOMPARE(sm[1].getIVs()[1], u8(31));
+}
+
+void Gen7Test::eggs()
+{
+    // Audit retests 2026-10-24 (Moon, copy 2), every egg from the daycare TinyMT 81DD662D F401F495 79C9DF86 AC2B733F. Parent 0 is the
+    // father role (the Ditto here), parent 1 the mother role (Yungoos F, Naughty, ability slot 1, 30/13/25/6/26/1)
+    const std::array<u32, 4> base = { 0x81DD662D, 0xF401F495, 0x79C9DF86, 0xAC2B733F };
+    Profile7 moon("-", Game::Moon, 12345, 54321, false, false);
+    Profile7 charm("-", Game::Moon, 12345, 54321, true, false);
+
+    // E1: Masuda (Ditto JPN) + Everstone on Yungoos + Destiny Knot on Ditto -> F Naughty, slot 1, 31/31/31/6/26/18, EC E03ED89D,
+    // PID 5BF13EDF (6th roll), 26 draws, accept 28, state after 1933D695 C36B3F09 AFB6F04E 343CC6C5
+    {
+        Daycare daycare({ { { 31, 31, 31, 31, 31, 31 }, { 30, 13, 25, 6, 26, 1 } } }, { 0, 0 }, { 3, 1 }, { 8, 1 }, { 0, 4 }, 734, true, 20);
+        EggGenerator7 generator(daycare, false, moon, allFilter7());
+        EggState7 egg = generator.generate(base);
+        QCOMPARE(egg.getGender(), u8(1));
+        QCOMPARE(egg.getNature(), u8(4));
+        QCOMPARE(egg.getAbility(), u8(0));
+        QCOMPARE(egg.getIVs(), (std::array<u8, 6> { 31, 31, 31, 6, 26, 18 }));
+        QCOMPARE(egg.getEC(), 0xE03ED89Du);
+        QCOMPARE(egg.getPID(), 0x5BF13EDFu);
+        QVERIFY(!egg.getMainPID());
+        QCOMPARE(egg.getDraws(), u8(26));
+        QCOMPARE(egg.getState(), (std::array<u32, 4> { 0x1933D695, 0xC36B3F09, 0xAFB6F04E, 0x343CC6C5 }));
+    }
+
+    // E2: Shiny Charm, Everstone on both (Yungoos Naughty slot 0 -> here ability index 0, Ditto Hardy) -> Naughty (pick 1 = mother),
+    // ability slot 2, 30/13/20/31/23/8, EC E84DEB5D, PID 5276A2B2 (2nd Charm roll), 19 draws, state after F8AA7482 929ABD3E E6A86D2A 76A3C77D
+    {
+        Daycare daycare({ { { 31, 31, 31, 31, 31, 31 }, { 30, 13, 25, 6, 26, 1 } } }, { 0, 0 }, { 3, 1 }, { 1, 1 }, { 0, 4 }, 734, false, 20);
+        EggGenerator7 generator(daycare, false, charm, allFilter7());
+        EggState7 egg = generator.generate(base);
+        QCOMPARE(egg.getNature(), u8(4));
+        QCOMPARE(egg.getAbility(), u8(1));
+        QCOMPARE(egg.getIVs(), (std::array<u8, 6> { 30, 13, 20, 31, 23, 8 }));
+        QCOMPARE(egg.getEC(), 0xE84DEB5Du);
+        QCOMPARE(egg.getPID(), 0x5276A2B2u);
+        QCOMPARE(egg.getDraws(), u8(19));
+        QCOMPARE(egg.getState(), (std::array<u32, 4> { 0xF8AA7482, 0x929ABD3E, 0xE6A86D2A, 0x76A3C77D }));
+    }
+
+    // E3: Masuda + Charm + Power Belt (Def) on Yungoos, Power Weight (HP) on Ditto -> pick 0 = father's Weight -> HP 31,
+    // 31/13/30/31/20/21, EC AB1222D7, PID 2FB00E56 (8th roll), 23 draws
+    {
+        Daycare daycare({ { { 31, 31, 31, 31, 31, 31 }, { 30, 13, 25, 6, 26, 1 } } }, { 0, 0 }, { 3, 1 }, { 2, 4 }, { 0, 4 }, 734, true, 20);
+        EggGenerator7 generator(daycare, false, charm, allFilter7());
+        EggState7 egg = generator.generate(base);
+        QCOMPARE(egg.getIVs(), (std::array<u8, 6> { 31, 13, 30, 31, 20, 21 }));
+        QCOMPARE(egg.getEC(), 0xAB1222D7u);
+        QCOMPARE(egg.getPID(), 0x2FB00E56u);
+        QCOMPARE(egg.getDraws(), u8(23));
+        QCOMPARE(egg.getState(), (std::array<u32, 4> { 0xB70AC9E1, 0x25300D6E, 0xBA141F53, 0xDE9AABA1 }));
+    }
+
+    // E5: Nidoran F (slot 1) + Ditto, no rolls -> the species coin replaces the gender draw: Nidoran M, Gentle, 15/30/31/6/26/23,
+    // EC 680C3488, PID from the main RNG, 16 draws, accept 18
+    {
+        Daycare daycare({ { { 31, 31, 31, 31, 31, 31 }, { 30, 13, 25, 6, 26, 1 } } }, { 0, 0 }, { 3, 1 }, { 0, 0 }, { 0, 4 }, 29, false, 20);
+        EggGenerator7 generator(daycare, false, moon, allFilter7());
+        EggState7 egg = generator.generate(base);
+        QCOMPARE(egg.getGender(), u8(0));
+        QCOMPARE(egg.getNature(), u8(21)); // Gentle
+        QCOMPARE(egg.getIVs(), (std::array<u8, 6> { 15, 30, 31, 6, 26, 23 }));
+        QCOMPARE(egg.getEC(), 0x680C3488u);
+        QVERIFY(egg.getMainPID());
+        QCOMPARE(egg.getDraws(), u8(16));
+        QCOMPARE(egg.getPID(), 0u);
+    }
+
+    // E4: same species (Yungoos M 0/1/2/3/4/5 Great Ball, Yungoos F Poke Ball) + Power Lens (SpA) on the female -> 15/30/2/6/26/23,
+    // EC 680C3488, ball roll rand(100) = 37 after the EC, accept = 17 + 2
+    {
+        Daycare daycare({ { { 0, 1, 2, 3, 4, 5 }, { 30, 13, 25, 6, 26, 1 } } }, { 1, 0 }, { 0, 1 }, { 0, 5 }, { 0, 4 }, 734, false, 20);
+        EggGenerator7 generator(daycare, true, moon, allFilter7());
+        EggState7 egg = generator.generate(base);
+        QCOMPARE(egg.getIVs(), (std::array<u8, 6> { 15, 30, 2, 6, 26, 23 }));
+        QCOMPARE(egg.getEC(), 0x680C3488u);
+        QCOMPARE(egg.getDraws(), u8(17));
+
+        // The chain walks the state by the accept cost; a reject costs one draw
+        auto chain = generator.generateChain(base, 0, 2);
+        QCOMPARE(chain.size(), size_t(2));
+        QCOMPARE(chain[0].getEC(), 0x680C3488u);
+        QCOMPARE(chain[1].getAdvances(), 2u);
+        QVERIFY(chain[1].getEC() != chain[0].getEC());
+
+        // The main RNG PID: Moon egg logged at advance 4324 as 7C562599 from the live seed is not in the notes; check the shape
+        auto mainPID = generator.generateMainPID(base, 0x35594014, 100, 2);
+        QCOMPARE(mainPID.size(), size_t(3));
+        QCOMPARE(mainPID[0].getAdvances(), 100u);
+        QCOMPARE(mainPID[0].getIVs(), (std::array<u8, 6> { 15, 30, 2, 6, 26, 23 }));
+        QCOMPARE(mainPID[0].getPID(), static_cast<u32>(SFMT(0x35594014, 100).next()));
+    }
+}
+
+void Gen7Test::wonderCards()
+{
+    // Ultra Sun Munchlax card 1601 (random IVs, nature and gender, fixed ability): seed A6070DB3, kept block at 7723 -> EC 2D9578EC,
+    // IVs 3/2/6/12/29/4, Sassy, gender roll 139 -> M (usum-findings-log)
+    Profile7 us("-", Game::US, 12345, 54321, false, false);
+    std::array<u8, 6> random;
+    random.fill(Gen7::Random);
+    WC7 munchlax(446, 0, 5, 0, 0, true, 0, Gen7::PIDType7::Random, 0, random, 0, 0, Gen7::Random, 3, false);
+    EventGenerator7 generator(7723, 0, 0, munchlax, us, allFilter7());
+    auto states = generator.generate(0xA6070DB3);
+    QCOMPARE(states.size(), size_t(1));
+    QCOMPARE(states[0].getEC(), 0x2D9578ECu);
+    QCOMPARE(states[0].getIVs(), (std::array<u8, 6> { 3, 2, 6, 12, 29, 4 }));
+    QCOMPARE(states[0].getNature(), u8(22)); // Sassy
+    QCOMPARE(states[0].getGender(), u8(0));
+    QCOMPARE(states[0].getLevel(), u8(5));
+
+    // The discarded blocks consume the same shape: with 1 block before, the kept block starts 10 draws later for this card
+    EventGenerator7 twice(7713, 0, 1, munchlax, us, allFilter7());
+    auto twiceStates = twice.generate(0xA6070DB3);
+    QCOMPARE(twiceStates.size(), size_t(1));
+    QCOMPARE(twiceStates[0].getEC(), 0x2D9578ECu);
+
+    // Forced shiny: the low half is kept and the high half becomes low ^ TID ^ SID (square)
+    WC7 magikarp(129, 0, 5, 39056, 2, false, 0, Gen7::PIDType7::Shiny, 0, random, 0, 0, Gen7::Random, 3, false);
+    EventGenerator7 shiny(0, 5, 0, magikarp, us, allFilter7());
+    for (const auto &state : shiny.generate(0xA6070DB3))
+    {
+        QCOMPARE(state.getShiny(), u8(2));
+        QCOMPARE(((state.getPID() >> 16) ^ (state.getPID() & 0xffff) ^ 39056 ^ 2), 0u);
+    }
+
+    // Shiny lock never yields a shiny
+    WC7 raikou(243, 0, 60, 0, 0, true, 0, Gen7::PIDType7::Locked, 0, random, 3, 0, Gen7::Random, 2, false);
+    Profile7 lucky("-", Game::Moon, 0, 0, false, false);
+    EventGenerator7 locked(0, 2000, 1, raikou, lucky, allFilter7());
+    for (const auto &state : locked.generate(0x12345678))
+    {
+        QCOMPARE(state.getShiny(), u8(0));
+        int perfect = 0;
+        for (u8 iv : state.getIVs())
+        {
+            perfect += iv == 31;
+        }
+        QVERIFY(perfect >= 3);
+    }
+
+    // .wc7 layout: the same bytes as a .wc6 (gift data at file + 0x68)
+    std::vector<u8> data(WC7::size, 0);
+    data[0x82] = 446 & 0xff;
+    data[0x83] = 446 >> 8;
+    data[0xa0] = 0xff;
+    data[0xa1] = 3;
+    data[0xa2] = 4;
+    data[0xa3] = 2;
+    data[0xaf] = 0xfe;
+    data[0xd0] = 50;
+    WC7 parsed = WC7::parse(data.data());
+    QCOMPARE(parsed.getSpecie(), u16(446));
+    QCOMPARE(parsed.getLevel(), u8(50));
+    QCOMPARE(parsed.getNature(), Gen7::Random);
+    QCOMPARE(parsed.getGender(), u8(3));
+    QCOMPARE(parsed.getAbility(), Gen7::AbilityRandomHidden);
+    QCOMPARE(parsed.getPIDType(), Gen7::PIDType7::Shiny);
+    QCOMPARE(parsed.getIVCount(), u8(3));
+}
+
+void Gen7Test::pelago()
+{
+    // Moon, seed A98C7463: the two visitors are the last blocks built on entry, 12 draws each (EC, discarded OT ID, PID, 6 IVs, ability,
+    // nature, gender). Spearow at 3745: EC 5A264E11, PID 9C2CF670, 29/31/13/16/3/15, Modest, F; Pikipek at 3757: EC 6FEC8023,
+    // PID 5C1D0E8D, 20/28/28/13/14/17, Bold, M (Moon reference 22.4n)
+    Profile7 moon("-", Game::Moon, 12345, 54321, false, false);
+    PelagoGenerator7 spearow(3745, 0, 21, 5, moon, allFilter7());
+    auto states = spearow.generate(0xA98C7463);
+    QCOMPARE(states.size(), size_t(1));
+    QCOMPARE(states[0].getEC(), 0x5A264E11u);
+    QCOMPARE(states[0].getPID(), 0x9C2CF670u);
+    QCOMPARE(states[0].getIVs(), (std::array<u8, 6> { 29, 31, 13, 16, 3, 15 }));
+    QCOMPARE(states[0].getNature(), u8(15)); // Modest
+    QCOMPARE(states[0].getGender(), u8(1));
+
+    PelagoGenerator7 pikipek(3757, 0, 731, 5, moon, allFilter7());
+    auto pikipekStates = pikipek.generate(0xA98C7463);
+    QCOMPARE(pikipekStates.size(), size_t(1));
+    QCOMPARE(pikipekStates[0].getEC(), 0x6FEC8023u);
+    QCOMPARE(pikipekStates[0].getPID(), 0x5C1D0E8Du);
+    QCOMPARE(pikipekStates[0].getIVs(), (std::array<u8, 6> { 20, 28, 28, 13, 14, 17 }));
+    QCOMPARE(pikipekStates[0].getNature(), u8(5)); // Bold
+    QCOMPARE(pikipekStates[0].getGender(), u8(0));
+}
+
+void Gen7Test::save()
+{
+    // A synthetic Ultra Sun main: MyStatus at 0x1400, Sodateya at 0x6BA00, ResortSave at 0x3B800
+    std::vector<u8> data(Save7::sizeUSUM, 0);
+    auto put32 = [&data](size_t offset, u32 value) {
+        for (int i = 0; i < 4; i++)
+        {
+            data[offset + i] = static_cast<u8>(value >> (8 * i));
+        }
+    };
+    data[0x1400] = 9459 & 0xff;
+    data[0x1401] = 9459 >> 8;
+    data[0x1402] = 63166 & 0xff;
+    data[0x1403] = 63166 >> 8;
+    data[0x1404] = 32;
+    data[0x6ba00 + 0x1d8] = 1;
+    const u32 egg[4] = { 0x81DD662D, 0xF401F495, 0x79C9DF86, 0xAC2B733F };
+    const u32 pelagoState[4] = { 0x563D2CEF, 0x82224F1F, 0x762769DD, 0xFFDA7125 };
+    for (size_t i = 0; i < 4; i++)
+    {
+        put32(0x6ba00 + 0x1dc + 4 * i, egg[i]);
+        put32(0x3b800 + 4 * i, pelagoState[i]);
+    }
+
+    Save7 save = Save7::parse(data.data(), data.size());
+    QVERIFY(save.valid);
+    QCOMPARE(save.version, Game::US);
+    QCOMPARE(save.tid, u16(9459));
+    QCOMPARE(save.sid, u16(63166));
+    QVERIFY(save.eggReady);
+    QCOMPARE(save.eggState, (std::array<u32, 4> { 0x81DD662D, 0xF401F495, 0x79C9DF86, 0xAC2B733F }));
+    QCOMPARE(save.pelagoState, (std::array<u32, 4> { 0x563D2CEF, 0x82224F1F, 0x762769DD, 0xFFDA7125 }));
+
+    QVERIFY(!Save7::parse(data.data(), 100).valid);
 }

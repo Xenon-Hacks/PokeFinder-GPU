@@ -64,6 +64,9 @@
 #include <Form/Gen7/Honey7.hpp>
 #include <Form/Gen7/IDs7.hpp>
 #include <Form/Gen7/Profile/ProfileManager7.hpp>
+#include <Form/Gen7/Eggs7.hpp>
+#include <Form/Gen7/Event7.hpp>
+#include <Form/Gen7/Pelago7.hpp>
 #include <Form/Gen7/SeedFinder7.hpp>
 #include <Form/Gen7/Static7.hpp>
 #include <Form/Gen6/Profile/ProfileManager6.hpp>
@@ -150,6 +153,9 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonHoney7, &QPushButton::clicked, this, &MainWindow::openHoney7);
     connect(ui->pushButtonSeedFinder7, &QPushButton::clicked, this, &MainWindow::openSeedFinder7);
     connect(ui->pushButtonStatic7, &QPushButton::clicked, this, &MainWindow::openStatic7);
+    connect(ui->pushButtonEggs7, &QPushButton::clicked, this, &MainWindow::openEggs7);
+    connect(ui->pushButtonEvent7, &QPushButton::clicked, this, &MainWindow::openEvent7);
+    connect(ui->pushButtonPelago7, &QPushButton::clicked, this, &MainWindow::openPelago7);
     connect(ui->actionProfileManager7, &QAction::triggered, this, &MainWindow::openProfileManager7);
     connect(ui->actionProfileManager6, &QAction::triggered, this, &MainWindow::openProfileManager6);
     connect(ui->pushButtonStatic8, &QPushButton::clicked, this, &MainWindow::openStatic8);
@@ -222,6 +228,9 @@ MainWindow::~MainWindow()
     delete ids7;
     delete seedFinder7;
     delete static7;
+    delete eggs7;
+    delete event7;
+    delete pelago7;
 
     delete egg8;
     delete event8;
@@ -853,6 +862,42 @@ void MainWindow::openStatic7()
     }
     static7->show();
     static7->raise();
+}
+
+void MainWindow::openEggs7()
+{
+    if (!eggs7)
+    {
+        eggs7 = new Eggs7();
+        connect(eggs7, &Eggs7::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged7, eggs7, &Eggs7::updateProfiles);
+    }
+    eggs7->show();
+    eggs7->raise();
+}
+
+void MainWindow::openEvent7()
+{
+    if (!event7)
+    {
+        event7 = new Event7();
+        connect(event7, &Event7::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged7, event7, &Event7::updateProfiles);
+    }
+    event7->show();
+    event7->raise();
+}
+
+void MainWindow::openPelago7()
+{
+    if (!pelago7)
+    {
+        pelago7 = new Pelago7();
+        connect(pelago7, &Pelago7::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged7, pelago7, &Pelago7::updateProfiles);
+    }
+    pelago7->show();
+    pelago7->raise();
 }
 
 void MainWindow::openSeedFinder7()
