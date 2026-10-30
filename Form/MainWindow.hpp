@@ -49,6 +49,9 @@ class Mirage6;
 class TinyMT6;
 class Honey7;
 class IDs7;
+class Eggs7;
+class Event7;
+class Pelago7;
 class SeedFinder7;
 class Static7;
 class Eggs8;
@@ -154,6 +157,9 @@ private:
     Honey7 *honey7 = nullptr;
     IDs7 *ids7 = nullptr;
     SeedFinder7 *seedFinder7 = nullptr;
+    Eggs7 *eggs7 = nullptr;
+    Event7 *event7 = nullptr;
+    Pelago7 *pelago7 = nullptr;
     Static7 *static7 = nullptr;
 
     // Gen 8
@@ -408,6 +414,21 @@ private slots:
      * @brief Opens the Gen 7 static / gift / trade window
      */
     void openStatic7();
+
+    /**
+     * @brief Opens the Gen 7 egg window
+     */
+    void openEggs7();
+
+    /**
+     * @brief Opens the Gen 7 Wonder Card window
+     */
+    void openEvent7();
+
+    /**
+     * @brief Opens the Poké Pelago visitor window
+     */
+    void openPelago7();
 
     /**
      * @brief Opens the Gen 7 profile manager

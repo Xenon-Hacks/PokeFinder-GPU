@@ -248,6 +248,27 @@
          </widget>
         </item>
         <item row="3" column="0">
+         <widget class="QPushButton" name="pushButtonEggs7">
+          <property name="text">
+           <string>Eggs</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QPushButton" name="pushButtonEvent7">
+          <property name="text">
+           <string>Wonder Card</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QPushButton" name="pushButtonPelago7">
+          <property name="text">
+           <string>Poké Pelago</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
          <widget class="QPushButton" name="pushButtonSeedFinder7">
           <property name="text">
            <string>Seed Finder (needles, GPU)</string>
