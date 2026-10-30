@@ -65,6 +65,7 @@
 #include <Form/Gen7/IDs7.hpp>
 #include <Form/Gen7/Profile/ProfileManager7.hpp>
 #include <Form/Gen7/SeedFinder7.hpp>
+#include <Form/Gen7/Static7.hpp>
 #include <Form/Gen6/Profile/ProfileManager6.hpp>
 #include <Form/Gen8/Eggs8.hpp>
 #include <Form/Gen8/Event8.hpp>
@@ -148,6 +149,7 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonIDs7, &QPushButton::clicked, this, &MainWindow::openIDs7);
     connect(ui->pushButtonHoney7, &QPushButton::clicked, this, &MainWindow::openHoney7);
     connect(ui->pushButtonSeedFinder7, &QPushButton::clicked, this, &MainWindow::openSeedFinder7);
+    connect(ui->pushButtonStatic7, &QPushButton::clicked, this, &MainWindow::openStatic7);
     connect(ui->actionProfileManager7, &QAction::triggered, this, &MainWindow::openProfileManager7);
     connect(ui->actionProfileManager6, &QAction::triggered, this, &MainWindow::openProfileManager6);
     connect(ui->pushButtonStatic8, &QPushButton::clicked, this, &MainWindow::openStatic8);
@@ -219,6 +221,7 @@ MainWindow::~MainWindow()
     delete honey7;
     delete ids7;
     delete seedFinder7;
+    delete static7;
 
     delete egg8;
     delete event8;
@@ -833,6 +836,18 @@ void MainWindow::openIDs7()
     }
     ids7->show();
     ids7->raise();
+}
+
+void MainWindow::openStatic7()
+{
+    if (!static7)
+    {
+        static7 = new Static7();
+        connect(static7, &Static7::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged7, static7, &Static7::updateProfiles);
+    }
+    static7->show();
+    static7->raise();
 }
 
 void MainWindow::openSeedFinder7()

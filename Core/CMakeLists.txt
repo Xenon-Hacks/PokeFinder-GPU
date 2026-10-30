@@ -258,6 +258,8 @@ add_library(PokeFinderCore STATIC
     Gen6/WC6.hpp
     Gen7/EncounterArea7.cpp
     Gen7/EncounterArea7.hpp
+    Gen7/Encounters7.cpp
+    Gen7/Encounters7.hpp
     Gen7/FieldTimeline7.cpp
     Gen7/FieldTimeline7.hpp
     Gen7/Gen7.hpp
@@ -265,6 +267,8 @@ add_library(PokeFinderCore STATIC
     Gen7/Generators/HoneyGenerator7.hpp
     Gen7/Generators/IDGenerator7.cpp
     Gen7/Generators/IDGenerator7.hpp
+    Gen7/Generators/StaticGenerator7.cpp
+    Gen7/Generators/StaticGenerator7.hpp
     Gen7/Profile7.cpp
     Gen7/Profile7.hpp
     Gen7/Searchers/NeedleSearcher7.cpp
@@ -272,6 +276,7 @@ add_library(PokeFinderCore STATIC
     Gen7/Spot7.hpp
     Gen7/Spots7.cpp
     Gen7/States/HoneyState7.hpp
+    Gen7/StaticTemplate7.hpp
     Gen7/Timer7.hpp
     Gen8/Den.hpp
     Gen8/EncounterArea8.cpp
