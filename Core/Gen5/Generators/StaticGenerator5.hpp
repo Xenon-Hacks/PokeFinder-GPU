@@ -20,6 +20,8 @@
 #ifndef STATICGENERATOR5_HPP
 #define STATICGENERATOR5_HPP
 
+#include <Core/Enum/Lead.hpp>
+#include <Core/Gen5/IVPrefilter5.hpp>
 #include <Core/Gen5/Profile5.hpp>
 #include <Core/Gen5/StaticTemplate5.hpp>
 #include <Core/Parents/Filters/StateFilter.hpp>
@@ -49,6 +51,26 @@ public:
      */
     StaticGenerator5(u32 initialAdvances, u32 maxAdvances, u32 offset, Method method, Lead lead, PassPower luckyPower,
                      const StaticTemplate5 &staticTemplate, const Profile5 &profile, const StateFilter &filter);
+
+    /**
+     * @brief Checks \p ivs against the IV and hidden power filters, the same way \ref generate() does before generating PIDs
+     *
+     * @param ivs IVs to check
+     *
+     * @return true IVs pass the filter
+     * @return false IVs do not pass the filter
+     */
+    bool compareIVs(const std::array<u8, 6> &ivs) const
+    {
+        return filter.compareIV(ivs) && filter.compareHiddenPower(ivs);
+    }
+
+    /**
+     * @brief Describes how IVs are read so searchers can filter them before calling \ref generate()
+     *
+     * @return IV prefilter information
+     */
+    IVPrefilter5 getIVPrefilter() const;
 
     /**
      * @brief Generates states

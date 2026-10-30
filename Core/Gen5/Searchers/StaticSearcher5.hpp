@@ -22,11 +22,13 @@
 
 #include <Core/Gen5/Generators/StaticGenerator5.hpp>
 #include <Core/Gen5/Searchers/IVSearcher5.hpp>
+#include <Core/Gen5/Searchers/IVSearcher5GPU.hpp>
 #include <Core/Gen5/States/SearcherState5.hpp>
 #include <Core/Gen5/States/State5.hpp>
 
 using StaticSearcher5 = IVSearcher5<StaticGenerator5, State5>;
 using StaticSearcher5Fast = IVSearcher5Fast<StaticGenerator5, State5>;
 using StaticSearcher5CacheFast = IVSearcher5CacheFast<StaticGenerator5, State5>;
+using StaticSearcher5GPU = IVSearcher5GPU<StaticGenerator5, State5>;
 
 #endif // STATICSEARCHER5_HPP

@@ -27,10 +27,12 @@
 #include <Core/Gen5/IVCache.hpp>
 #include <Core/Gen5/Profile5.hpp>
 #include <Core/Gen5/SHA1Cache.hpp>
+#include <Core/Gen5/Searchers/MultiProfileSearcher5.hpp>
 #include <Core/Gen5/Searchers/StaticSearcher5.hpp>
 #include <Core/Parents/Filters/StateFilter.hpp>
 #include <Core/Parents/ProfileLoader.hpp>
 #include <Core/Parents/StaticTemplate.hpp>
+#include <Core/Util/OpenCL.hpp>
 #include <Core/Util/Translator.hpp>
 #include <Form/Controls/Controls.hpp>
 #include <Form/Gen5/Profile/ProfileManager5.hpp>
@@ -43,6 +45,9 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QTimer>
+#include <algorithm>
+#include <memory>
+#include <vector>
 
 static const QString settingPrefix = QStringLiteral("static5");
 
@@ -376,34 +381,95 @@ void Static5::search()
         = Encounters5::getStaticEncounter(ui->comboBoxSearcherCategory->currentIndex(), ui->comboBoxSearcherPokemon->getCurrentInt());
 
     auto filter = ui->filterSearcher->getFilter<StateFilter>();
-    StaticGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, lead, luckyPower, *staticTemplate, *currentProfile,
-                               filter);
 
-    SearcherBase5<StaticGenerator5, State5> *searcher;
-    if (fastSearchEnabled())
+    // Every profile of the same game shares the encounters and IV cache, only the TID/SID, MAC, Timer0 and other boot settings
+    // differ, so all of them run through the same search
+    std::vector<Profile5> profiles;
+    if (ui->checkBoxSearcherAllProfiles->isChecked())
+    {
+        for (const auto &profile : ui->profileDisplay->getProfiles())
+        {
+            if (profile.getVersion() == currentProfile->getVersion() && profiles.size() < 256)
+            {
+                profiles.emplace_back(profile);
+            }
+        }
+    }
+    if (profiles.empty())
+    {
+        profiles.emplace_back(*currentProfile);
+    }
+
+    QStringList profileNames;
+    for (const auto &profile : profiles)
+    {
+        profileNames.append(QString::fromStdString(profile.getName()));
+    }
+    searcherModel->setProfileNames(profileNames);
+
+    QSettings settings;
+    bool useGPU = settings.value("settings/gpu", true).toBool() && OpenCL::isAvailable();
+
+    // Caches are read up front, the profile selection can change while the search runs
+    bool fastSearch = fastSearchEnabled();
+    CacheType type = staticTemplate->getRoamer() ? CacheType::Roamer : CacheType::Normal;
+    auto ivMap = std::make_shared<fph::MetaFphMap<u64, std::array<u8, 6>>>();
+    std::vector<std::shared_ptr<fph::MetaFphMap<u64, u64>>> shaMaps(profiles.size());
+    if (fastSearch)
     {
         CacheType type = staticTemplate->getRoamer() ? CacheType::Roamer : CacheType::Normal;
-        auto ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), luckyPower != PassPower::None, type,
-                                       staticTemplate, filter);
-        if (shaCache && shaCache->isValid(*currentProfile))
+        *ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), luckyPower != PassPower::None, type,
+                                   staticTemplate, filter);
+        for (size_t i = 0; i < profiles.size(); i++)
         {
-            auto shaMap = shaCache->getCache(initialAdvances, maxIVAdvances, start, end, ivMap, type, *currentProfile);
-            searcher = new StaticSearcher5CacheFast(initialIVAdvances, maxIVAdvances, shaMap, ivMap, generator, *currentProfile);
+            if (shaCache && shaCache->isValid(profiles[i]))
+            {
+                shaMaps[i] = std::make_shared<fph::MetaFphMap<u64, u64>>(
+                    shaCache->getCache(initialAdvances, maxIVAdvances, start, end, *ivMap, type, profiles[i]));
+            }
+        }
+    }
+
+    auto factory = [=](const Profile5 &profile, size_t index) {
+        StaticGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, lead, luckyPower, *staticTemplate, profile, filter);
+
+        MultiProfileSearcher5<StaticGenerator5, State5>::Created created;
+        if (fastSearch)
+        {
+            if (shaMaps[index])
+            {
+                created.searcher
+                    = new StaticSearcher5CacheFast(initialIVAdvances, maxIVAdvances, *shaMaps[index], *ivMap, generator, profile);
+                return created;
+            }
+
+            if (useGPU && StaticSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, true))
+            {
+                created.gpu = new StaticSearcher5GPU(initialIVAdvances, maxIVAdvances, *ivMap, generator, profile);
+            }
+            if (!created.gpu || !created.gpu->isReady())
+            {
+                created.searcher = new StaticSearcher5Fast(initialIVAdvances, maxIVAdvances, *ivMap, generator, profile);
+            }
         }
         else
         {
-            searcher = new StaticSearcher5Fast(initialIVAdvances, maxIVAdvances, ivMap, generator, *currentProfile);
+            if (useGPU && StaticSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false))
+            {
+                created.gpu = new StaticSearcher5GPU(initialIVAdvances, maxIVAdvances, generator, profile);
+            }
+            if (!created.gpu || !created.gpu->isReady())
+            {
+                created.searcher = new StaticSearcher5(initialIVAdvances, maxIVAdvances, generator, profile);
+            }
         }
-    }
-    else
-    {
-        searcher = new StaticSearcher5(initialIVAdvances, maxIVAdvances, generator, *currentProfile);
-    }
+        return created;
+    };
 
-    searcher->setMaxProgress(searcher->getMaxProgress(start, end));
-
-    QSettings settings;
+    auto *searcher = new MultiProfileSearcher5<StaticGenerator5, State5>(profiles, factory);
     int threads = settings.value("settings/threads").toInt();
+    searcher->startSearch(threads, start, end);
+    showGPUMessages(tr("GPU search unavailable"), tr("Searching on the CPU instead: %1"), searcher->getWarnings());
 
     auto *timer = new QTimer(this);
     connect(ui->pushButtonCancel, &QPushButton::clicked, timer, [this, searcher] {
@@ -411,26 +477,42 @@ void Static5::search()
         ui->pushButtonCancel->setEnabled(false);
     });
     connect(timer, &QTimer::timeout, this, [this, searcher, timer] {
+        bool searching = searcher->isSearching();
         searcherModel->addItems(searcher->getResults());
         ui->progressBar->setValue(searcher->getProgress());
 
-        if (!searcher->isSearching())
+        if (!searching)
         {
             timer->stop();
-
-            searcherModel->addItems(searcher->getResults());
-            ui->progressBar->setValue(searcher->getProgress());
 
             ui->pushButtonSearch->setEnabled(true);
             ui->pushButtonCancel->setEnabled(false);
 
+            auto warnings = searcher->getWarnings();
+            auto errors = searcher->getErrors();
             delete searcher;
             timer->deleteLater();
+
+            showGPUMessages(tr("GPU search unavailable"), tr("Searching on the CPU instead: %1"), warnings);
+            showGPUMessages(tr("GPU search failed"), QStringLiteral("%1"), errors);
         }
     });
 
-    searcher->startSearch(threads, start, end);
     timer->start(1000);
+}
+
+void Static5::showGPUMessages(const QString &title, const QString &text, const std::vector<std::string> &messages)
+{
+    if (!messages.empty())
+    {
+        QStringList lines;
+        for (const auto &message : messages)
+        {
+            lines.append(text.arg(QString::fromStdString(message)));
+        }
+        QMessageBox msg(QMessageBox::Warning, title, lines.join('\n'));
+        msg.exec();
+    }
 }
 
 void Static5::searcherCategoryIndexChanged(int index)

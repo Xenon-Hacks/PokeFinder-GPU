@@ -62,7 +62,7 @@ public:
      * @param start Start date
      * @param end End date
      */
-    void startSearch(int threads, const Date &start, const Date &end);
+    virtual void startSearch(int threads, const Date &start, const Date &end);
 
 protected:
     Generator generator;

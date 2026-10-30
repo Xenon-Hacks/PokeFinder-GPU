@@ -46,6 +46,7 @@
 #include <Test/Gen5/HiddenGrottoGeneratorTest.hpp>
 #include <Test/Gen5/IDGenerator5Test.hpp>
 #include <Test/Gen5/PhenomenonGeneratorTest.hpp>
+#include <Test/Gen5/IVSearcher5GPUTest.hpp>
 #include <Test/Gen5/ProfileSearcher5Test.hpp>
 #include <Test/Gen5/StaticGenerator5Test.hpp>
 #include <Test/Gen5/WildGenerator5Test.hpp>
@@ -121,6 +122,7 @@ int main()
     status += runTest<HiddenGrottoGeneratorTest>(fails);
     status += runTest<IDGenerator5Test>(fails);
     status += runTest<PhenomenonGeneratorTest>(fails);
+    status += runTest<IVSearcher5GPUTest>(fails);
     status += runTest<ProfileSearcher5Test>(fails);
     status += runTest<StaticGenerator5Test>(fails);
     status += runTest<WildGenerator5Test>(fails);

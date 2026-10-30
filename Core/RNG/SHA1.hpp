@@ -110,6 +110,13 @@ public:
      */
     void setTime(u32 time, DSType dsType);
 
+    /**
+     * @brief Returns the 16 message words currently set
+     *
+     * @return Message words
+     */
+    std::array<u32, 16> getMessage() const;
+
 private:
     alignas(16) u32 data[80];
     u32 alpha[5];

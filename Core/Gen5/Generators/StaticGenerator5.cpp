@@ -59,6 +59,24 @@ StaticGenerator5::StaticGenerator5(u32 initialAdvances, u32 maxAdvances, u32 off
     }
 }
 
+IVPrefilter5 StaticGenerator5::getIVPrefilter() const
+{
+    // Same MT outputs generate() skips: 1 for eggs and roamers, 2 on BW2, 2 more for a wild template with a Pass Power active
+    u8 offset = (staticTemplate.getEgg() || staticTemplate.getRoamer()) ? 1 : 0;
+    if ((profile.getVersion() & Game::BW2) != Game::None)
+    {
+        offset += 2;
+        if (staticTemplate.getWild() && luckyPower != PassPower::None)
+        {
+            offset += 2;
+        }
+    }
+
+    // Marvelous Bridge Magikarp forces speed to 31, which the GPU IV check cannot see, so it stays on the CPU
+    bool supported = staticTemplate.getSpecie() != 129;
+    return { filter.getIVMin(), filter.getIVMax(), offset, staticTemplate.getRoamer(), supported };
+}
+
 std::vector<State5> StaticGenerator5::generate(u64 seed, u32 initialAdvances, u32 maxAdvances) const
 {
     u32 initial = initialAdvances + ((staticTemplate.getEgg() || staticTemplate.getRoamer()) ? 1 : 0);

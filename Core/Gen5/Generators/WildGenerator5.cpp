@@ -111,6 +111,17 @@ WildGenerator5::WildGenerator5(u32 initialAdvances, u32 maxAdvances, u32 offset,
 {
 }
 
+IVPrefilter5 WildGenerator5::getIVPrefilter() const
+{
+    // Same MT outputs generate() skips: 2 on BW2, 2 more with a Pass Power active
+    u8 offset = 0;
+    if ((profile.getVersion() & Game::BW2) != Game::None)
+    {
+        offset = luckyPower != PassPower::None ? 4 : 2;
+    }
+    return { filter.getIVMin(), filter.getIVMax(), offset, false, true };
+}
+
 std::vector<WildState5> WildGenerator5::generate(u64 seed, u32 initialAdvances, u32 maxAdvances) const
 {
     u32 initial = initialAdvances;
