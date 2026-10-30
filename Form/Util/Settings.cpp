@@ -20,6 +20,7 @@
 #include "Settings.hpp"
 #include "ui_Settings.h"
 #include <Core/Parents/ProfileLoader.hpp>
+#include <Core/Util/OpenCL.hpp>
 #include <QApplication>
 #include <QFileDialog>
 #include <QHeaderView>
@@ -91,6 +92,19 @@ Settings::Settings(QWidget *parent) : QWidget(parent), ui(new Ui::Settings)
         }
     }
 
+    // GPU search
+    if (OpenCL::isAvailable())
+    {
+        ui->checkBoxGPU->setText(QString::fromStdString(OpenCL::deviceName()));
+        ui->checkBoxGPU->setChecked(setting.value("gpu", true).toBool());
+    }
+    else
+    {
+        ui->checkBoxGPU->setText(tr("No OpenCL GPU found"));
+        ui->checkBoxGPU->setEnabled(false);
+    }
+    ui->checkBoxGPU->setToolTip(tr("Hash seeds and filter IVs on the GPU for Gen 5 Wild and Static searches"));
+
     setting.endGroup();
 
     connect(ui->comboBoxLanguage, &QComboBox::currentIndexChanged, this, &Settings::languageIndexChanged);
@@ -98,6 +112,7 @@ Settings::Settings(QWidget *parent) : QWidget(parent), ui(new Ui::Settings)
     connect(ui->comboBoxStyle, &QComboBox::currentIndexChanged, this, &Settings::styleIndexChanged);
     connect(ui->comboBoxTableHeaderSize, &QComboBox::currentIndexChanged, this, &Settings::tableHeaderSizeIndexChanged);
     connect(ui->comboBoxThreads, &QComboBox::currentIndexChanged, this, &Settings::threadsIndexChanged);
+    connect(ui->checkBoxGPU, &QCheckBox::toggled, this, &Settings::gpuToggled);
 
     if (setting.contains("settingsForm/geometry"))
     {
@@ -199,4 +214,10 @@ void Settings::threadsIndexChanged(int index)
         QSettings setting;
         setting.setValue("settings/threads", ui->comboBoxThreads->currentData().toInt());
     }
+}
+
+void Settings::gpuToggled(bool checked)
+{
+    QSettings setting;
+    setting.setValue("settings/gpu", checked);
 }

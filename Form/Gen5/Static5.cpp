@@ -31,6 +31,7 @@
 #include <Core/Parents/Filters/StateFilter.hpp>
 #include <Core/Parents/ProfileLoader.hpp>
 #include <Core/Parents/StaticTemplate.hpp>
+#include <Core/Util/OpenCL.hpp>
 #include <Core/Util/Translator.hpp>
 #include <Form/Controls/Controls.hpp>
 #include <Form/Gen5/Profile/ProfileManager5.hpp>
@@ -379,7 +380,11 @@ void Static5::search()
     StaticGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, lead, luckyPower, *staticTemplate, *currentProfile,
                                filter);
 
-    SearcherBase5<StaticGenerator5, State5> *searcher;
+    QSettings settings;
+    bool useGPU = settings.value("settings/gpu", true).toBool() && OpenCL::isAvailable();
+
+    SearcherBase5<StaticGenerator5, State5> *searcher = nullptr;
+    StaticSearcher5GPU *gpuSearcher = nullptr;
     if (fastSearchEnabled())
     {
         CacheType type = staticTemplate->getRoamer() ? CacheType::Roamer : CacheType::Normal;
@@ -392,17 +397,43 @@ void Static5::search()
         }
         else
         {
-            searcher = new StaticSearcher5Fast(initialIVAdvances, maxIVAdvances, ivMap, generator, *currentProfile);
+            if (useGPU && StaticSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, true))
+            {
+                gpuSearcher = new StaticSearcher5GPU(initialIVAdvances, maxIVAdvances, ivMap, generator, *currentProfile);
+            }
+            if (!gpuSearcher || !gpuSearcher->isReady())
+            {
+                searcher = new StaticSearcher5Fast(initialIVAdvances, maxIVAdvances, ivMap, generator, *currentProfile);
+            }
         }
     }
     else
     {
-        searcher = new StaticSearcher5(initialIVAdvances, maxIVAdvances, generator, *currentProfile);
+        if (useGPU && StaticSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false))
+        {
+            gpuSearcher = new StaticSearcher5GPU(initialIVAdvances, maxIVAdvances, generator, *currentProfile);
+        }
+        if (!gpuSearcher || !gpuSearcher->isReady())
+        {
+            searcher = new StaticSearcher5(initialIVAdvances, maxIVAdvances, generator, *currentProfile);
+        }
+    }
+
+    if (gpuSearcher && !gpuSearcher->isReady())
+    {
+        QMessageBox msg(QMessageBox::Warning, tr("GPU search unavailable"),
+                        tr("Searching on the CPU instead: %1").arg(QString::fromStdString(gpuSearcher->getError())));
+        msg.exec();
+        delete gpuSearcher;
+        gpuSearcher = nullptr;
+    }
+    else if (gpuSearcher)
+    {
+        searcher = gpuSearcher;
     }
 
     searcher->setMaxProgress(searcher->getMaxProgress(start, end));
 
-    QSettings settings;
     int threads = settings.value("settings/threads").toInt();
 
     auto *timer = new QTimer(this);
@@ -410,7 +441,7 @@ void Static5::search()
         searcher->cancelSearch();
         ui->pushButtonCancel->setEnabled(false);
     });
-    connect(timer, &QTimer::timeout, this, [this, searcher, timer] {
+    connect(timer, &QTimer::timeout, this, [this, searcher, gpuSearcher, timer] {
         searcherModel->addItems(searcher->getResults());
         ui->progressBar->setValue(searcher->getProgress());
 
@@ -424,8 +455,15 @@ void Static5::search()
             ui->pushButtonSearch->setEnabled(true);
             ui->pushButtonCancel->setEnabled(false);
 
+            std::string gpuError = gpuSearcher ? gpuSearcher->getError() : std::string();
             delete searcher;
             timer->deleteLater();
+
+            if (!gpuError.empty())
+            {
+                QMessageBox msg(QMessageBox::Warning, tr("GPU search failed"), QString::fromStdString(gpuError));
+                msg.exec();
+            }
         }
     });
 
