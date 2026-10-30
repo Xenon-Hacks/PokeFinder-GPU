@@ -81,7 +81,7 @@
 MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setWindowTitle(QString("Pok\303\251Finder %1").arg(POKEFINDER_VERSION));
+    setWindowTitle(QString("Pok\303\251Finder-GPU %1").arg(POKEFINDER_GPU_VERSION));
 
     connect(ui->pushButtonEgg3, &QPushButton::clicked, this, &MainWindow::openEgg3);
     connect(ui->pushButtonGameCube, &QPushButton::clicked, this, &MainWindow::openGameCube);
@@ -199,16 +199,21 @@ void MainWindow::checkUpdates() const
 
     if (lastOpened.daysTo(today) > 0)
     {
-        auto json = QJsonDocument::fromJson(downloadFile("https://api.github.com/repos/Admiral-Fish/PokeFinder/releases/latest")).object();
-        QString webVersion = json["tag_name"].toString().right(5);
-        if (!webVersion.isEmpty() && POKEFINDER_VERSION != webVersion)
+        auto json = QJsonDocument::fromJson(downloadFile("https://api.github.com/repos/Xenon-Hacks/PokeFinder-GPU/releases/latest")).object();
+        // Release tags look like "v4.4.2-gpu.1"; compare the whole tag, not the last five characters
+        QString webVersion = json["tag_name"].toString();
+        if (webVersion.startsWith('v'))
+        {
+            webVersion.remove(0, 1);
+        }
+        if (!webVersion.isEmpty() && POKEFINDER_GPU_VERSION != webVersion)
         {
             QMessageBox msg(QMessageBox::Question, tr("Update Check"),
                             tr("An update is available. Would you like to download the newest version?"),
                             QMessageBox::Yes | QMessageBox::No);
             if (msg.exec() == QMessageBox::Yes)
             {
-                QDesktopServices::openUrl(QUrl("https://github.com/Admiral-Fish/PokeFinder/releases/latest"));
+                QDesktopServices::openUrl(QUrl("https://github.com/Xenon-Hacks/PokeFinder-GPU/releases/latest"));
             }
         }
     }
