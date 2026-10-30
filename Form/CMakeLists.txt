@@ -95,6 +95,7 @@ set(PROJECT_UI
     Gen6/Wild6.ui
     Gen7/Eggs7.ui
     Gen7/Event7.ui
+    Gen7/Fishing7.ui
     Gen7/Honey7.ui
     Gen7/IDs7.ui
     Gen7/Pelago7.ui
@@ -264,6 +265,8 @@ set(PROJECT_SOURCES
     Gen7/Eggs7.hpp
     Gen7/Event7.cpp
     Gen7/Event7.hpp
+    Gen7/Fishing7.cpp
+    Gen7/Fishing7.hpp
     Gen7/Honey7.cpp
     Gen7/Honey7.hpp
     Gen7/IDs7.cpp

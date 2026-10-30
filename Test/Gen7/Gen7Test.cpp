@@ -21,6 +21,8 @@
 #include <Core/Enum/Game.hpp>
 #include <Core/Gen7/EncounterArea7.hpp>
 #include <Core/Gen7/Encounters7.hpp>
+#include <Core/Gen7/FishingSpot7.hpp>
+#include <Core/Gen7/Generators/FishingGenerator7.hpp>
 #include <Core/Gen7/Generators/EggGenerator7.hpp>
 #include <Core/Gen7/Generators/EventGenerator7.hpp>
 #include <Core/Gen7/Generators/PelagoGenerator7.hpp>
@@ -722,4 +724,149 @@ void Gen7Test::save()
     QCOMPARE(save.pelagoState, (std::array<u32, 4> { 0x563D2CEF, 0x82224F1F, 0x762769DD, 0xFFDA7125 }));
 
     QVERIFY(!Save7::parse(data.data(), 100).valid);
+}
+
+static const FishingSpot7 *fishingSpot(Game version, s32 x, s32 z)
+{
+    for (const FishingSpot7 *spot : FishingSpots7::getSpots(version))
+    {
+        if (spot->spot[0] == x && spot->spot[1] == z)
+        {
+            return spot;
+        }
+    }
+    return nullptr;
+}
+
+void Gen7Test::fishingTimeline()
+{
+    // Melemele Sea spot by Hau'oli's seawall (21019, 23014): Continue at 418 with L 4, only the player persisting, fidget at frame 4.
+    // Moon ftl1 (seed A3F9EA65) cast frame 50 -> bite roll at 578; ftl3 (46E3D842) cast frame 120 -> bite 643; Sun c2_ftl1 (BAC5E71A)
+    // cast frame 50 -> cast rand(60) at 473, bite 526 (Moon reference 17.1, Sun phase 3)
+    const FishingSpot7 *spot = fishingSpot(Game::Moon, 21019, 23014);
+    QVERIFY(spot);
+    QCOMPARE(spot->castDelay, u8(48));
+    auto areas = Encounters7::getEncounters(Game::Moon, spot->zone, spot->table, false);
+    QVERIFY(!areas.empty());
+    FieldModel7 field;
+    Profile7 moon("-", Game::Moon, 12345, 54321, false, false);
+    Profile7 sun("-", Game::Sun, 12345, 54321, false, false);
+
+    FishingGenerator7 ftl1(418, 1, 1, *spot, field, areas[0], Lead::None, moon, allFilter7());
+    QCOMPARE(ftl1.generateAt(0xA3F9EA65, 50).getBiteAdvance(), 578u);
+    QCOMPARE(ftl1.generateAt(0x46E3D842, 120).getBiteAdvance(), 643u);
+
+    FishingGenerator7 sunGenerator(418, 1, 1, *spot, field, areas[0], Lead::None, sun, allFilter7());
+    FishingState7 cast = sunGenerator.generateAt(0xBAC5E71A, 50);
+    QCOMPARE(cast.getAdvances(), 473u);
+    QCOMPARE(cast.getBiteAdvance(), 526u);
+
+    // The spot table: 66 Sun/Moon records (3 unreachable), 62 Ultra Sun/Ultra Moon records with a rare table where the area has one
+    QCOMPARE(FishingSpots7::getSpots(Game::Moon).size(), size_t(66));
+    QCOMPARE(FishingSpots7::getSpots(Game::US).size(), size_t(62));
+    int unreachable = 0;
+    for (const FishingSpot7 *s : FishingSpots7::getSpots(Game::Sun))
+    {
+        unreachable += !s->reachable;
+    }
+    QCOMPARE(unreachable, 3);
+    const FishingSpot7 *usSpot = fishingSpot(Game::US, 21019, 23014);
+    QVERIFY(usSpot);
+    QCOMPARE(usSpot->rareTable, u8(5));
+    QCOMPARE(usSpot->rareRate, u8(60));
+    const FishingSpot7 *bubbling = fishingSpot(Game::Moon, 20756, 26354);
+    QVERIFY(bubbling);
+    QCOMPARE(bubbling->rareTable, u8(5));
+    QCOMPARE(bubbling->rareRate, u8(100));
+    const FishingSpot7 *walk = fishingSpot(Game::Moon, 19767, 35855);
+    QVERIFY(walk);
+    QCOMPARE(walk->castDelay, u8(67));
+    QCOMPARE(fishingSpot(Game::US, 19767, 35855)->castDelay, u8(59));
+}
+
+void Gen7Test::fishingCasts()
+{
+    // Audit retests round 2 (2026-10-25): casts aimed from the seed at the Hau'oli spots, every chain and Pokemon = battle RAM
+    struct Cast
+    {
+        Game game;
+        bool bubbling;
+        u32 seed;
+        u32 castAdvance;
+        u8 wait;
+        u32 bite;
+        u8 biteRoll;
+        u32 hook;
+        u8 hookRoll;
+        u32 lead;
+        FishingResult7 result;
+        u16 specie;
+        u8 level;
+        u32 ec;
+        u32 pid;
+        std::array<u8, 6> ivs;
+        u8 nature;
+        u16 item;
+    };
+    const Cast casts[] = {
+        { Game::Moon, false, 0xBC2EEBD4, 486, 48, 581, 19, 597, 54, 610, FishingResult7::Pokemon, 129, 14, 0xD50D8F1D, 0xA9EF5217, { 29, 1, 12, 4, 20, 4 }, 5, 0 },
+        { Game::Moon, false, 0x13ABB226, 458, 44, 582, 47, 585, 89, 0, FishingResult7::Item, 0, 0, 0, 0, { 0, 0, 0, 0, 0, 0 }, 0, 107 },
+        { Game::Moon, false, 0x3203C057, 486, 37, 570, 46, 586, 1, 599, FishingResult7::Pokemon, 129, 18, 0x894AB7E4, 0x8869E8F3, { 1, 8, 22, 3, 16, 16 }, 11, 0 },
+        { Game::Moon, false, 0xB5296A9D, 525, 47, 652, 2, 668, 56, 681, FishingResult7::Pokemon, 129, 16, 0x9AD3002C, 0xCC23F3F8, { 25, 26, 23, 24, 0, 30 }, 16, 0 },
+        { Game::Sun, false, 0xC15515AE, 513, 37, 597, 0, 613, 45, 626, FishingResult7::Pokemon, 129, 15, 0x66E1DABA, 0x882D4925, { 28, 2, 26, 29, 11, 6 }, 14, 0 },
+        { Game::Moon, true, 0x9FEE892C, 473, 17, 531, 46, 552, 50, 565, FishingResult7::Pokemon, 222, 13, 0xC0C29B52, 0x53EB2201, { 14, 10, 25, 2, 9, 26 }, 20, 0 },
+        { Game::Moon, true, 0x7EFFF496, 503, 55, 638, 6, 659, 78, 672, FishingResult7::Pokemon, 222, 18, 0x7829CB65, 0x029107A8, { 15, 29, 3, 1, 20, 9 }, 12, 0 },
+        { Game::Moon, false, 0x14CE00AA, 573, 34, 687, 1, 703, 26, 716, FishingResult7::Pokemon, 129, 0, 0, 0, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+        { Game::Moon, false, 0x75B71F8E, 453, 48, 548, 96, 0, 0, 0, FishingResult7::NoBite, 0, 0, 0, 0, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    };
+
+    FieldModel7 field;
+    for (const Cast &c : casts)
+    {
+        const FishingSpot7 *spot = c.bubbling ? fishingSpot(c.game, 20756, 26354) : fishingSpot(c.game, 21019, 23014);
+        QVERIFY(spot);
+        auto areas = Encounters7::getEncounters(c.game, spot->zone, c.bubbling ? spot->rareTable : spot->table, false);
+        QVERIFY(!areas.empty());
+        Profile7 profile("-", c.game, 12345, 54321, false, false);
+        FishingGenerator7 generator(418, 1, 400, *spot, field, areas[0], Lead::None, profile, allFilter7());
+        generator.setRare(c.bubbling);
+        generator.setShowAll(true);
+
+        const FishingState7 *hit = nullptr;
+        auto states = generator.generate(c.seed);
+        for (const auto &state : states)
+        {
+            if (state.getAdvances() == c.castAdvance)
+            {
+                hit = &state;
+            }
+        }
+        QVERIFY2(hit != nullptr, qPrintable(QString("seed %1: no cast frame reaches advance %2").arg(c.seed, 8, 16).arg(c.castAdvance)));
+        QCOMPARE(hit->getWait(), u8(c.wait + 30));
+        QCOMPARE(hit->getBiteAdvance(), c.bite);
+        QCOMPARE(hit->getBiteRoll(), c.biteRoll);
+        QCOMPARE(hit->getResult(), c.result);
+        if (c.result != FishingResult7::NoBite)
+        {
+            QCOMPARE(hit->getHookAdvance(), c.hook);
+            QCOMPARE(hit->getHookRoll(), c.hookRoll);
+        }
+        if (c.result == FishingResult7::Item)
+        {
+            QCOMPARE(hit->getItem(), c.item);
+        }
+        if (c.result == FishingResult7::Pokemon)
+        {
+            QCOMPARE(hit->getLeadAdvance(), c.lead);
+            QCOMPARE(hit->getSpecie(), c.specie);
+            if (c.ec != 0)
+            {
+                QCOMPARE(hit->getLevel(), c.level);
+                QCOMPARE(hit->getEC(), c.ec);
+                QCOMPARE(hit->getPID(), c.pid);
+                QCOMPARE(hit->getIVs(), c.ivs);
+                QCOMPARE(hit->getNature(), c.nature);
+            }
+        }
+    }
 }

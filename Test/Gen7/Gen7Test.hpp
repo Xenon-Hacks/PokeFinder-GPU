@@ -45,6 +45,8 @@ private slots:
     void wonderCards();
     void pelago();
     void save();
+    void fishingTimeline();
+    void fishingCasts();
 };
 
 #endif // GEN7TEST_HPP

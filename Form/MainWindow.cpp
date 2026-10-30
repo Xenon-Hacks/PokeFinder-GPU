@@ -65,6 +65,7 @@
 #include <Form/Gen7/IDs7.hpp>
 #include <Form/Gen7/Profile/ProfileManager7.hpp>
 #include <Form/Gen7/Eggs7.hpp>
+#include <Form/Gen7/Fishing7.hpp>
 #include <Form/Gen7/Event7.hpp>
 #include <Form/Gen7/Pelago7.hpp>
 #include <Form/Gen7/SeedFinder7.hpp>
@@ -154,6 +155,7 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonSeedFinder7, &QPushButton::clicked, this, &MainWindow::openSeedFinder7);
     connect(ui->pushButtonStatic7, &QPushButton::clicked, this, &MainWindow::openStatic7);
     connect(ui->pushButtonEggs7, &QPushButton::clicked, this, &MainWindow::openEggs7);
+    connect(ui->pushButtonFishing7, &QPushButton::clicked, this, &MainWindow::openFishing7);
     connect(ui->pushButtonEvent7, &QPushButton::clicked, this, &MainWindow::openEvent7);
     connect(ui->pushButtonPelago7, &QPushButton::clicked, this, &MainWindow::openPelago7);
     connect(ui->actionProfileManager7, &QAction::triggered, this, &MainWindow::openProfileManager7);
@@ -229,6 +231,7 @@ MainWindow::~MainWindow()
     delete seedFinder7;
     delete static7;
     delete eggs7;
+    delete fishing7;
     delete event7;
     delete pelago7;
 
@@ -862,6 +865,18 @@ void MainWindow::openStatic7()
     }
     static7->show();
     static7->raise();
+}
+
+void MainWindow::openFishing7()
+{
+    if (!fishing7)
+    {
+        fishing7 = new Fishing7();
+        connect(fishing7, &Fishing7::profilesChanged, this, &MainWindow::updateProfiles);
+        connect(this, &MainWindow::profilesChanged7, fishing7, &Fishing7::updateProfiles);
+    }
+    fishing7->show();
+    fishing7->raise();
 }
 
 void MainWindow::openEggs7()

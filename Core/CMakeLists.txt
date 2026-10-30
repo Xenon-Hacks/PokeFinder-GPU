@@ -262,11 +262,15 @@ add_library(PokeFinderCore STATIC
     Gen7/Encounters7.hpp
     Gen7/FieldTimeline7.cpp
     Gen7/FieldTimeline7.hpp
+    Gen7/FishingSpot7.hpp
+    Gen7/FishingSpots7.cpp
     Gen7/Gen7.hpp
     Gen7/Generators/EggGenerator7.cpp
     Gen7/Generators/EggGenerator7.hpp
     Gen7/Generators/EventGenerator7.cpp
     Gen7/Generators/EventGenerator7.hpp
+    Gen7/Generators/FishingGenerator7.cpp
+    Gen7/Generators/FishingGenerator7.hpp
     Gen7/Generators/HoneyGenerator7.cpp
     Gen7/Generators/HoneyGenerator7.hpp
     Gen7/Generators/IDGenerator7.cpp
@@ -283,6 +287,7 @@ add_library(PokeFinderCore STATIC
     Gen7/Spot7.hpp
     Gen7/Spots7.cpp
     Gen7/States/EggState7.hpp
+    Gen7/States/FishingState7.hpp
     Gen7/States/HoneyState7.hpp
     Gen7/StaticTemplate7.hpp
     Gen7/Timer7.hpp
