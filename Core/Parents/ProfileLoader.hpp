@@ -208,6 +208,38 @@ namespace ProfileLoader6
     void updateProfile(const Profile6 &update, const Profile6 &original);
 }
 
+class Profile7;
+
+namespace ProfileLoader7
+{
+    /**
+     * @brief Adds a profile to the stored json file
+     */
+    void addProfile(const Profile7 &profile);
+
+    /**
+     * @brief Reads profiles from stored json file
+     *
+     * @param version Game version to filter by
+     */
+    std::vector<Profile7> getProfiles(Game version);
+
+    /**
+     * @brief Replaces stored profiles
+     */
+    void setProfiles(const std::vector<Profile7> &profiles);
+
+    /**
+     * @brief Deletes a profile from the stored json file
+     */
+    void removeProfile(const Profile7 &remove);
+
+    /**
+     * @brief Updates a profile from the stored json file
+     */
+    void updateProfile(const Profile7 &update, const Profile7 &original);
+}
+
 namespace ProfileLoader8
 {
     /**

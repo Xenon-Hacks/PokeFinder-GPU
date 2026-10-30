@@ -255,6 +255,13 @@ add_library(PokeFinderCore STATIC
     Gen6/TinyTimeline6.cpp
     Gen6/TinyTimeline6.hpp
     Gen6/WC6.hpp
+    Gen7/Gen7.hpp
+    Gen7/Generators/IDGenerator7.cpp
+    Gen7/Generators/IDGenerator7.hpp
+    Gen7/Profile7.cpp
+    Gen7/Profile7.hpp
+    Gen7/Searchers/NeedleSearcher7.cpp
+    Gen7/Searchers/NeedleSearcher7.hpp
     Gen8/Den.hpp
     Gen8/EncounterArea8.cpp
     Gen8/EncounterArea8.hpp
