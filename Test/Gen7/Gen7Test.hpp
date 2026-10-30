@@ -38,6 +38,9 @@ private slots:
     void honeySpecial();
     void honeyProofRun();
     void timer();
+    void statics();
+    void gifts();
+    void trades();
 };
 
 #endif // GEN7TEST_HPP

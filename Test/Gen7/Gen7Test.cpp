@@ -20,6 +20,9 @@
 #include "Gen7Test.hpp"
 #include <Core/Enum/Game.hpp>
 #include <Core/Gen7/EncounterArea7.hpp>
+#include <Core/Gen7/Encounters7.hpp>
+#include <Core/Gen7/Generators/StaticGenerator7.hpp>
+#include <Core/Gen7/StaticTemplate7.hpp>
 #include <Core/Gen7/FieldTimeline7.hpp>
 #include <Core/Gen7/Gen7.hpp>
 #include <Core/Gen7/Generators/HoneyGenerator7.hpp>
@@ -367,4 +370,126 @@ void Gen7Test::timer()
     QVERIFY(std::abs(timer.calibrate(t, 1050) - (-100.7f)) < 1e-3);
     QVERIFY(std::abs(timer.calibrate(t, 1049) - (-101.7f)) < 1e-3);
     QVERIFY(std::abs(Timer7::fitFps(10.0, 199, 40.0, 1096) - 29.9f) < 1e-3);
+}
+
+static const StaticTemplate7 *findStatic7(int category, Game version, u16 specie, u8 form = 0)
+{
+    int size = 0;
+    const StaticTemplate7 *templates = Encounters7::getStaticEncounters(category, &size);
+    for (int i = 0; i < size; i++)
+    {
+        if (templates[i].getSpecie() == specie && templates[i].getForm() == form && (templates[i].getVersion() & version) != Game::None)
+        {
+            return &templates[i];
+        }
+    }
+    return nullptr;
+}
+
+void Gen7Test::statics()
+{
+    // Ultra Sun Tapu Koko (seed 727FAFFC): EC 0201FA19 at 1299 = lead + 64, PID 3EF6E797 (shiny lock), rand(6) picks 1, 5, 2,
+    // HP 19 / SpA 5 / SpD 14, Careful (handoff 4.8)
+    Profile7 us("-", Game::US, 12345, 54321, false, false);
+    const StaticTemplate7 *koko = findStatic7(0, Game::US, 785);
+    QVERIFY(koko);
+    StaticGenerator7 generator(1299 - 64, 0, 3, Lead::None, *koko, us, allFilter7());
+    auto states = generator.generate(0x727FAFFC);
+    QCOMPARE(states.size(), size_t(1));
+    QCOMPARE(states[0].getEC(), 0x0201FA19u);
+    QCOMPARE(states[0].getPID(), 0x3EF6E797u);
+    QCOMPARE(states[0].getIVs(), (std::array<u8, 6> { 19, 31, 31, 5, 14, 31 }));
+    QCOMPARE(states[0].getNature(), u8(23));
+    QCOMPARE(states[0].getLevel(), u8(60));
+    QCOMPARE(states[0].getGender(), u8(2));
+
+    // Ultra Sun Tapu Bulu (seed 88AAF0E8): lead 1243, EC BE2F18FD at 1307
+    const StaticTemplate7 *bulu = findStatic7(0, Game::US, 787);
+    QVERIFY(bulu);
+    StaticGenerator7 buluGenerator(1243, 0, 3, Lead::None, *bulu, us, allFilter7());
+    auto buluStates = buluGenerator.generate(0x88AAF0E8);
+    QCOMPARE(buluStates.size(), size_t(1));
+    QCOMPARE(buluStates[0].getEC(), 0xBE2F18FDu);
+
+    // The lock never gives a shiny for the player
+    Profile7 lucky("-", Game::US, 0x0201, 0xFA19 ^ 0x3EF6, false, false);
+    StaticGenerator7 locked(1299 - 64, 0, 3, Lead::None, *koko, lucky, allFilter7());
+    QCOMPARE(locked.generate(0x727FAFFC)[0].getShiny(), u8(0));
+}
+
+void Gen7Test::gifts()
+{
+    // Moon Cosmog (seed 18CA1E24, advance 5084): EC 7991331C, PID 724C0413, IVs 31/7/8/9/31/31, Lax; the first draw is the EC and
+    // Cosmog draws no ability (handoff 4.9)
+    Profile7 moon("-", Game::Moon, 12345, 54321, false, false);
+    const StaticTemplate7 *cosmog = findStatic7(3, Game::Moon, 789);
+    QVERIFY(cosmog && !cosmog->getAbilityDraw());
+    StaticGenerator7 generator(5084, 0, 3, Lead::None, *cosmog, moon, allFilter7());
+    auto states = generator.generate(0x18CA1E24);
+    QCOMPARE(states.size(), size_t(1));
+    QCOMPARE(states[0].getEC(), 0x7991331Cu);
+    QCOMPARE(states[0].getPID(), 0x724C0413u);
+    QCOMPARE(states[0].getIVs(), (std::array<u8, 6> { 31, 7, 8, 9, 31, 31 }));
+    QCOMPARE(states[0].getNature(), u8(9)); // Lax
+    QCOMPARE(states[0].getLevel(), u8(5));
+
+    // Moon Type: Null (seed 35594014, advances 17230..): EC 6B2FBD4B, IVs 23/31/29/20/31/31, with the ability draw. The research
+    // log records the nature draw as 21 (Gentle); its "Careful" label is a slip
+    const StaticTemplate7 *typeNull = findStatic7(3, Game::Moon, 772);
+    QVERIFY(typeNull && typeNull->getAbilityDraw());
+    StaticGenerator7 nullGenerator(17230, 0, 3, Lead::None, *typeNull, moon, allFilter7());
+    auto nullStates = nullGenerator.generate(0x35594014);
+    QCOMPARE(nullStates.size(), size_t(1));
+    QCOMPARE(nullStates[0].getEC(), 0x6B2FBD4Bu);
+    QCOMPARE(nullStates[0].getIVs(), (std::array<u8, 6> { 23, 31, 29, 20, 31, 31 }));
+    QCOMPARE(nullStates[0].getNature(), u8(21)); // Gentle
+
+    // Sun Cosmog (seed F9EB5EAA): EC 242158C5, IVs 31/13/10/23/31/31, Lonely at 6520 or 6521
+    Profile7 sun("-", Game::Sun, 12345, 54321, false, false);
+    const StaticTemplate7 *cosmogSun = findStatic7(3, Game::Sun, 789);
+    StaticGenerator7 sunGenerator(6520, 1, 3, Lead::None, *cosmogSun, sun, allFilter7());
+    auto sunStates = sunGenerator.generate(0xF9EB5EAA);
+    bool found = false;
+    for (const auto &state : sunStates)
+    {
+        if (state.getEC() == 0x242158C5u)
+        {
+            found = true;
+            QCOMPARE(state.getIVs(), (std::array<u8, 6> { 31, 13, 10, 23, 31, 31 }));
+            QCOMPARE(state.getNature(), u8(1)); // Lonely
+        }
+    }
+    QVERIFY(found);
+
+    // Synchronize fixes a gift's nature with no roll: the IVs stay the same, the nature follows the lead
+    StaticGenerator7 synced(5084, 0, 3, Lead::Synchronize, *cosmog, moon, allFilter7());
+    auto syncedStates = synced.generate(0x18CA1E24);
+    QCOMPARE(syncedStates[0].getIVs(), states[0].getIVs());
+    QCOMPARE(syncedStates[0].getNature(), u8(0));
+}
+
+void Gen7Test::trades()
+{
+    // Ultra Sun Hawlucha (seed A6070DB3): 5 x rand(32) at 7712-7716 = 10/1/4/31/30 (HP, Def, SpA, SpD, Spe; Atk fixed 31),
+    // EC F1EE3B64 at 7717, PID F67F2226, Brave (handoff 4.11)
+    Profile7 us("-", Game::US, 12345, 54321, false, false);
+    const StaticTemplate7 *hawlucha = findStatic7(5, Game::US, 701);
+    QVERIFY(hawlucha && hawlucha->getKind() == StaticKind7::Trade);
+    StaticGenerator7 generator(7712, 0, 3, Lead::None, *hawlucha, us, allFilter7());
+    auto states = generator.generate(0xA6070DB3);
+    QCOMPARE(states.size(), size_t(1));
+    QCOMPARE(states[0].getIVs(), (std::array<u8, 6> { 10, 31, 1, 4, 31, 30 }));
+    QCOMPARE(states[0].getEC(), 0xF1EE3B64u);
+    QCOMPARE(states[0].getPID(), 0xF67F2226u);
+    QCOMPARE(states[0].getNature(), u8(2)); // Brave
+    QCOMPARE(states[0].getGender(), u8(1));
+    QCOMPARE(states[0].getLevel(), u8(8));
+
+    // SM table: 7 trades, each with one fixed 31 and a TSV from the trade's OT ID
+    int size = 0;
+    const StaticTemplate7 *sm = Encounters7::getStaticEncounters(5, &size);
+    QCOMPARE(size, 14);
+    QCOMPARE(sm[1].getSpecie(), u16(761));
+    QCOMPARE(sm[1].getTradeTSV(), u16(20683 ^ 9));
+    QCOMPARE(sm[1].getIVs()[1], u8(31));
 }

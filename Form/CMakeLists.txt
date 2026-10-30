@@ -99,6 +99,7 @@ set(PROJECT_UI
     Gen7/Profile/ProfileEditor7.ui
     Gen7/Profile/ProfileManager7.ui
     Gen7/SeedFinder7.ui
+    Gen7/Static7.ui
     Gen8/Eggs8.ui
     Gen8/Event8.ui
     Gen8/IDs8.ui
@@ -268,6 +269,8 @@ set(PROJECT_SOURCES
     Gen7/Profile/ProfileManager7.hpp
     Gen7/SeedFinder7.cpp
     Gen7/SeedFinder7.hpp
+    Gen7/Static7.cpp
+    Gen7/Static7.hpp
     Gen8/Eggs8.cpp
     Gen8/Eggs8.hpp
     Gen8/Event8.cpp

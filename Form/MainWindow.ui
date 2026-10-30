@@ -241,6 +241,13 @@
          </widget>
         </item>
         <item row="2" column="0">
+         <widget class="QPushButton" name="pushButtonStatic7">
+          <property name="text">
+           <string>Static / Gift / Trade</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
          <widget class="QPushButton" name="pushButtonSeedFinder7">
           <property name="text">
            <string>Seed Finder (needles, GPU)</string>
