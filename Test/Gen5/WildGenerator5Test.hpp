@@ -28,6 +28,10 @@ class WildGenerator5Test : public QObject
 private slots:
     void generate_data();
     void generate();
+    void passPowerIVs_data();
+    void passPowerIVs();
+    void cgearIVs();
+    void ivPrefilterOffset();
 };
 
 #endif // WILDGENERATOR5TEST_HPP

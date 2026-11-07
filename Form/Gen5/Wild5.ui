@@ -58,6 +58,9 @@
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="labelGeneratorIVAdvances">
+            <property name="toolTip">
+             <string>IV (Mersenne Twister) advances used before the Pokemon is made. Every 128 steps uses 1 per Pokemon in the party. In Black 2/White 2 every battle uses 2; in Black/White a battle reseeds the IV RNG, so the boot seed no longer applies.</string>
+            </property>
             <property name="text">
              <string>IV Advances</string>
             </property>
@@ -65,6 +68,9 @@
           </item>
           <item row="2" column="1">
            <widget class="TextBox" name="textBoxGeneratorIVAdvances">
+            <property name="toolTip">
+             <string>IV (Mersenne Twister) advances used before the Pokemon is made. Every 128 steps uses 1 per Pokemon in the party. In Black 2/White 2 every battle uses 2; in Black/White a battle reseeds the IV RNG, so the boot seed no longer applies.</string>
+            </property>
             <property name="text">
              <string>0</string>
             </property>
@@ -140,6 +146,16 @@
            </widget>
           </item>
           <item row="7" column="0" colspan="2">
+           <widget class="QCheckBox" name="checkBoxGeneratorCGear">
+            <property name="toolTip">
+             <string>Tick this if you answered Yes to &quot;Launch C-Gear communications?&quot; when you loaded the save. In Black 2/White 2 that uses 2 more IV advances. Pass Powers do not change the IV advances.</string>
+            </property>
+            <property name="text">
+             <string>C-Gear on at Continue</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0" colspan="2">
            <widget class="QPushButton" name="pushButtonGenerate">
             <property name="text">
              <string>Generate</string>
@@ -354,6 +370,9 @@
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="labelSearcherInitialIVAdvances">
+            <property name="toolTip">
+             <string>IV (Mersenne Twister) advances used before the Pokemon is made. Every 128 steps uses 1 per Pokemon in the party. In Black 2/White 2 every battle uses 2; in Black/White a battle reseeds the IV RNG, so the boot seed no longer applies.</string>
+            </property>
             <property name="text">
              <string>Initial IV Advances</string>
             </property>
@@ -361,6 +380,9 @@
           </item>
           <item row="1" column="1">
            <widget class="TextBox" name="textBoxSearcherInitialIVAdvances">
+            <property name="toolTip">
+             <string>IV (Mersenne Twister) advances used before the Pokemon is made. Every 128 steps uses 1 per Pokemon in the party. In Black 2/White 2 every battle uses 2; in Black/White a battle reseeds the IV RNG, so the boot seed no longer applies.</string>
+            </property>
             <property name="text">
              <string>0</string>
             </property>
@@ -439,27 +461,37 @@
             </item>
            </widget>
           </item>
-          <item row="6" column="0">
+          <item row="6" column="0" colspan="2">
+           <widget class="QCheckBox" name="checkBoxSearcherCGear">
+            <property name="toolTip">
+             <string>Tick this if you answered Yes to &quot;Launch C-Gear communications?&quot; when you loaded the save. In Black 2/White 2 that uses 2 more IV advances. Pass Powers do not change the IV advances.</string>
+            </property>
+            <property name="text">
+             <string>C-Gear on at Continue</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
            <widget class="QLabel" name="labelSearcherStartDate">
             <property name="text">
              <string>Start Date</string>
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
+          <item row="7" column="1">
            <widget class="DateEdit" name="dateEditSearcherStartDate"/>
           </item>
-          <item row="7" column="0">
+          <item row="8" column="0">
            <widget class="QLabel" name="labelSearcherEndDate">
             <property name="text">
              <string>End Date</string>
             </property>
            </widget>
           </item>
-          <item row="7" column="1">
+          <item row="8" column="1">
            <widget class="DateEdit" name="dateEditSearcherEndDate"/>
           </item>
-          <item row="8" column="0" colspan="2">
+          <item row="9" column="0" colspan="2">
            <widget class="QCheckBox" name="checkBoxSearcherAllProfiles">
             <property name="toolTip">
              <string>Search every profile for this game, each with its own TID/SID, MAC, Timer0 range and other settings</string>
@@ -469,7 +501,7 @@
             </property>
            </widget>
           </item>
-          <item row="9" column="0" colspan="2">
+          <item row="10" column="0" colspan="2">
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
              <widget class="QPushButton" name="pushButtonSearch">
@@ -759,6 +791,7 @@
   <tabstop>textBoxGeneratorMaxAdvances</tabstop>
   <tabstop>textBoxGeneratorOffset</tabstop>
   <tabstop>comboBoxGeneratorLuckyPower</tabstop>
+  <tabstop>checkBoxGeneratorCGear</tabstop>
   <tabstop>pushButtonGenerate</tabstop>
   <tabstop>comboBoxGeneratorEncounter</tabstop>
   <tabstop>comboBoxGeneratorSeason</tabstop>
@@ -773,6 +806,7 @@
   <tabstop>textBoxSearcherInitialAdvances</tabstop>
   <tabstop>textBoxSearcherMaxAdvances</tabstop>
   <tabstop>comboBoxSearcherLuckyPower</tabstop>
+  <tabstop>checkBoxSearcherCGear</tabstop>
   <tabstop>dateEditSearcherStartDate</tabstop>
   <tabstop>dateEditSearcherEndDate</tabstop>
   <tabstop>pushButtonSearch</tabstop>
