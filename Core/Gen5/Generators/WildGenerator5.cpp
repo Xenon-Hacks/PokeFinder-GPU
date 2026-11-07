@@ -105,19 +105,20 @@ static u16 getItem(BWRNG &rng, bool bw, Lead lead, Encounter encounter, const Pe
 }
 
 WildGenerator5::WildGenerator5(u32 initialAdvances, u32 maxAdvances, u32 offset, Method method, Lead lead, PassPower luckyPower,
-                               const EncounterArea5 &area, const Profile5 &profile, const WildStateFilter &filter) :
+                               bool cgear, const EncounterArea5 &area, const Profile5 &profile, const WildStateFilter &filter) :
     WildGenerator(initialAdvances, maxAdvances, offset, method, lead, area, profile, filter),
-    luckyPower((profile.getVersion() & Game::BW) != Game::None ? PassPower::None : luckyPower)
+    luckyPower((profile.getVersion() & Game::BW) != Game::None ? PassPower::None : luckyPower),
+    cgear((profile.getVersion() & Game::BW2) != Game::None && cgear)
 {
 }
 
 IVPrefilter5 WildGenerator5::getIVPrefilter() const
 {
-    // Same MT outputs generate() skips: 2 on BW2, 2 more with a Pass Power active
+    // Same MT outputs generate() skips: 2 on BW2, 2 more when the C-Gear was turned on at Continue
     u8 offset = 0;
     if ((profile.getVersion() & Game::BW2) != Game::None)
     {
-        offset = luckyPower != PassPower::None ? 4 : 2;
+        offset = cgear ? 4 : 2;
     }
     return { filter.getIVMin(), filter.getIVMax(), offset, false, true };
 }
@@ -127,8 +128,12 @@ std::vector<WildState5> WildGenerator5::generate(u64 seed, u32 initialAdvances, 
     u32 initial = initialAdvances;
     if ((profile.getVersion() & Game::BW2) != Game::None)
     {
+        // The daycare block takes 2 MT outputs on every load
         initial += 2;
-        if (luckyPower != PassPower::None)
+
+        // Answering yes to "Launch C-Gear communications?" seeds the comm battle RNG from 2 more MT outputs.
+        // Pass Powers only use the LCRNG.
+        if (cgear)
         {
             initial += 2;
         }
