@@ -239,10 +239,11 @@ void Wild5::generate()
     u32 offset = ui->textBoxGeneratorOffset->getUInt();
     auto lead = ui->comboMenuGeneratorLead->getEnum<Lead>();
     auto luckyPower = ui->comboBoxGeneratorLuckyPower->getEnum<PassPower>();
+    bool cgear = ui->checkBoxGeneratorCGear->isChecked();
     auto area = encounterGenerator[ui->comboBoxGeneratorLocation->currentIndex()];
 
     auto filter = ui->filterGenerator->getFilter<WildStateFilter, true>();
-    WildGenerator5 generator(initialAdvances, maxAdvances, offset, Method::None, lead, luckyPower, area, *currentProfile, filter);
+    WildGenerator5 generator(initialAdvances, maxAdvances, offset, Method::None, lead, luckyPower, cgear, area, *currentProfile, filter);
 
     auto states = generator.generate(seed, ivAdvances, 0);
     generatorModel->setPhenomenon(area.getPhenomenonType() != PhenomenonType::None);
@@ -383,9 +384,11 @@ void Wild5::profileChanged(const Profile5 &profile)
 
     ui->labelGeneratorLuckyPower->setVisible(flag);
     ui->comboBoxGeneratorLuckyPower->setVisible(flag);
+    ui->checkBoxGeneratorCGear->setVisible(flag);
 
     ui->labelSearcherLuckyPower->setVisible(flag);
     ui->comboBoxSearcherLuckyPower->setVisible(flag);
+    ui->checkBoxSearcherCGear->setVisible(flag);
 
     generatorEncounterIndexChanged(0);
     searcherEncounterIndexChanged(0);
@@ -420,6 +423,7 @@ void Wild5::search()
     u32 maxAdvances = ui->textBoxSearcherMaxAdvances->getUInt();
     auto lead = ui->comboMenuSearcherLead->getEnum<Lead>();
     auto luckyPower = ui->comboBoxSearcherLuckyPower->getEnum<PassPower>();
+    bool cgear = ui->checkBoxSearcherCGear->isChecked();
 
     auto filter = ui->filterSearcher->getFilter<WildStateFilter, true>();
     auto area = encounterSearcher[ui->comboBoxSearcherLocation->currentIndex()];
@@ -458,7 +462,7 @@ void Wild5::search()
     std::vector<std::shared_ptr<fph::MetaFphMap<u64, u64>>> shaMaps(profiles.size());
     if (fastSearch)
     {
-        *ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), luckyPower != PassPower::None,
+        *ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), cgear,
                                    CacheType::Normal, nullptr, filter);
         for (size_t i = 0; i < profiles.size(); i++)
         {
@@ -471,7 +475,7 @@ void Wild5::search()
     }
 
     auto factory = [=](const Profile5 &profile, size_t index) {
-        WildGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, lead, luckyPower, area, profile, filter);
+        WildGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, lead, luckyPower, cgear, area, profile, filter);
 
         MultiProfileSearcher5<WildGenerator5, WildState5>::Created created;
         if (fastSearch)

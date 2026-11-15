@@ -213,12 +213,13 @@ void Static5::generate()
     u32 offset = ui->textBoxGeneratorOffset->getUInt();
     auto lead = ui->comboMenuGeneratorLead->getEnum<Lead>();
     auto luckyPower = ui->comboBoxGeneratorLuckyPower->getEnum<PassPower>();
+    bool cgear = ui->checkBoxGeneratorCGear->isChecked();
 
     const StaticTemplate5 *staticTemplate
         = Encounters5::getStaticEncounter(ui->comboBoxGeneratorCategory->currentIndex(), ui->comboBoxGeneratorPokemon->getCurrentInt());
 
     auto filter = ui->filterGenerator->getFilter<StateFilter>();
-    StaticGenerator5 generator(initialAdvances, maxAdvances, offset, Method::None, lead, luckyPower, *staticTemplate, *currentProfile,
+    StaticGenerator5 generator(initialAdvances, maxAdvances, offset, Method::None, lead, luckyPower, cgear, *staticTemplate, *currentProfile,
                                filter);
 
     auto states = generator.generate(seed, ivAdvances, 0);
@@ -326,6 +327,8 @@ void Static5::profileChanged(const Profile5 &profile)
     ui->labelSearcherLuckyPower->setHidden(!bw);
     ui->comboBoxGeneratorLuckyPower->setHidden(!bw);
     ui->comboBoxSearcherLuckyPower->setHidden(!bw);
+    ui->checkBoxGeneratorCGear->setHidden(bw);
+    ui->checkBoxSearcherCGear->setHidden(bw);
 
     // Event
     ui->comboBoxGeneratorCategory->setItemHidden(5, !bw);
@@ -376,6 +379,7 @@ void Static5::search()
     u32 maxAdvances = ui->textBoxSearcherMaxAdvances->getUInt();
     auto lead = ui->comboMenuSearcherLead->getEnum<Lead>();
     auto luckyPower = ui->comboBoxSearcherLuckyPower->getEnum<PassPower>();
+    bool cgear = ui->checkBoxSearcherCGear->isChecked();
 
     const StaticTemplate5 *staticTemplate
         = Encounters5::getStaticEncounter(ui->comboBoxSearcherCategory->currentIndex(), ui->comboBoxSearcherPokemon->getCurrentInt());
@@ -418,7 +422,7 @@ void Static5::search()
     if (fastSearch)
     {
         CacheType type = staticTemplate->getRoamer() ? CacheType::Roamer : CacheType::Normal;
-        *ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), luckyPower != PassPower::None, type,
+        *ivMap = ivCache->getCache(initialIVAdvances, maxIVAdvances, currentProfile->getVersion(), cgear, type,
                                    staticTemplate, filter);
         for (size_t i = 0; i < profiles.size(); i++)
         {
@@ -431,7 +435,7 @@ void Static5::search()
     }
 
     auto factory = [=](const Profile5 &profile, size_t index) {
-        StaticGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, lead, luckyPower, *staticTemplate, profile, filter);
+        StaticGenerator5 generator(initialAdvances, maxAdvances, 0, Method::Method5, lead, luckyPower, cgear, *staticTemplate, profile, filter);
 
         MultiProfileSearcher5<StaticGenerator5, State5>::Created created;
         if (fastSearch)

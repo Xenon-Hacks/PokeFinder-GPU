@@ -45,11 +45,12 @@ public:
      * @param method Encounter method
      * @param lead Encounter lead
      * @param luckyPower Lucky power level
+     * @param cgear Whether C-Gear communications were turned on at Continue (B2W2: 2 more MT outputs before the IVs)
      * @param staticTemplate Pokemon template
      * @param profile Profile Information
      * @param filter State filter
      */
-    StaticGenerator5(u32 initialAdvances, u32 maxAdvances, u32 offset, Method method, Lead lead, PassPower luckyPower,
+    StaticGenerator5(u32 initialAdvances, u32 maxAdvances, u32 offset, Method method, Lead lead, PassPower luckyPower, bool cgear,
                      const StaticTemplate5 &staticTemplate, const Profile5 &profile, const StateFilter &filter);
 
     /**
@@ -95,6 +96,7 @@ public:
 
 private:
     PassPower luckyPower;
+    bool cgear;
 
     /**
      * @brief Generates states

@@ -41,12 +41,13 @@ public:
      * @param method Encounter method
      * @param lead Encounter lead
      * @param luckyPower Lucky power level
+     * @param cgear Whether C-Gear communications were turned on at Continue (B2W2: 2 more MT outputs before the IVs)
      * @param area Wild pokemon info
      * @param profile Profile Information
      * @param filter State filter
      */
-    WildGenerator5(u32 initialAdvances, u32 maxAdvances, u32 offset, Method method, Lead lead, PassPower luckyPower, const EncounterArea5 &area,
-                   const Profile5 &profile, const WildStateFilter &filter);
+    WildGenerator5(u32 initialAdvances, u32 maxAdvances, u32 offset, Method method, Lead lead, PassPower luckyPower, bool cgear,
+                   const EncounterArea5 &area, const Profile5 &profile, const WildStateFilter &filter);
 
     /**
      * @brief Checks \p ivs against the IV and hidden power filters, the same way \ref generate() does before generating PIDs
@@ -91,6 +92,7 @@ public:
 
 private:
     PassPower luckyPower;
+    bool cgear;
 };
 
 #endif // WILDGENERATOR5_HPP

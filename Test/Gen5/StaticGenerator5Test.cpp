@@ -82,7 +82,7 @@ void StaticGenerator5Test::generateNonWild()
 
     const StaticTemplate5 *staticTemplate = Encounters5::getStaticEncounter(category, pokemon);
     StateFilter filter(255, 255, 255, 1, 100, 0, 255, 0, 255, false, min, max, natures, powers);
-    StaticGenerator5 generator(0, 9, 0, Method::Method5, Lead::None, PassPower::None, *staticTemplate, profile, filter);
+    StaticGenerator5 generator(0, 9, 0, Method::Method5, Lead::None, PassPower::None, false, *staticTemplate, profile, filter);
 
     auto states = generator.generate(seed, 0, 0);
     QCOMPARE(states.size(), j.size());
@@ -142,7 +142,9 @@ void StaticGenerator5Test::generateWild()
 
     const StaticTemplate5 *staticTemplate = Encounters5::getStaticEncounter(category, pokemon);
     StateFilter filter(255, 255, 255, 1, 100, 0, 255, 0, 255, false, min, max, natures, powers);
-    StaticGenerator5 generator(0, 9, 0, Method::Method5, lead, luckyPower, *staticTemplate, profile, filter);
+    // These vectors were made when a Pass Power on a wild template added the 2 MT outputs that really come from the C-Gear
+    bool cgear = luckyPower != PassPower::None && staticTemplate->getWild();
+    StaticGenerator5 generator(0, 9, 0, Method::Method5, lead, luckyPower, cgear, *staticTemplate, profile, filter);
 
     auto states = generator.generate(seed, 0, 0);
     QCOMPARE(states.size(), j.size());

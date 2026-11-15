@@ -96,7 +96,7 @@ void IVSearcher5GPUTest::searchWild_data()
     QTest::newRow("B2 loose") << Game::Black2 << IVs { 20, 20, 0, 0, 0, 20 } << u8(3) << 0u << 10u << PassPower::None;
     QTest::newRow("B2 strict") << Game::Black2 << IVs { 31, 0, 31, 0, 31, 31 } << u8(255) << 0u << 50u << PassPower::None;
     QTest::newRow("B2 offset") << Game::Black2 << IVs { 28, 28, 28, 28, 28, 28 } << u8(255) << 5u << 200u << PassPower::None;
-    QTest::newRow("B2 pass power") << Game::Black2 << IVs { 28, 0, 28, 0, 28, 28 } << u8(255) << 0u << 20u << PassPower::Level1;
+    QTest::newRow("B2 C-Gear") << Game::Black2 << IVs { 28, 0, 28, 0, 28, 28 } << u8(255) << 0u << 20u << PassPower::Level1;
     QTest::newRow("B loose shiny") << Game::Black << IVs { 20, 0, 20, 0, 20, 0 } << u8(3) << 0u << 10u << PassPower::None;
 }
 
@@ -122,7 +122,8 @@ void IVSearcher5GPUTest::searchWild()
     encounterSlots.fill(true);
 
     WildStateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers, encounterSlots);
-    WildGenerator5 generator(0, 100, 0, Method::Method5, Lead::None, luckyPower, areas[0], profile, filter);
+    WildGenerator5 generator(0, 100, 0, Method::Method5, Lead::None, luckyPower, luckyPower != PassPower::None, areas[0], profile,
+                             filter);
 
     QVERIFY(WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false));
     WildSearcher5GPU gpu(initialIVAdvances, maxIVAdvances, generator, profile);
@@ -152,7 +153,7 @@ void IVSearcher5GPUTest::searchWildCache()
 
     WildStateFilter filter(255, 255, 3, 1, 100, 0, 255, 0, 255, false, { 25, 0, 25, 0, 25, 25 }, { 31, 31, 31, 31, 31, 31 }, natures,
                            powers, encounterSlots);
-    WildGenerator5 generator(0, 300, 0, Method::Method5, Lead::None, PassPower::None, areas[0], profile, filter);
+    WildGenerator5 generator(0, 300, 0, Method::Method5, Lead::None, PassPower::None, false, areas[0], profile, filter);
 
     // Stand-in IV cache: what the MT path finds for this date, plus entries that never match
     WildSearcher5GPU mt(0, 30, generator, profile);
@@ -220,7 +221,7 @@ void IVSearcher5GPUTest::searchStatic()
     powers.fill(true);
 
     StateFilter filter(255, 255, 3, 1, 100, 0, 255, 0, 255, false, { 20, 0, 20, 20, 0, 20 }, { 31, 31, 31, 31, 31, 31 }, natures, powers);
-    StaticGenerator5 generator(0, 200, 0, Method::Method5, Lead::None, PassPower::None, *staticTemplate, profile, filter);
+    StaticGenerator5 generator(0, 200, 0, Method::Method5, Lead::None, PassPower::None, false, *staticTemplate, profile, filter);
 
     StaticSearcher5GPU gpu(0, 15, generator, profile);
     QVERIFY2(gpu.isReady(), gpu.getError().data());
@@ -293,8 +294,10 @@ void IVSearcher5GPUTest::searchRandomProfiles()
     u32 maxIVAdvances = random(0, 15);
 
     std::vector<std::tuple<u32, u32, u64, u16, u16, u32, u32, u32, IVs>> cpuResults, gpuResults;
-    // Pass Powers add two IV advances on BW2, so the random profiles exercise that offset too
-    auto luckyPower = (version & Game::BW2) != Game::None && random(0, 1) ? PassPower::Level1 : PassPower::None;
+    // The C-Gear adds two IV advances on BW2, so the random profiles exercise that offset too. Pass Powers only touch the LCRNG.
+    bool bw2 = (version & Game::BW2) != Game::None;
+    auto luckyPower = bw2 && random(0, 1) ? PassPower::Level3 : PassPower::None;
+    bool cgear = bw2 && random(0, 1);
     if (random(0, 1))
     {
         EncounterSettings5 settings = {};
@@ -305,7 +308,8 @@ void IVSearcher5GPUTest::searchRandomProfiles()
 
         WildStateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers,
                                encounterSlots);
-        WildGenerator5 generator(0, 5, 0, Method::Method5, Lead::None, luckyPower, areas[random(0, areas.size() - 1)], profile, filter);
+        WildGenerator5 generator(0, 5, 0, Method::Method5, Lead::None, luckyPower, cgear, areas[random(0, areas.size() - 1)], profile,
+                                 filter);
 
         QVERIFY(WildSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false));
         WildSearcher5GPU gpu(initialIVAdvances, maxIVAdvances, generator, profile);
@@ -334,8 +338,8 @@ void IVSearcher5GPUTest::searchRandomProfiles()
         QVERIFY(!templates.empty());
 
         StateFilter filter(255, 255, shiny, 1, 100, 0, 255, 0, 255, false, min, { 31, 31, 31, 31, 31, 31 }, natures, powers);
-        StaticGenerator5 generator(0, 5, 0, Method::Method5, Lead::None, luckyPower, *templates[random(0, templates.size() - 1)], profile,
-                                   filter);
+        StaticGenerator5 generator(0, 5, 0, Method::Method5, Lead::None, luckyPower, cgear, *templates[random(0, templates.size() - 1)],
+                                   profile, filter);
 
         QVERIFY(StaticSearcher5GPU::isSupported(generator, initialIVAdvances, maxIVAdvances, false));
         StaticSearcher5GPU gpu(initialIVAdvances, maxIVAdvances, generator, profile);
@@ -372,7 +376,7 @@ void IVSearcher5GPUTest::searchMultipleProfiles()
     EncounterSettings5 settings = {};
     auto area = Encounters5::getEncounters(Encounter::Grass, settings, &profiles[0])[0];
     auto makeGenerator = [&](const Profile5 &profile) {
-        return WildGenerator5(0, 100, 0, Method::Method5, Lead::None, PassPower::None, area, profile, filter);
+        return WildGenerator5(0, 100, 0, Method::Method5, Lead::None, PassPower::None, false, area, profile, filter);
     };
 
     MultiProfileSearcher5<WildGenerator5, WildState5> multi(profiles, [&](const Profile5 &profile, size_t) {

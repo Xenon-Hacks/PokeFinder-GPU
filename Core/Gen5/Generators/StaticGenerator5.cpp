@@ -45,9 +45,10 @@ static u8 getPercentRand(BWRNG &rng, bool bw)
 }
 
 StaticGenerator5::StaticGenerator5(u32 initialAdvances, u32 maxAdvances, u32 offset, Method method, Lead lead, PassPower luckyPower,
-                                   const StaticTemplate5 &staticTemplate, const Profile5 &profile, const StateFilter &filter) :
+                                   bool cgear, const StaticTemplate5 &staticTemplate, const Profile5 &profile, const StateFilter &filter) :
     StaticGenerator(initialAdvances, maxAdvances, offset, method, lead, staticTemplate, profile, filter),
-    luckyPower((profile.getVersion() & Game::BW) != Game::None ? PassPower::None : luckyPower)
+    luckyPower((profile.getVersion() & Game::BW) != Game::None ? PassPower::None : luckyPower),
+    cgear((profile.getVersion() & Game::BW2) != Game::None && cgear)
 {
     if (staticTemplate.getCurtis())
     {
@@ -61,12 +62,12 @@ StaticGenerator5::StaticGenerator5(u32 initialAdvances, u32 maxAdvances, u32 off
 
 IVPrefilter5 StaticGenerator5::getIVPrefilter() const
 {
-    // Same MT outputs generate() skips: 1 for eggs and roamers, 2 on BW2, 2 more for a wild template with a Pass Power active
+    // Same MT outputs generate() skips: 1 for eggs and roamers, 2 on BW2, 2 more when the C-Gear was turned on at Continue
     u8 offset = (staticTemplate.getEgg() || staticTemplate.getRoamer()) ? 1 : 0;
     if ((profile.getVersion() & Game::BW2) != Game::None)
     {
         offset += 2;
-        if (staticTemplate.getWild() && luckyPower != PassPower::None)
+        if (cgear)
         {
             offset += 2;
         }
@@ -82,8 +83,9 @@ std::vector<State5> StaticGenerator5::generate(u64 seed, u32 initialAdvances, u3
     u32 initial = initialAdvances + ((staticTemplate.getEgg() || staticTemplate.getRoamer()) ? 1 : 0);
     if ((profile.getVersion() & Game::BW2) != Game::None)
     {
+        // The daycare block takes 2 MT outputs on every load, the C-Gear comm start 2 more (Pass Powers only use the LCRNG)
         initial += 2;
-        if (staticTemplate.getWild() && luckyPower != PassPower::None)
+        if (cgear)
         {
             initial += 2;
         }

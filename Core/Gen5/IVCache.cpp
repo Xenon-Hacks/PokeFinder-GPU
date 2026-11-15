@@ -142,7 +142,7 @@ IVCache::IVCache(std::string_view file, bool read) : valid(false)
     }
 }
 
-fph::MetaFphMap<u64, std::array<u8, 6>> IVCache::getCache(u32 initialAdvances, u32 maxAdvances, Game version, bool passPower,
+fph::MetaFphMap<u64, std::array<u8, 6>> IVCache::getCache(u32 initialAdvances, u32 maxAdvances, Game version, bool cgear,
                                                           CacheType type, const StaticTemplate5 *staticTemplate,
                                                           const StateFilter &filter) const
 {
@@ -152,7 +152,7 @@ fph::MetaFphMap<u64, std::array<u8, 6>> IVCache::getCache(u32 initialAdvances, u
     }
     else if (type == CacheType::Normal)
     {
-        return getNormalCache(initialAdvances, maxAdvances, version, passPower, staticTemplate, filter);
+        return getNormalCache(initialAdvances, maxAdvances, version, cgear, staticTemplate, filter);
     }
     else
     {
@@ -220,7 +220,7 @@ fph::MetaFphMap<u64, std::array<u8, 6>> IVCache::getEntralinkCache(u32 initialAd
     return cache;
 }
 
-fph::MetaFphMap<u64, std::array<u8, 6>> IVCache::getNormalCache(u32 initialAdvances, u32 maxAdvances, Game version, bool passPower,
+fph::MetaFphMap<u64, std::array<u8, 6>> IVCache::getNormalCache(u32 initialAdvances, u32 maxAdvances, Game version, bool cgear,
                                                                 const StaticTemplate5 *staticTemplate, const StateFilter &filter) const
 {
     fph::MetaFphMap<u64, std::array<u8, 6>> cache;
@@ -229,7 +229,7 @@ fph::MetaFphMap<u64, std::array<u8, 6>> IVCache::getNormalCache(u32 initialAdvan
     if ((version & Game::BW2) != Game::None)
     {
         offset += 2;
-        if (passPower && (staticTemplate == nullptr || staticTemplate->getWild()))
+        if (cgear)
         {
             offset += 2;
         }
