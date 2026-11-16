@@ -305,6 +305,14 @@ set(PROJECT_SOURCES
     Gen8/Underground.hpp
     Gen8/Wild8.cpp
     Gen8/Wild8.hpp
+    Gen8a/BootSeed8a.cpp
+    Gen8a/BootSeed8a.hpp
+    Gen8a/Shared8a.cpp
+    Gen8a/Shared8a.hpp
+    Gen8a/Spawner8a.cpp
+    Gen8a/Spawner8a.hpp
+    Gen8a/Widgets8a.cpp
+    Gen8a/Widgets8a.hpp
     MainWindow.cpp
     MainWindow.hpp
     Util/EncounterLookup.cpp

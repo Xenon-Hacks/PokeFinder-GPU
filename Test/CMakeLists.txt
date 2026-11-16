@@ -101,6 +101,8 @@ qt_add_executable(PokeFinderTest
     Gen8/UndergroundGeneratorTest.hpp
     Gen8/WildGenerator8Test.cpp
     Gen8/WildGenerator8Test.hpp
+    Gen8a/Gen8aTest.cpp
+    Gen8a/Gen8aTest.hpp
     main.cpp
     RNG/LCRNGTest.cpp
     RNG/LCRNGTest.hpp

@@ -54,6 +54,9 @@ class Fishing7;
 class Event7;
 class Pelago7;
 class SeedFinder7;
+class BootSeed8a;
+class Shared8a;
+class Spawner8a;
 class Static7;
 class Eggs8;
 class Event8;
@@ -158,6 +161,9 @@ private:
     Honey7 *honey7 = nullptr;
     IDs7 *ids7 = nullptr;
     SeedFinder7 *seedFinder7 = nullptr;
+    BootSeed8a *bootSeed8a = nullptr;
+    Shared8a *shared8a = nullptr;
+    Spawner8a *spawner8a = nullptr;
     Eggs7 *eggs7 = nullptr;
     Fishing7 *fishing7 = nullptr;
     Event7 *event7 = nullptr;
@@ -411,6 +417,21 @@ private slots:
      * @brief Opens the Gen 7 Seed Finder window
      */
     void openSeedFinder7();
+
+    /**
+     * @brief Opens the Legends: Arceus boot seed window
+     */
+    void openBootSeed8a();
+
+    /**
+     * @brief Opens the Legends: Arceus Unown / Static / Gift window
+     */
+    void openShared8a();
+
+    /**
+     * @brief Opens the Legends: Arceus spawner window
+     */
+    void openSpawner8a();
 
     /**
      * @brief Opens the Gen 7 static / gift / trade window
