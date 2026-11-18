@@ -325,6 +325,22 @@ add_library(PokeFinderCore STATIC
     Gen8/UndergroundArea.cpp
     Gen8/UndergroundArea.hpp
     Gen8/WB8.hpp
+    Gen8a/Generator8a.cpp
+    Gen8a/Generator8a.hpp
+    Gen8a/Linear8a.cpp
+    Gen8a/Linear8a.hpp
+    Gen8a/Rng8a.hpp
+    Gen8a/Searchers/BootSeedSearcher8a.cpp
+    Gen8a/Searchers/BootSeedSearcher8a.hpp
+    Gen8a/Searchers/SpawnerSearcher8a.cpp
+    Gen8a/Searchers/SpawnerSearcher8a.hpp
+    Gen8a/SharedGenerator8a.cpp
+    Gen8a/SharedGenerator8a.hpp
+    Gen8a/SpawnerGenerator8a.cpp
+    Gen8a/SpawnerGenerator8a.hpp
+    Gen8a/Templates8a.cpp
+    Gen8a/Templates8a.hpp
+    Gen8a/Templates8aData.inc
     Global.hpp
     Parents/Daycare.hpp
     Parents/Filters/IDFilter.cpp

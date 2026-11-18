@@ -9,6 +9,7 @@ What this fork adds (each item lands as its own pull request; see the release no
 - Gen 5 Wild and Static searchers can run on the GPU, with a CPU re-check of every hit, and can search every profile of a game at once
 - Gen 6 (X, Y, Omega Ruby, Alpha Sapphire): seed finder, seed window and timer, Wild, Static, Eggs, Events, IDs, Mirage spots
 - Gen 7 (Sun, Moon, Ultra Sun, Ultra Moon): needle seed finder, Honey and field timeline, statics, gifts, fishing, trades, eggs
+- Legends: Arceus (1.1.1): boot seed from two Unown (GPU), Unown/static/gift results from the boot seed, wild spawner group seed from two catches (experimental) and spawner prediction
 
 Releases are named after the upstream release they are built on plus `-GPU` (`4.4.2-GPU`; a later build on the same upstream release would be `4.4.2-GPU.2`). The release tag is `v` + that name, which the in-app update check compares against.
 

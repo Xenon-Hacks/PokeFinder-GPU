@@ -72,6 +72,9 @@
 #include <Form/Gen7/Static7.hpp>
 #include <Form/Gen6/Profile/ProfileManager6.hpp>
 #include <Form/Gen8/Eggs8.hpp>
+#include <Form/Gen8a/BootSeed8a.hpp>
+#include <Form/Gen8a/Shared8a.hpp>
+#include <Form/Gen8a/Spawner8a.hpp>
 #include <Form/Gen8/Event8.hpp>
 #include <Form/Gen8/IDs8.hpp>
 #include <Form/Gen8/Profile/ProfileManager8.hpp>
@@ -153,6 +156,9 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonIDs7, &QPushButton::clicked, this, &MainWindow::openIDs7);
     connect(ui->pushButtonHoney7, &QPushButton::clicked, this, &MainWindow::openHoney7);
     connect(ui->pushButtonSeedFinder7, &QPushButton::clicked, this, &MainWindow::openSeedFinder7);
+    connect(ui->pushButtonBootSeed8a, &QPushButton::clicked, this, &MainWindow::openBootSeed8a);
+    connect(ui->pushButtonShared8a, &QPushButton::clicked, this, &MainWindow::openShared8a);
+    connect(ui->pushButtonSpawner8a, &QPushButton::clicked, this, &MainWindow::openSpawner8a);
     connect(ui->pushButtonStatic7, &QPushButton::clicked, this, &MainWindow::openStatic7);
     connect(ui->pushButtonEggs7, &QPushButton::clicked, this, &MainWindow::openEggs7);
     connect(ui->pushButtonFishing7, &QPushButton::clicked, this, &MainWindow::openFishing7);
@@ -229,6 +235,9 @@ MainWindow::~MainWindow()
     delete honey7;
     delete ids7;
     delete seedFinder7;
+    delete bootSeed8a;
+    delete shared8a;
+    delete spawner8a;
     delete static7;
     delete eggs7;
     delete fishing7;
@@ -923,6 +932,36 @@ void MainWindow::openSeedFinder7()
     }
     seedFinder7->show();
     seedFinder7->raise();
+}
+
+void MainWindow::openBootSeed8a()
+{
+    if (!bootSeed8a)
+    {
+        bootSeed8a = new BootSeed8a();
+    }
+    bootSeed8a->show();
+    bootSeed8a->raise();
+}
+
+void MainWindow::openShared8a()
+{
+    if (!shared8a)
+    {
+        shared8a = new Shared8a();
+    }
+    shared8a->show();
+    shared8a->raise();
+}
+
+void MainWindow::openSpawner8a()
+{
+    if (!spawner8a)
+    {
+        spawner8a = new Spawner8a();
+    }
+    spawner8a->show();
+    spawner8a->raise();
 }
 
 void MainWindow::openProfileManager7() const

@@ -59,6 +59,7 @@
 #include <Test/Gen8/StaticGenerator8Test.hpp>
 #include <Test/Gen8/UndergroundGeneratorTest.hpp>
 #include <Test/Gen8/WildGenerator8Test.hpp>
+#include <Test/Gen8a/Gen8aTest.hpp>
 #include <Test/RNG/LCRNG64Test.hpp>
 #include <Test/RNG/LCRNGReverseTest.hpp>
 #include <Test/RNG/LCRNGTest.hpp>
@@ -138,6 +139,7 @@ int main()
     status += runTest<EggGenerator8Test>(fails);
     status += runTest<EventGenerator8Test>(fails);
     status += runTest<RaidGeneratorTest>(fails);
+    status += runTest<Gen8aTest>(fails);
     status += runTest<StaticGenerator8Test>(fails);
     status += runTest<UndergroundGeneratorTest>(fails);
     status += runTest<WildGenerator8Test>(fails);

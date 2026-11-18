@@ -340,6 +340,34 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tabGen8a">
+       <attribute name="title">
+        <string>Legends: Arceus</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_8a">
+        <item row="0" column="0">
+         <widget class="QPushButton" name="pushButtonBootSeed8a">
+          <property name="text">
+           <string>Boot Seed (Unown, GPU)</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="pushButtonShared8a">
+          <property name="text">
+           <string>Unown / Static / Gift</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QPushButton" name="pushButtonSpawner8a">
+          <property name="text">
+           <string>Spawners</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>

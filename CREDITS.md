@@ -35,9 +35,16 @@ The upstream PokeFinder credits (RNG Reporter, PPRNG, 3DSRNGTool, the PokemonRNG
 | [PKHeX](https://github.com/kwsch/PKHeX) (GPL-3.0) | Kurt (kwsch / Kaphotics) and contributors | SM/USUM save layout, personal tables, encounter and Wonder Card formats |
 | Gen 7 RNG research (`PK7 Generation` project, 2026-10-20 to 2026-10-30: Moon reference, Sun and USUM references, hardware timing on a New 3DS) | Javier (Xenon-Hacks) | The field-timeline model (blink engine, Continue rule, fidget, Honey D = 93/63), needle seed search, every static/gift/fishing/trade/egg/Pelago rule, the Honey and fishing spot presets, the timer constants, and the Python reference models the tests replay |
 
+## Legends: Arceus tab
+
+| Project | Owner | Used for |
+| --- | --- | --- |
+| [PKHeX](https://github.com/kwsch/PKHeX) (GPL-3.0) | Kurt (kwsch / Kaphotics) and contributors | PA8 field meanings, species gender ratios, and `Overworld8aRNG` as the starting point the research checked against the game (the game's gender draw is `rand(253)`) |
+| Legends: Arceus RNG research (`PA8 Generation` project, 2026-11-15 to 2026-11-16: 1.1.1 code, Eden runs, console runs on a Switch) | Javier (Xenon-Hacks) | The generator draw order, the shared RNG and its boot seed, the Unown/static/gift specs, the spawner seed chain, the console boot-seed recovery, and the Python reference models the tests replay |
+
 ## Research tools
 
-These were used to produce the Gen 6 and Gen 7 research. None of them ship with PokeFinder-GPU.
+These were used to produce the Gen 6, Gen 7 and Legends: Arceus research. None of them ship with PokeFinder-GPU.
 
 | Tool | Owner | Used for |
 | --- | --- | --- |
@@ -45,6 +52,9 @@ These were used to produce the Gen 6 and Gen 7 research. None of them ship with 
 | [Project_CTR](https://github.com/3DSGuy/Project_CTR) (ctrtool, makerom) | 3DSGuy (jakcron) | Decrypting the game images and extracting `code.bin` |
 | [Capstone](https://github.com/capstone-engine/capstone) | Nguyen Anh Quynh and the Capstone contributors | Disassembling the game code |
 | [NTR-HR](https://github.com/Nanquitas/BootNTR) lineage, Luma3DS | Their respective authors | Live RAM reads on the New 3DS for the Gen 7 hardware runs |
+| [Eden](https://git.eden-emu.dev/eden-emu/eden) (GPL-3.0) | The Eden project | Running Legends: Arceus 1.1.1 with its GDB stub to log the shared RNG, spawner seeds and generator calls |
+| [sys-botbase](https://github.com/olliz0r/sys-botbase) | olliz0r and contributors | Read-only RAM checks of the shared RNG on the Switch |
+| [Ghidra](https://github.com/NationalSecurityAgency/ghidra) | NSA | Decompiling the Legends: Arceus `main` |
 
 ## Libraries
 
