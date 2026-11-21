@@ -18,6 +18,7 @@
  */
 
 #include "BootSeed8a.hpp"
+#include <Form/Gen8a/StockBootSeed8a.hpp>
 #include <Core/Gen8a/Searchers/BootSeedSearcher8a.hpp>
 #include <Core/Util/OpenCL.hpp>
 #include <QCheckBox>
@@ -110,6 +111,17 @@ BootSeed8a::BootSeed8a(QWidget *parent) : QWidget(parent)
     table->setModel(model);
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     layout->addWidget(table);
+
+    auto *stockButton = new QPushButton(tr("No IVs? Stock console search from five Unown (effort levels)..."));
+    stockButton->setToolTip(tr("Exact IVs need a dump or a memory read: the game only shows effort levels. This opens the search that "
+                               "works from what the summary shows"));
+    layout->addWidget(stockButton);
+    connect(stockButton, &QPushButton::clicked, this, [] {
+        auto *window = new StockBootSeed8a();
+        window->setAttribute(Qt::WA_DeleteOnClose);
+        window->show();
+        window->raise();
+    });
 
     connect(searchButton, &QPushButton::clicked, this, &BootSeed8a::search);
 

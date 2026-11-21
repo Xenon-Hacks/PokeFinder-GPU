@@ -311,6 +311,8 @@ set(PROJECT_SOURCES
     Gen8a/Shared8a.hpp
     Gen8a/Spawner8a.cpp
     Gen8a/Spawner8a.hpp
+    Gen8a/StockBootSeed8a.cpp
+    Gen8a/StockBootSeed8a.hpp
     Gen8a/Widgets8a.cpp
     Gen8a/Widgets8a.hpp
     MainWindow.cpp

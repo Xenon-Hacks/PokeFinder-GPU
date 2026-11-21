@@ -35,6 +35,8 @@ private slots:
     void bootSearchCPU();
     void bootSearchGPU();
     void spawnerSearchLong();
+    void stockBootVerify();
+    void stockBootSearchGPU();
 };
 
 #endif // GEN8ATEST_HPP

@@ -20,6 +20,7 @@
 #include "Gen8aTest.hpp"
 #include <Core/Gen8a/Generator8a.hpp>
 #include <Core/Gen8a/Searchers/BootSeedSearcher8a.hpp>
+#include <Core/Gen8a/Searchers/StockBootSeedSearcher8a.hpp>
 #include <Core/Gen8a/Searchers/SpawnerSearcher8a.hpp>
 #include <Core/Gen8a/SharedGenerator8a.hpp>
 #include <Core/Gen8a/SpawnerGenerator8a.hpp>
@@ -274,4 +275,49 @@ void Gen8aTest::spawnerSearchLong()
     QCOMPARE(found[0].groupSeed, 0x1234ABCD5678EF01ULL);
     QCOMPARE(found[0].relation, SpawnerRelation8a::NextFill);
     QCOMPARE(found[0].position, u8(1));
+}
+
+// Five Mirelands Unown logged in Eden on 2026-11-21 (boot seed B7261D36C4B3AD2E, first EC 148 draws after boot),
+// reduced to what a stock console shows: effort levels, nature, weight in 0.1 kg
+static std::vector<StockUnown8a> stockBatch()
+{
+    return { { { 0, 0, 0, 0, 0, 0 }, 7, 57 }, { { 0, 2, 0, 1, 0, 3 }, 11, 56 }, { { 1, 0, 0, 0, 0, 2 }, 10, 48 },
+             { { 0, 0, 2, 1, 2, 0 }, 11, 57 }, { { 0, 0, 0, 0, 0, 1 }, 21, 50 } };
+}
+
+void Gen8aTest::stockBootVerify()
+{
+    StockBootSeedSearcher8a searcher(stockBatch(), 148, 148, 4);
+    QVERIFY(searcher.verify(0xB7261D36C4B3AD2EULL, 148));
+    QVERIFY(!searcher.verify(0xB7261D36C4B3AD2EULL, 147));
+    QVERIFY(!searcher.verify(0xB7261D36C4B3AD2FULL, 148));
+    QCOMPARE(StockBootSeedSearcher8a::displayedWeight(213), static_cast<u16>(57));
+    QCOMPARE(searcher.getAlignments(), static_cast<u64>(3 * 625 * 2));
+}
+
+void Gen8aTest::stockBootSearchGPU()
+{
+    if (std::getenv("POKEFINDER_LONG_TESTS") == nullptr)
+    {
+        QSKIP("Set POKEFINDER_LONG_TESTS=1 to run the stock boot seed search (GPU, several minutes)");
+    }
+    if (!OpenCL::isAvailable())
+    {
+        QSKIP("No OpenCL GPU");
+    }
+    StockBootSeedSearcher8a searcher(stockBatch(), 148, 148, 4);
+    searcher.startSearch();
+    std::vector<StockBootSeedResult8a> found;
+    while (searcher.isSearching())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        auto part = searcher.getResults();
+        found.insert(found.end(), part.begin(), part.end());
+    }
+    auto part = searcher.getResults();
+    found.insert(found.end(), part.begin(), part.end());
+    QVERIFY2(searcher.getError().empty(), searcher.getError().c_str());
+    QCOMPARE(found.size(), static_cast<size_t>(1));
+    QCOMPARE(found[0].seed, 0xB7261D36C4B3AD2EULL);
+    QCOMPARE(found[0].advance, 148u);
 }
