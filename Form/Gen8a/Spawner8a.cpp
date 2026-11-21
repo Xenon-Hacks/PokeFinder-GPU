@@ -164,7 +164,8 @@ Spawner8a::Spawner8a(QWidget *parent) : QWidget(parent)
 
     spawns = new QStandardItemModel(this);
     spawns->setHorizontalHeaderLabels({ tr("Fill"), tr("Slot"), tr("Group seed"), tr("Slot roll"), tr("Entity seed"), tr("EC"), tr("PID"),
-                                        tr("Shiny"), tr("IVs"), tr("Ability"), tr("Gender"), tr("Nature"), tr("Height"), tr("Weight") });
+                                        tr("Shiny"), tr("IVs"), tr("Effort levels"), tr("Ability"), tr("Gender"), tr("Nature"), tr("Height"),
+                                        tr("Weight") });
     auto *spawnTable = new QTableView();
     spawnTable->setModel(spawns);
     spawnTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -273,7 +274,8 @@ void Spawner8a::predict()
                             Widgets8a::item(Widgets8a::hex(s.groupSeed, 16)), Widgets8a::item(QString::number(s.slotRoll, 'f', 4)),
                             Widgets8a::item(Widgets8a::hex(s.entitySeed, 16)), Widgets8a::item(Widgets8a::hex(p.ec, 8)),
                             Widgets8a::item(Widgets8a::hex(p.pid, 8)), Widgets8a::item(p.shiny ? tr("Yes") : tr("No")),
-                            Widgets8a::item(Widgets8a::ivText(p.ivs)), Widgets8a::item(QString::number(p.ability + 1)),
+                            Widgets8a::item(Widgets8a::ivText(p.ivs)), Widgets8a::item(Widgets8a::effortText(p.ivs)),
+                            Widgets8a::item(QString::number(p.ability + 1)),
                             Widgets8a::item(Widgets8a::genderText(p.gender)), Widgets8a::item(QString::fromStdString(natures[p.nature])),
                             Widgets8a::item(QString::number(p.height)), Widgets8a::item(QString::number(p.weight)) });
     }

@@ -185,6 +185,10 @@ void StockBootSeed8a::search()
         std::string error = searcher->getError();
         delete searcher;
         timer->deleteLater();
+        if (!*userCancel && error.empty())
+        {
+            progress->setValue(100);
+        }
 
         if (!error.empty())
         {
@@ -192,7 +196,6 @@ void StockBootSeed8a::search()
         }
         else if (!seeds->isEmpty())
         {
-            progress->setValue(100);
             result->setText(seeds->join("\n") + "\n" + tr("Use it in the Unown / Static / Gift window (%1 min)").arg(minutes));
         }
         else if (*userCancel)

@@ -64,6 +64,11 @@ namespace Widgets8a
 
     QString ivText(const std::array<u8, 6> &ivs);
 
+    /**
+     * @brief Effort levels a fresh catch with these IVs shows (what a stock console displays), e.g. 0/2/0/1/0/3
+     */
+    QString effortText(const std::array<u8, 6> &ivs);
+
     QString genderText(u8 gender);
 }
 

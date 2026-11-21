@@ -326,6 +326,9 @@ add_library(PokeFinderCore STATIC
     Gen8/UndergroundArea.hpp
     Gen8/WB8.hpp
     Gen8a/Generator8a.cpp
+    Gen8a/IVCalculator8a.cpp
+    Gen8a/IVCalculator8a.hpp
+    Gen8a/IVCalculator8aData.inc
     Gen8a/Generator8a.hpp
     Gen8a/Linear8a.cpp
     Gen8a/Linear8a.hpp

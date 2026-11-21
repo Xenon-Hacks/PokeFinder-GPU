@@ -73,6 +73,7 @@
 #include <Form/Gen6/Profile/ProfileManager6.hpp>
 #include <Form/Gen8/Eggs8.hpp>
 #include <Form/Gen8a/BootSeed8a.hpp>
+#include <Form/Gen8a/IVCalc8a.hpp>
 #include <Form/Gen8a/Shared8a.hpp>
 #include <Form/Gen8a/Spawner8a.hpp>
 #include <Form/Gen8/Event8.hpp>
@@ -157,6 +158,7 @@ MainWindow::MainWindow(bool profile, QWidget *parent) : QMainWindow(parent), ui(
     connect(ui->pushButtonHoney7, &QPushButton::clicked, this, &MainWindow::openHoney7);
     connect(ui->pushButtonSeedFinder7, &QPushButton::clicked, this, &MainWindow::openSeedFinder7);
     connect(ui->pushButtonBootSeed8a, &QPushButton::clicked, this, &MainWindow::openBootSeed8a);
+    connect(ui->pushButtonIVCalc8a, &QPushButton::clicked, this, &MainWindow::openIVCalc8a);
     connect(ui->pushButtonShared8a, &QPushButton::clicked, this, &MainWindow::openShared8a);
     connect(ui->pushButtonSpawner8a, &QPushButton::clicked, this, &MainWindow::openSpawner8a);
     connect(ui->pushButtonStatic7, &QPushButton::clicked, this, &MainWindow::openStatic7);
@@ -236,6 +238,7 @@ MainWindow::~MainWindow()
     delete ids7;
     delete seedFinder7;
     delete bootSeed8a;
+    delete ivCalc8a;
     delete shared8a;
     delete spawner8a;
     delete static7;
@@ -932,6 +935,16 @@ void MainWindow::openSeedFinder7()
     }
     seedFinder7->show();
     seedFinder7->raise();
+}
+
+void MainWindow::openIVCalc8a()
+{
+    if (!ivCalc8a)
+    {
+        ivCalc8a = new IVCalc8a();
+    }
+    ivCalc8a->show();
+    ivCalc8a->raise();
 }
 
 void MainWindow::openBootSeed8a()

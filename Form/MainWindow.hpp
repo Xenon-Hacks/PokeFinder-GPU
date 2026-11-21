@@ -55,6 +55,7 @@ class Event7;
 class Pelago7;
 class SeedFinder7;
 class BootSeed8a;
+class IVCalc8a;
 class Shared8a;
 class Spawner8a;
 class Static7;
@@ -162,6 +163,7 @@ private:
     IDs7 *ids7 = nullptr;
     SeedFinder7 *seedFinder7 = nullptr;
     BootSeed8a *bootSeed8a = nullptr;
+    IVCalc8a *ivCalc8a = nullptr;
     Shared8a *shared8a = nullptr;
     Spawner8a *spawner8a = nullptr;
     Eggs7 *eggs7 = nullptr;
@@ -422,6 +424,11 @@ private slots:
      * @brief Opens the Legends: Arceus boot seed window
      */
     void openBootSeed8a();
+
+    /**
+     * @brief Opens the Legends: Arceus IV calculator
+     */
+    void openIVCalc8a();
 
     /**
      * @brief Opens the Legends: Arceus Unown / Static / Gift window
