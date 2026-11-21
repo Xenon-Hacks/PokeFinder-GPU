@@ -334,6 +334,8 @@ add_library(PokeFinderCore STATIC
     Gen8a/Searchers/BootSeedSearcher8a.hpp
     Gen8a/Searchers/SpawnerSearcher8a.cpp
     Gen8a/Searchers/SpawnerSearcher8a.hpp
+    Gen8a/Searchers/StockBootSeedSearcher8a.cpp
+    Gen8a/Searchers/StockBootSeedSearcher8a.hpp
     Gen8a/SharedGenerator8a.cpp
     Gen8a/SharedGenerator8a.hpp
     Gen8a/SpawnerGenerator8a.cpp
