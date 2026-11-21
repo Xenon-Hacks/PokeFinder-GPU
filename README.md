@@ -11,7 +11,7 @@ What this fork adds (each item lands as its own pull request; see the release no
 - Gen 7 (Sun, Moon, Ultra Sun, Ultra Moon): needle seed finder, Honey and field timeline, statics, gifts, fishing, trades, eggs
 - Legends: Arceus (1.1.1): boot seed from two Unown (GPU), Unown/static/gift results from the boot seed, wild spawner group seed from two catches (experimental) and spawner prediction
 
-Releases are named after the upstream release they are built on plus `-GPU` (`4.4.2-GPU`; a later build on the same upstream release would be `4.4.2-GPU.2`). The release tag is `v` + that name, which the in-app update check compares against.
+Releases have their own version number plus `-GPU` (`4.5.0-GPU`; the first one, `4.4.2-GPU`, was named after the upstream release it was built on). The release tag is `v` + that name, which the in-app update check compares against.
 
 Building on Windows: Visual Studio 2022 Build Tools, CMake 3.31 or newer, Qt 6.10 and Python 3.14, then
 
