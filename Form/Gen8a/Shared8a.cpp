@@ -91,8 +91,8 @@ Shared8a::Shared8a(QWidget *parent) : QWidget(parent)
     layout->addLayout(grid);
 
     model = new QStandardItemModel(this);
-    model->setHorizontalHeaderLabels({ tr("Advance"), tr("Pokémon"), tr("EC"), tr("PID"), tr("Shiny"), tr("IVs"), tr("Ability"),
-                                       tr("Gender"), tr("Nature"), tr("Height"), tr("Weight"), tr("Advance after") });
+    model->setHorizontalHeaderLabels({ tr("Advance"), tr("Pokémon"), tr("EC"), tr("PID"), tr("Shiny"), tr("IVs"), tr("Effort levels"),
+                                       tr("Ability"), tr("Gender"), tr("Nature"), tr("Height"), tr("Weight"), tr("Advance after") });
     auto *table = new QTableView();
     table->setModel(model);
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -206,6 +206,7 @@ void Shared8a::generate()
         model->appendRow({ Widgets8a::item(QString::number(result.advance)), Widgets8a::item(names[result.index]),
                            Widgets8a::item(Widgets8a::hex(s.ec, 8)), Widgets8a::item(Widgets8a::hex(s.pid, 8)),
                            Widgets8a::item(s.shiny ? tr("Yes") : tr("No")), Widgets8a::item(Widgets8a::ivText(s.ivs)),
+                           Widgets8a::item(Widgets8a::effortText(s.ivs)),
                            Widgets8a::item(QString::number(s.ability + 1)), Widgets8a::item(Widgets8a::genderText(s.gender)),
                            Widgets8a::item(QString::fromStdString(natures[s.nature])), Widgets8a::item(QString::number(s.height)),
                            Widgets8a::item(QString::number(s.weight)), Widgets8a::item(QString::number(result.end)) });

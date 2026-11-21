@@ -18,6 +18,7 @@
  */
 
 #include "Widgets8a.hpp"
+#include <Core/Gen8a/IVCalculator8a.hpp>
 #include <Core/Util/Translator.hpp>
 #include <QStandardItem>
 
@@ -89,6 +90,11 @@ namespace Widgets8a
         auto *result = new QStandardItem(text);
         result->setEditable(false);
         return result;
+    }
+
+    QString effortText(const std::array<u8, 6> &ivs)
+    {
+        return ivText(IVCalculator8a::effortLevels(ivs));
     }
 
     QString ivText(const std::array<u8, 6> &ivs)
